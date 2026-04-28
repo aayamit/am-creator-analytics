@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.env*.local
+npm-debug.log*
+Dockerfile
+docker-compose.yml
+*.md
+.pytest_cache
+cypress
+cypress.json
+.coverage
+.vscode
+.idea
+*.swp
+*.swo
+*~

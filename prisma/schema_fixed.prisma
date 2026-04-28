@@ -1,0 +1,500 @@
+     1|generator client {
+     2|  provider = "prisma-client-js"
+     3|}
+     4|
+     5|datasource db {
+     6|  provider = "postgresql"
+     7|  url      = env("DATABASE_URL")
+     8|}
+     9|
+    10|// Enums
+    11|enum UserRole {
+    12|  BRAND
+    13|  CREATOR
+    14|  ADMIN
+    15|}
+    16|
+    17|enum SocialPlatform {
+    18|  YOUTUBE
+    19|  LINKEDIN
+    20|  INSTAGRAM
+    21|  TIKTOK
+    22|  TWITTER
+    23|  FACEBOOK
+    24|}
+    25|
+    26|enum CampaignStatus {
+    27|  DRAFT
+    28|  ACTIVE
+    29|  PAUSED
+    30|  COMPLETED
+    31|  CANCELLED
+    32|}
+    33|
+    34|enum PaymentStatus {
+    35|  PENDING
+    36|  PROCESSING
+    37|  PAID
+    38|  FAILED
+    39|  REFUNDED
+    40|}
+    41|
+    42|enum MetricType {
+    43|  FOLLOWERS
+    44|  ENGAGEMENT_RATE
+    45|  VIEWS
+    46|  LIKES
+    47|  COMMENTS
+    48|  SHARES
+    49|  CLICKS
+    50|  CONVERSIONS
+    51|}
+    52|
+    53|enum DemographicType {
+    54|  AGE
+    55|  GENDER
+    56|  LOCATION
+    57|  INTEREST
+    58|  INCOME_BRACKET
+    59|}
+    60|
+    61|// NextAuth Compatible Models
+    62|model User {
+    63|  id            String    @id @default(cuid())
+    64|  name          String?
+    65|  email         String?   @unique
+    66|  emailVerified DateTime?
+    67|  image         String?
+    68|  role          UserRole  @default(CREATOR)
+    69|  createdAt     DateTime  @default(now())
+    70|  updatedAt     DateTime  @updatedAt
+    71|  deletedAt     DateTime?
+    72|
+    73|  // NextAuth relations
+    74|  accounts Account[]
+    75|  sessions Session[]
+    76|
+    77|  // Role-specific profiles
+    78|  brandProfile    BrandProfile?
+    79|  creatorProfile CreatorProfile?
+    80|
+    81|  // Subscriptions
+    82|  subscriptions   Subscription[]  // Cashfree subscriptions
+    83|
+    84|  // Audit logs
+    85|  auditLogs        AuditLog[]
+    86|  notifications    Notification[]
+    87|  complianceAudits ComplianceAudit[]
+    88|  invitesSent      CampaignInvite[]  // Added: invites sent by this user (brand)
+    89|
+    90|  @@index([email])
+    91|  @@index([role])
+    92|}
+    93|
+    94|model Account {
+    95|  id                String  @id @default(cuid())
+    96|  userId            String
+    97|  type              String
+    98|  provider          String
+    99|  providerAccountId String
+   100|  refresh_token     String? @db.Text
+   101|  access_token      String? @db.Text
+   102|  expires_at        Int?
+   103|  token_type        String?
+   104|  scope             String?
+   105|  id_token          String? @db.Text
+   106|  session_state     String?
+   107|
+   108|  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+   109|
+   110|  @@unique([provider, providerAccountId])
+   111|  @@index([userId])
+   112|}
+   113|
+   114|model Session {
+   115|  id           String   @id @default(cuid())
+   116|  sessionToken String   @unique
+   117|  userId       String
+   118|  expires      DateTime
+   119|  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+   120|  @@index([userId])
+   121|}
+   122|
+   123|model VerificationToken {
+   124|  identifier String
+   125|  token      String   @unique
+   126|  expires    DateTime
+   127|  @@unique([identifier, token])
+   128|}
+   129|
+   130|// Brand Models
+   131|model BrandProfile {
+   132|  id          String    @id @default(cuid())
+   133|  userId      String    @unique
+   134|  companyName String
+   135|  industry    String?
+   136|  website     String?
+   137|  description String?   @db.Text
+   138|  logoUrl     String?
+   139|  address     String?
+   140|  taxId       String?
+   141|  createdAt   DateTime  @default(now())
+   142|  updatedAt   DateTime  @updatedAt
+   143|  deletedAt   DateTime?
+   144|
+   145|  // Relations
+   146|  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+   147|  campaigns Campaign[]
+   148|  crmConnections CrmConnection[]
+   149|
+   150|  @@index([userId])
+   151|}
+   152|
+   153|// Creator Models
+   154|model CreatorProfile {
+   155|  id          String    @id @default(cuid())
+   156|  userId      String    @unique
+   157|  displayName String
+   158|  bio         String?   @db.Text
+   159|  niche       String?   // Tech, Finance, SaaS, etc.
+   160|  website     String?
+   161|  pricing     Json?     // { cpm: number, cpe: number, per_post: number }
+   162|  
+   163|  // NEW: Follower count for bonus eligibility
+   164|  followerCount Int      @default(0)  // Track total followers across platforms
+   165|  signingBonusPaid Boolean  @default(false)  // ₹1500 bonus tracking
+   166|  bonusPaidAt    DateTime?  // When bonus was paid
+   167|  
+   168|  createdAt   DateTime  @default(now())
+   169|  updatedAt   DateTime  @updatedAt
+   170|  deletedAt   DateTime?
+   171|
+   172|  // Relations
+   173|  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+   174|  socialAccounts     SocialAccount[]
+   175|  campaignCreators   CampaignCreator[]
+   176|  mediaKit           MediaKit?
+   177|  audienceDemographics AudienceDemographic[]
+   178|  leads              Lead[]
+   179|  trackingEvents     TrackingEvent[]
+   180|  payoutAccount      PayoutAccount?
+   181|  invitesReceived   CampaignInvite[]  // Added: invites received by this creator
+   182|   183|  
+   184|  @@index([userId])
+   185|  @@index([niche])
+   186|  @@index([followerCount])  // NEW: For bonus eligibility queries
+   187|}
+   188|
+   189|model SocialAccount {
+   190|  id           String        @id @default(cuid())
+   191|  creatorId    String
+   192|  platform     SocialPlatform
+   193|  platformId   String       // Platform's user/channel ID
+   194|  accessToken  String        @db.Text // Encrypted at rest
+   195|  refreshToken String?       @db.Text // Encrypted at rest
+   196|  expiresAt    DateTime?
+   197|  username     String?
+   198|  profileUrl   String?
+   199|  createdAt    DateTime      @default(now())
+   200|  updatedAt    DateTime      @updatedAt
+   201|
+   202|  // Relations
+   203|  creator         CreatorProfile  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+   204|  metrics         AnalyticsMetric[]
+   205|
+   206|  @@unique([creatorId, platform])
+   207|  @@index([creatorId])
+   208|  @@index([platform])
+   209|}
+   210|
+   211|// Campaign Models
+   212|model Campaign {
+   213|  id             String         @id @default(cuid())
+   214|  brandId        String
+   215|  title          String
+   216|  description    String?        @db.Text
+   217|  budget         Decimal        @db.Decimal(10, 2)
+   218|  spent          Decimal        @default(0) @db.Decimal(10, 2)
+   219|  startDate      DateTime
+   220|  endDate        DateTime
+   221|  status         CampaignStatus @default(DRAFT)
+   222|  objectives     Json?          // { awareness: boolean, conversions: boolean }
+   223|  createdAt      DateTime       @default(now())
+   224|  updatedAt      DateTime       @updatedAt
+   225|  deletedAt      DateTime?
+   226|
+   227|  // Relations
+   228|  brand          BrandProfile    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+   229|  campaignCreators CampaignCreator[]
+   230|  leads           Lead[]
+   231|  trackingEvents   TrackingEvent[]
+   232|  payoutTransactions PayoutTransaction[]
+   233|  invites         CampaignInvite[]  // Added: invites for this campaign
+   234|
+   235|  @@index([brandId])
+   236|  @@index([status])
+   237|}
+   238|
+   239|model CampaignCreator {
+   240|  id             String         @id @default(cuid())
+   241|  campaignId     String
+   242|  creatorId      String
+   243|  deliverables   Json?          // { posts: 3, stories: 5 }
+   244|  rate           Decimal        @db.Decimal(10, 2)
+   245|  paymentStatus  PaymentStatus  @default(PENDING)
+   246|  performance    Json?          // { impressions: number, clicks: number }
+   247|  createdAt      DateTime       @default(now())
+   248|  updatedAt      DateTime       @updatedAt
+   249|
+   250|  // Relations
+   251|  campaign  Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+   252|  creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+   253|  invoice   Invoice?
+   254|  payoutTransactions PayoutTransaction[]
+   255|  deliverableRecords Deliverable[]    // Added: link to deliverables
+   256|  contractRecord     Contract?         // Added: link to contract
+   257|
+   258|  @@unique([campaignId, creatorId])
+   259|  @@index([campaignId])
+   260|  @@index([creatorId])
+   261|}
+   262|
+   263|// Analytics Models
+   264|model AnalyticsMetric {
+   265|  id             String     @id @default(cuid())
+   266|  socialAccountId String
+   267|  type           MetricType
+   268|  value          Decimal    @db.Decimal(15, 2)
+   269|  date           DateTime   @default(now())
+   270|  metadata       Json?      // Additional platform-specific data
+   271|
+   272|  // Relations
+   273|  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+   274|
+   275|  @@index([socialAccountId])
+   276|  @@index([type])
+   277|  @@index([date])
+   278|}
+   279|
+   280|model AudienceDemographic {
+   281|  id             String        @id @default(cuid())
+   282|  creatorId      String
+   283|  type           DemographicType
+   284|  label          String        // e.g., "18-24", "Male", "US"
+   285|  percentage     Decimal       @db.Decimal(5, 2)
+   286|  updatedAt      DateTime      @updatedAt
+   287|
+   288|  // Relations
+   289|  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+   290|
+   291|  @@index([creatorId])
+   292|  @@index([type])
+   293|}
+   294|
+   295|// Media Kit Model
+   296|model MediaKit {
+   297|  id             String    @id @default(cuid())
+   298|  creatorId      String    @unique
+   299|  slug           String    @unique // Public-facing slug for sharing
+   300|  isPublic       Boolean   @default(false)
+   301|  settings       Json?     // { showPastCampaigns: boolean, showPricing: boolean }
+   302|  createdAt      DateTime  @default(now())
+   303|  updatedAt      DateTime  @updatedAt
+   304|
+   305|  // Relations
+   306|  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+   307|
+   308|  @@index([slug])
+   309|}
+   310|
+   311|// Invoice Model
+   312|model Invoice {
+   313|  id                String         @id @default(cuid())
+   314|  campaignCreatorId String         @unique
+   315|  amount            Decimal        @db.Decimal(10, 2)
+   316|  status            PaymentStatus  @default(PENDING)
+   317|  dueDate           DateTime
+   318|  paidAt            DateTime?
+   319|  createdAt         DateTime       @default(now())
+   320|  updatedAt         DateTime       @updatedAt
+   321|
+   322|  // Relations
+   323|  campaignCreator CampaignCreator @relation(fields: [campaignCreatorId], references: [id], onDelete: Cascade)
+   324|
+   325|  @@index([campaignCreatorId])
+   326|}
+   327|
+   328|// Audit Log Model
+   329|model AuditLog {
+   330|  id        String   @id @default(cuid())
+   331|  userId    String?
+   332|  action    String   // e.g., "VIEW_CREATOR_PROFILE", "UPDATE_CAMPAIGN_BUDGET"
+   333|  resource  String   // e.g., "CreatorProfile:123", "Campaign:456"
+   334|  timestamp DateTime @default(now())
+   335|  metadata  Json?    // Additional context
+   336|
+   337|  // Relations
+   338|  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+   339|
+   340|  @@index([userId])
+   341|  @@index([timestamp])
+   342|}
+   343|
+   344|// Notification Models
+   345|enum NotificationType {
+   346|  CAMPAIGN_INVITE
+   347|  CAMPAIGN_UPDATE
+   348|  PAYMENT_RECEIVED
+   349|  MILESTONE_REACHED
+   350|  SYSTEM
+   351|}
+   352|
+   353|// B2B Pipeline Enums
+   354|enum LeadStage {
+   355|  MQL             // Marketing Qualified Lead
+   356|  SQL              // Sales Qualified Lead
+   357|  OPPORTUNITY
+   358|  CLOSED_WON
+   359|  CLOSED_LOST
+   360|}
+   361|
+   362|enum CrmType {
+   363|  SALESFORCE
+   364|  HUBSPOT
+   365|}
+   366|
+   367|enum LeadSource {
+   368|  CREATOR_POST
+   369|  CREATOR_STORY
+   370|  CREATOR_VIDEO
+   371|  DIRECT_LINK
+   372|  OTHER
+   373|}
+   374|
+   375|model Notification {
+   376|  id        String        @id @default(cuid())
+   377|  userId    String
+   378|  type      NotificationType
+   379|  title     String
+   380|  message   String        @db.Text
+   381|  read      Boolean       @default(false)
+   382|  link      String?       // Relative path to navigate, e.g., /brands/campaigns/123
+   383|  createdAt DateTime      @default(now())
+   384|  updatedAt DateTime      @updatedAt
+   385|
+   386|  // Relations
+   387|  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+   388|
+   389|  @@index([userId, createdAt])
+   390|  @@index([userId, read])
+   391|}
+   392|
+   393|// B2B Pipeline Models
+   394|
+   395|// CRM Connection Model - Stores OAuth tokens for Salesforce/HubSpot integrations
+   396|model CrmConnection {
+   397|  id              String    @id @default(cuid())
+   398|  brandId         String
+   399|  brand           BrandProfile @relation(fields: [brandId], references: [id], onDelete: Cascade)
+   400|  type            CrmType
+   401|  accessToken     String    @db.Text // Encrypted at rest
+   402|  refreshToken    String?   @db.Text // Encrypted at rest
+   403|  instanceUrl     String?   // For Salesforce
+   404|  lastSync        DateTime?
+   405|  syncErrors      Json?     // Track integration errors
+   406|  createdAt       DateTime  @default(now())
+   407|  updatedAt       DateTime  @updatedAt
+   408|
+   409|  @@index([brandId])
+   410|  @@index([type])
+   411|}
+   412|
+   413|// Lead Model - Tracks pipeline from creator content to closed deals
+   414|model Lead {
+   415|  id                String      @id @default(cuid())
+   416|  campaignId        String
+   417|  campaign          Campaign    @relation(fields: [campaignId], references: [id])
+   418|  creatorId         String
+   419|  creator           CreatorProfile @relation(fields: [creatorId], references: [id])
+   420|  
+   421|  // Lead identification
+   422|  email             String?
+   423|  linkedInProfile   String?
+   424|  companyName       String?
+   425|  jobTitle          String?
+   426|  companySize       String?     // "1-10", "11-50", "51-200", "201-1000", "1000+"
+   427|  
+   428|  // Pipeline tracking
+   429|  stage             LeadStage  @default(MQL)
+   430|  source            LeadSource @default(CREATOR_POST)
+   431|  sourceUrl         String?    // URL of the creator post/content
+   432|  firstTouchAt      DateTime   @default(now())
+   433|  lastTouchAt       DateTime   @updatedAt
+   434|  convertedAt       DateTime?
+   435|  
+   436|  // Revenue attribution
+   437|  dealValue         Decimal?   @db.Decimal(12, 2)
+   438|  currency          String?    @default("USD")
+   439|  
+   440|  // CRM sync status
+   441|  crmContactId      String?   // External CRM contact ID
+   442|  crmDealId         String?   // External CRM deal ID
+   443|  crmSyncedAt       DateTime?
+   444|  
+   445|  // Custom fields for enterprise CRMs
+   446|  customFields      Json?     // Store custom object data
+   447|
+   448|  createdAt         DateTime   @default(now())
+   449|  updatedAt         DateTime   @updatedAt
+   450|  deletedAt         DateTime?
+   451|
+   452|  // Relations
+   453|  trackingEvents   TrackingEvent[]
+   454|
+   455|  @@index([campaignId])
+   456|  @@index([creatorId])
+   457|  @@index([stage])
+   458|  @@index([email])
+   459|  @@index([crmContactId])
+   460|  @@index([firstTouchAt])
+   461|}
+   462|
+   463|// Tracking Event Model - Server-side conversion tracking
+   464|model TrackingEvent {
+   465|  id                String    @id @default(cuid())
+   466|  leadId            String?
+   467|  lead              Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+   468|  campaignId        String?
+   469|  campaign          Campaign?  @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+   470|  creatorId         String?
+   471|  creator           CreatorProfile? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+   472|  
+   473|  // Event details
+   474|  type              String    // "PAGE_VIEW", "FORM_FILL", "DEMO_REQUEST", "DEAL_CLOSED"
+   475|  url               String?
+   476|  referrer          String?
+   477|  utmSource         String?
+   478|  utmMedium         String?
+   479|  utmCampaign       String?
+   480|  utmContent        String?
+   481|  
+   482|  // Attribution preservation (critical for when CRM contacts merge)
+   483|  originalEmail     String?   // Store original email even if contact merges
+   484|  originalSource    String?   // Store original attribution source
+   485|  touchPoint        Int       @default(1) // Multi-touch attribution
+   486|  
+   487|  // Technical data
+   488|  ipAddress         String?   // Hashed for privacy
+   489|  userAgent         String?   @db.Text
+   490|  fingerprint       String?   // Browser fingerprint for identity resolution
+   491|  
+   492|  // Conversion data
+   493|  value             Decimal?  @db.Decimal(10, 2)
+   494|  metadata          Json?     // Additional event-specific data
+   495|  
+   496|  timestamp         DateTime  @default(now())
+   497|  
+   498|  @@index([leadId])
+   499|  @@index([campaignId])
+   500|  @@index([creatorId])
+   501|

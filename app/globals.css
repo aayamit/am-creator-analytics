@@ -1,0 +1,213 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.75);
+  --radius-md: calc(var(--radius) * 1);
+  --radius-lg: calc(var(--radius) * 1.5);
+  --radius-xl: calc(var(--radius) * 2);
+  --radius-2xl: calc(var(--radius) * 2.5);
+  --radius-3xl: calc(var(--radius) * 3);
+  --radius-4xl: calc(var(--radius) * 3.5);
+}
+
+:root {
+  /* === USER MEMORY SPECS === */
+  /* Background: Parchment */
+  --background: #F8F7F4;
+  --foreground: #1a1a2e;  /* Dark indigo (not charcoal #3A3941) */
+
+  /* Cards - not used (no cards rule) */
+  --card: #FFFFFF;
+  --card-foreground: #1a1a2e;
+
+  /* Popover */
+  --popover: #FFFFFF;
+  --popover-foreground: #1a1a2e;
+
+  /* Primary: Amber-800 (user's accent) */
+  --primary: #92400e;
+  --primary-foreground: #FFFFFF;  /* WHITE TEXT on buttons */
+
+  /* Secondary */
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1a1a2e;
+
+  /* Muted */
+  --muted: #f8f7f4;
+  --muted-foreground: rgba(26,26,46,0.6);
+
+  /* Accent: Amber-800 */
+  --accent: #92400e;
+  --accent-foreground: #FFFFFF;
+
+  /* Destructive */
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  /* Borders */
+  --border: rgba(26,26,46,0.1);
+  --input: rgba(26,26,46,0.1);
+  --ring: #92400e;
+
+  /* Chart */
+  --chart-1: #92400e;
+  --chart-2: #1a1a2e;
+  --chart-3: rgba(26,26,46,0.6);
+  --chart-4: rgba(146,64,14,0.6);
+  --chart-5: rgba(26,26,46,0.4);
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Sidebar */
+  --sidebar: #F8FAFC;
+  --sidebar-foreground: #1a1a2e;
+  --sidebar-primary: #92400e;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F8F7F4;
+  --sidebar-accent-foreground: #1a1a2e;
+  --sidebar-border: rgba(26,26,46,0.1);
+  --sidebar-ring: #92400e;
+
+  /* Fonts */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.dark {
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
+  --primary: #92400e;
+  --primary-foreground: #FFFFFF;
+  --secondary: #334155;
+  --secondary-foreground: #F8FAFC;
+  --muted: #1E293B;
+  --muted-foreground: rgba(248,250,252,0.6);
+  --accent: #92400e;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(248,250,252,0.1);
+  --input: rgba(248,250,252,0.1);
+  --ring: #92400e;
+  --chart-1: #92400e;
+  --chart-2: #F8FAFC;
+  --chart-3: rgba(248,250,252,0.6);
+  --chart-4: rgba(146,64,14,0.6);
+  --chart-5: rgba(248,250,252,0.4);
+  --sidebar: #1E293B;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #92400e;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #F8FAFC;
+  --sidebar-border: rgba(248,250,252,0.1);
+  --sidebar-ring: #92400e;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+  html {
+    @apply font-sans;
+  }
+
+  /* Monospace for numbers/metrics */
+  .metric-value, .chart-value, .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Clean link style */
+  a {
+    @apply text-foreground hover:underline;
+  }
+
+  /* Consistent heading styles */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold tracking-tight;
+  }
+
+  h1 { @apply text-5xl md:text-7xl mb-6; line-height: 0.95; }
+  h2 { @apply text-3xl md:text-4xl mb-4; }
+  h3 { @apply text-2xl mb-3; }
+  h4 { @apply text-xl mb-2; }
+}
+
+@layer components {
+  /* BUTTONS: White text, hover anim (shadow + lift) - PER MEMORY */
+  button, .button {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  /* Primary button: Amber bg, WHITE text, shadow + lift on hover */
+  button[class*="bg-primary"],
+  button[class*="bg-accent"] {
+    @apply text-white shadow-md hover:shadow-xl hover:-translate-y-0.5;
+  }
+
+  /* Outline button */
+  button[class*="border-border"] {
+    @apply hover:border-accent hover:text-accent;
+  }
+
+  /* McKinsey-style: NO cards, border-based separation */
+  .data-row {
+    @apply border-y border-border/8 py-6;
+  }
+
+  .feature-list-item {
+    @apply flex items-start gap-6 py-6 border-b border-border/5 last:border-0;
+  }
+
+  /* Smooth page transitions */
+  main {
+    @apply animate-in fade-in duration-500;
+  }
+}
