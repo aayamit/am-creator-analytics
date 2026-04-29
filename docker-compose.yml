@@ -35,5 +35,27 @@ services:
     command: >
       sh -c "npx prisma migrate deploy && npm start"
 
+  # Nango self-hosted integration platform
+  nango:
+    image: nango/nango:latest
+    restart: unless-stopped
+    ports:
+      - "3003:3003"   # Nango server
+      - "3004:3004"   # Nango UI
+    environment:
+      - NANGO_DB_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/nango?schema=public
+      - NANGO_SECRET_KEY=${NANGO_SECRET_KEY:-nango-secret-key-change-in-prod}
+      - NANGO_ENCRYPTION_KEY=${NANGO_ENCRYPTION_KEY:-nango-encryption-key-change-in-prod}
+      - NANGO_ADMIN_KEY=${NANGO_ADMIN_KEY:-nango-admin-key-change-in-prod}
+      - NANGO_CALLBACK_URL=http://localhost:3003/oauth/callback
+      - NANGO_FRONTEND_URL=http://localhost:3004
+      - NANGO_SERVER_URL=http://localhost:3003
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - nango_data:/tmp/nango
+
 volumes:
   postgres_data:
+  nango_data:
