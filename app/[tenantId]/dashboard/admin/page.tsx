@@ -1,26 +1,14 @@
 import { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Users, TrendingUp, FileText, Plus, Send, BarChart3 } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import RevenueMarginChart from '@/components/dashboard/charts';
+import CreatorGrowthChart from '@/components/dashboard/charts';
 
 export const metadata: Metadata = {
   title: 'Agency Command Center | AM Creator Analytics',
   description: 'Multi-tenant agency dashboard',
 };
-
-const topCreators = [
-  { id: '1', name: 'Priya Sharma', followers: '245K', revenue: '₹1.2L', margin: '21%', status: 'Active' },
-  { id: '2', name: 'Arjun Kapoor', followers: '189K', revenue: '₹0.9L', margin: '18%', status: 'Active' },
-  { id: '3', name: 'Tech Reviews', followers: '512K', revenue: '₹2.5L', margin: '24%', status: 'Active' },
-  { id: '4', name: 'Fashion Forward', followers: '98K', revenue: '₹0.6L', margin: '15%', status: 'Pending' },
-];
-
-const recentActivity = [
-  { id: 1, icon: '✅', text: 'Contract signed: Priya Sharma', time: '2 min ago' },
-  { id: 2, icon: '💰', text: 'Bonus triggered: Creator-pro (₹1,500)', time: '5 min ago' },
-  { id: 3, icon: '📊', text: 'New campaign: Tech Reviews Q2', time: '12 min ago' },
-  { id: 4, icon: '🎯', text: 'Lead converted: Arjun Kapoor', time: '25 min ago' },
-  { id: 5, icon: '📈', text: 'Margin alert: Brand X campaign at 28%', time: '1 hour ago' },
-];
 
 export default async function AgencyDashboardPage({
   params,
@@ -28,6 +16,55 @@ export default async function AgencyDashboardPage({
   params: Promise<{ tenantId: string }>;
 }) {
   const { tenantId } = await params;
+
+  // Fetch real data from database
+  const [campaigns, contracts, creators] = await Promise.all([
+    prisma.campaign.findMany({
+      where: { tenantId },
+      include: { _count: { select: { creators: true } } },
+    }),
+    prisma.contract.findMany({
+      where: { campaignCreator: { campaign: { tenantId } },
+      include: { campaignCreator: { include: { creator: true } } },
+    }),
+    prisma.creatorProfile.findMany({
+      where: { user: { tenantId } },
+      take: 10,
+    }),
+  ]);
+
+  // Calculate KPIs
+  const totalRevenue = contracts.reduce((sum, c) => sum + (c.amount || 0), 0);
+  const activeContracts = contracts.filter(c => c.status === 'FULLY_EXECUTED').length;
+  const activeCreators = creators.length;
+
+  // Mock revenue data (replace with real aggregation later)
+  const revenueData = [
+    { month: 'Jan', revenue: 420000, margin: 84000, creators: 45 },
+    { month: 'Feb', revenue: 380000, margin: 76000, creators: 52 },
+    { month: 'Mar', revenue: 510000, margin: 102000, creators: 61 },
+    { month: 'Apr', revenue: 475000, margin: 95000, creators: 58 },
+    { month: 'May', revenue: 580000, margin: 116000, creators: 67 },
+  ];
+
+  // Format top creators for table
+  const topCreators = creators.slice(0, 5).map(c => ({
+    id: c.id,
+    name: c.user?.name || 'Unknown',
+    followers: `${Math.round((c.followerCount || 0) / 1000)}K`,
+    revenue: `₹${(c.totalEarnings || 0).toLocaleString('en-IN')}`,
+    margin: `${c.marginPercentage || 0}%`,
+    status: c.verified ? 'Active' : 'Pending',
+  }));
+
+  // Recent activity (mock for now)
+  const recentActivity = [
+    { id: 1, icon: '✅', text: `Contract signed: ${contracts[0]?.campaignCreator?.creator?.user?.name || 'New Creator'}`, time: '2 min ago' },
+    { id: 2, icon: '💰', text: 'Bonus triggered: Creator-pro (₹1,500)', time: '5 min ago' },
+    { id: 3, icon: '📊', text: `New campaign: ${campaigns[0]?.name || 'Q2 Campaign'}`, time: '12 min ago' },
+    { id: 4, icon: '🎯', text: 'Lead converted: Arjun Kapoor', time: '25 min ago' },
+    { id: 5, icon: '📈', text: 'Margin alert: Brand X campaign at 28%', time: '1 hour ago' },
+  ];
 
   return (
     <div style={{
@@ -75,14 +112,14 @@ export default async function AgencyDashboardPage({
       }}>
         <KPICard
           title="Total Revenue"
-          value="₹17.8L"
+          value={`₹${(totalRevenue / 100000).toFixed(1)}L`}
           change="+12%"
           icon={<DollarSign size={20} />}
           accentColor="#1a1a2e"
         />
         <KPICard
           title="Active Creators"
-          value="1,247"
+          value={activeCreators.toString()}
           change="+8%"
           icon={<Users size={20} />}
           accentColor="#92400e"
@@ -96,11 +133,51 @@ export default async function AgencyDashboardPage({
         />
         <KPICard
           title="Active Contracts"
-          value="89"
+          value={activeContracts.toString()}
           change="+15%"
           icon={<FileText size={20} />}
           accentColor="#2563eb"
         />
+      </div>
+
+      {/* Charts Row */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '24px',
+        marginBottom: '32px',
+      }}>
+        {/* Revenue & Margin Chart */}
+        <Card style={{
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+        }}>
+          <CardHeader>
+            <CardTitle style={{ color: '#1a1a2e', fontSize: '16px', fontWeight: 600 }}>
+              Revenue & Margin Trends
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RevenueMarginChart data={revenueData} />
+          </CardContent>
+        </Card>
+
+        {/* Creator Growth Chart */}
+        <Card style={{
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+        }}>
+          <CardHeader>
+            <CardTitle style={{ color: '#1a1a2e', fontSize: '16px', fontWeight: 600 }}>
+              Creator Growth
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CreatorGrowthChart data={revenueData} />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Bottom Row: Top Creators + Activity */}
