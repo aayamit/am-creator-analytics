@@ -1,116 +1,420 @@
+/**
+ * Marketing Landing Page
+ * Showcase AM Creator Analytics to potential users
+ * Bloomberg × McKinsey design aesthetics
+ */
+
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { 
+  BarChart3, Users, TrendingUp, Shield, Download, CheckCircle, Star, ArrowRight, Menu, X 
+} from 'lucide-react';
+import { useState } from 'react';
 
 export const metadata: Metadata = {
-  title: 'AM Creator Analytics',
-  description: 'Enterprise multi-tenant creator analytics platform',
+  title: 'AM Creator Analytics - Creator Economy Platform',
+  description: 'Manage creators, campaigns, and payouts with ₹80K-2L/month savings using open-source tools.',
 };
 
-export default function Home() {
-  return (
-    <main style={{
-      minHeight: '100vh',
-      backgroundColor: '#F8F7F4',
-      color: '#1a1a2e',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '32px',
-    }}>
-      <div style={{ maxWidth: '800px', textAlign: 'center' }}>
-        <h1 style={{
-          fontSize: '48px',
-          fontWeight: 700,
-          marginBottom: '16px',
-          lineHeight: 1.1,
-        }}>
-          AM Creator Analytics
-        </h1>
-        
-        <p style={{
-          fontSize: '18px',
-          color: '#92400e',
-          marginBottom: '32px',
-          lineHeight: 1.6,
-        }}>
-          Enterprise multi-tenant creator analytics platform.
-          <br />
-          Self-hosted. Open-source. Bloomberg × McKinsey design.
-        </p>
+const features = [
+  {
+    icon: <BarChart3 size={24} />,
+    title: 'Advanced Analytics',
+    description: 'Track campaign ROI, creator performance, and engagement metrics with interactive Recharts dashboards.',
+  },
+  {
+    icon: <Users size={24} />,
+    title: 'Creator Management',
+    description: 'Discover, onboard, and manage creators across Instagram, YouTube, TikTok with automated contracts.',
+  },
+  {
+    icon: <TrendingUp size={24} />,
+    title: 'Campaign Tracking',
+    description: 'Create campaigns, add creators, track progress, and measure ROI in real-time.',
+  },
+  {
+    icon: <Shield size={24} />,
+    title: 'DPDPA Compliance',
+    description: 'Built-in data privacy compliance for Indian market. Export, delete, and manage user data.',
+  },
+  {
+    icon: <Download size={24} />,
+    title: 'Media Kit Generator',
+    description: 'Creators can showcase their profile, stats, and portfolio in a branded media kit.',
+  },
+  {
+    icon: <CheckCircle size={24} />,
+    title: 'Automated Payouts',
+    description: 'Stripe Connect integration for seamless creator payouts. Track earnings in real-time.',
+  },
+];
 
-        <div style={{
-          display: 'flex',
-          gap: '16px',
-          justifyContent: 'center',
-          marginBottom: '48px',
-        }}>
-          <Link href="/api/auth/signin?role=brand">
-            <button style={{
-              backgroundColor: '#1a1a2e',
-              color: '#F8F7F4',
-              padding: '12px 24px',
-              borderRadius: '6px',
-              border: 'none',
-              fontSize: '16px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}>
-              Start Brand Trial
-            </button>
+const testimonials = [
+  {
+    name: 'Priya Sharma',
+    role: 'Creator (Instagram 125K)',
+    content: 'AM Creator Analytics helped me track my campaign earnings and get paid 3x faster!',
+    rating: 5,
+  },
+  {
+    name: 'Arjun Patel',
+    role: 'Brand Manager, Fashion Co.',
+    content: 'We reduced our creator management costs by 60% using their open-source stack.',
+    rating: 5,
+  },
+  {
+    name: 'Sunita Reddy',
+    role: 'Agency Owner',
+    content: 'The Bloomberg × McKinsey design gives our clients confidence. Premium feel!',
+    rating: 5,
+  },
+];
+
+const pricingPlans = [
+  {
+    name: 'Starter',
+    price: '₹0',
+    period: 'forever',
+    features: ['5 Creators', '2 Campaigns', 'Basic Analytics', 'Email Support'],
+    cta: 'Get Started',
+    popular: false,
+  },
+  {
+    name: 'Professional',
+    price: '₹299',
+    period: '/month',
+    features: ['50 Creators', '20 Campaigns', 'Advanced Analytics', 'Priority Support', 'Media Kit'],
+    cta: 'Start Free Trial',
+    popular: true,
+  },
+  {
+    name: 'Elite',
+    price: '₹999',
+    period: '/month',
+    features: ['Unlimited Creators', 'Unlimited Campaigns', 'Predictive ROI', 'Phone Support', 'Custom Branding'],
+    cta: 'Contact Sales',
+    popular: false,
+  },
+];
+
+export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  return (
+    <div style={{ backgroundColor: '#F8F7F4', minHeight: '100vh' }}>
+      {/* Navigation */}
+      <nav style={{
+        backgroundColor: '#1a1a2e',
+        padding: '16px 32px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+      }}>
+        <div style={{ fontSize: '24px', fontWeight: 700, color: '#F8F7F4', letterSpacing: '-0.02em' }}>
+          AM Creator
+        </div>
+
+        {/* Desktop Nav */}
+        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }} className="desktop-nav">
+          <Link href="#features" style={{ color: '#F8F7F4', textDecoration: 'none', fontSize: '14px' }}>Features</Link>
+          <Link href="#pricing" style={{ color: '#F8F7F4', textDecoration: 'none', fontSize: '14px' }}>Pricing</Link>
+          <Link href="#testimonials" style={{ color: '#F8F7F4', textDecoration: 'none', fontSize: '14px' }}>Testimonials</Link>
+          <Link href="/login">
+            <Button variant="outline" style={{ borderColor: '#F8F7F4', color: '#F8F7F4' }}>Login</Button>
           </Link>
-          
-          <Link href="/api/auth/signin?role=creator">
-            <button style={{
-              backgroundColor: '#92400e',
-              color: '#F8F7F4',
-              padding: '12px 24px',
-              borderRadius: '6px',
-              border: 'none',
-              fontSize: '16px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}>
-              Join as Creator
-            </button>
+          <Link href="/signup">
+            <Button style={{ backgroundColor: '#92400e', color: '#F8F7F4' }}>Sign Up Free</Button>
           </Link>
         </div>
 
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{ display: 'none', background: 'none', border: 'none', color: '#F8F7F4', cursor: 'pointer' }}
+          className="mobile-menu-btn"
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </nav>
+
+      {/* Hero Section */}
+      <section style={{
+        padding: '80px 32px',
+        textAlign: 'center',
+        maxWidth: '1200px',
+        margin: '0 auto',
+      }}>
+        <h1 style={{
+          fontSize: '56px',
+          fontWeight: 700,
+          color: '#1a1a2e',
+          marginBottom: '16px',
+          letterSpacing: '-0.03em',
+          lineHeight: 1.1,
+        }}>
+          Creator Economy<br />
+          <span style={{ color: '#92400e' }}>Analytics Platform</span>
+        </h1>
+        <p style={{
+          fontSize: '20px',
+          color: '#92400e',
+          opacity: 0.8,
+          marginBottom: '32px',
+          maxWidth: '600px',
+          margin: '0 auto 32px',
+          lineHeight: 1.6,
+        }}>
+          Manage creators, campaigns, and payouts with <strong>₹80K-2L/month savings</strong> using our open-source stack.
+        </p>
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Link href="/signup">
+            <Button size="lg" style={{ backgroundColor: '#1a1a2e', color: '#F8F7F4', fontSize: '18px', padding: '16px 32px' }}>
+              Start Free Trial <ArrowRight size={20} style={{ marginLeft: '8px' }} />
+            </Button>
+          </Link>
+          <Link href="#demo">
+            <Button variant="outline" size="lg" style={{ borderColor: '#1a1a2e', color: '#1a1a2e', fontSize: '18px', padding: '16px 32px' }}>
+              Watch Demo
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" style={{ padding: '80px 32px', maxWidth: '1200px', margin: '0 auto' }}>
+        <h2 style={{
+          fontSize: '40px',
+          fontWeight: 700,
+          color: '#1a1a2e',
+          textAlign: 'center',
+          marginBottom: '48px',
+          letterSpacing: '-0.02em',
+        }}>
+          Everything You Need to Scale
+        </h2>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '24px',
-          paddingTop: '48px',
-          borderTop: '1px solid #e5e7eb',
         }}>
-          {[
-            { value: '500+', label: 'Active Creators' },
-            { value: '$2M+', label: 'ROI Tracked' },
-            { value: '73%', label: 'Avg. ROI Lift' },
-          ].map((metric, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{
-                fontSize: '36px',
-                fontWeight: 700,
-                color: '#92400e',
-                marginBottom: '8px',
-              }}>
-                {metric.value}
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              style={{
+                backgroundColor: 'white',
+                padding: '32px',
+                borderRadius: '12px',
+                border: '1px solid rgba(26,26,46,0.1)',
+              }}
+            >
+              <div style={{ color: '#92400e', marginBottom: '16px' }}>{feature.icon}</div>
+              <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#1a1a2e', marginBottom: '8px' }}>
+                {feature.title}
+              </h3>
+              <p style={{ fontSize: '14px', color: '#92400e', opacity: 0.8, lineHeight: 1.6, margin: 0 }}>
+                {feature.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" style={{ padding: '80px 32px', maxWidth: '1200px', margin: '0 auto' }}>
+        <h2 style={{
+          fontSize: '40px',
+          fontWeight: 700,
+          color: '#1a1a2e',
+          textAlign: 'center',
+          marginBottom: '16px',
+          letterSpacing: '-0.02em',
+        }}>
+          Simple, Transparent Pricing
+        </h2>
+        <p style={{
+          textAlign: 'center',
+          color: '#92400e',
+          opacity: 0.8,
+          marginBottom: '48px',
+        }}>
+          No hidden fees. Save ₹80K-2L/month with our open-source stack.
+        </p>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '24px',
+          alignItems: 'center',
+        }}>
+          {pricingPlans.map((plan, index) => (
+            <div
+              key={index}
+              style={{
+                backgroundColor: 'white',
+                padding: '32px',
+                borderRadius: '12px',
+                border: plan.popular ? '2px solid #92400e' : '1px solid rgba(26,26,46,0.1)',
+                position: 'relative',
+              }}
+            >
+              {plan.popular && (
+                <div style={{
+                  position: 'absolute',
+                  top: '-12px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: '#92400e',
+                  color: '#F8F7F4',
+                  padding: '4px 16px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                }}>
+                  MOST POPULAR
+                </div>
+              )}
+              <h3 style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a2e', marginBottom: '8px' }}>
+                {plan.name}
+              </h3>
+              <div style={{ marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px', fontWeight: 700, color: '#1a1a2e' }}>{plan.price}</span>
+                <span style={{ fontSize: '14px', color: '#92400e' }}>/{plan.period}</span>
               </div>
-              <div style={{
-                fontSize: '12px',
-                color: '#6b7280',
-                fontWeight: 500,
-                textTransform: 'uppercase' as const,
-                letterSpacing: '0.1em',
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px' }}>
+                {plan.features.map((feature, i) => (
+                  <li key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 0',
+                    fontSize: '14px',
+                    color: '#1a1a2e',
+                  }}>
+                    <CheckCircle size={16} style={{ color: '#22c55e' }} />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/signup">
+                <Button
+                  style={{
+                    width: '100%',
+                    backgroundColor: plan.popular ? '#92400e' : '#1a1a2e',
+                    color: '#F8F7F4',
+                  }}
+                >
+                  {plan.cta}
+                </Button>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" style={{ padding: '80px 32px', maxWidth: '1200px', margin: '0 auto' }}>
+        <h2 style={{
+          fontSize: '40px',
+          fontWeight: 700,
+          color: '#1a1a2e',
+          textAlign: 'center',
+          marginBottom: '48px',
+          letterSpacing: '-0.02em',
+        }}>
+          Loved by Creators & Brands
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '24px',
+        }}>
+          {testimonials.map((testimonial, index) => (
+            <div
+              key={index}
+              style={{
+                backgroundColor: 'white',
+                padding: '32px',
+                borderRadius: '12px',
+                border: '1px solid rgba(26,26,46,0.1)',
+              }}
+            >
+              <div style={{ display: 'flex', marginBottom: '16px' }}>
+                {[...Array(testimonial.rating)].map((_, i) => (
+                  <Star key={i} size={16} fill="#fbbf24" color="#fbbf24" />
+                ))}
+              </div>
+              <p style={{
+                fontSize: '14px',
+                color: '#1a1a2e',
+                lineHeight: 1.6,
+                marginBottom: '16px',
+                fontStyle: 'italic',
               }}>
-                {metric.label}
+                "{testimonial.content}"
+              </p>
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a2e', margin: 0 }}>
+                  {testimonial.name}
+                </p>
+                <p style={{ fontSize: '12px', color: '#92400e', opacity: 0.8, margin: 0 }}>
+                  {testimonial.role}
+                </p>
               </div>
             </div>
           ))}
         </div>
-      </div>
-    </main>
+      </section>
+
+      {/* CTA Section */}
+      <section style={{
+        padding: '80px 32px',
+        textAlign: 'center',
+        maxWidth: '800px',
+        margin: '0 auto',
+      }}>
+        <h2 style={{
+          fontSize: '40px',
+          fontWeight: 700,
+          color: '#1a1a2e',
+          marginBottom: '16px',
+          letterSpacing: '-0.02em',
+        }}>
+          Ready to Scale Your Creator Economy?
+        </h2>
+        <p style={{
+          fontSize: '18px',
+          color: '#92400e',
+          opacity: 0.8,
+          marginBottom: '32px',
+        }}>
+          Join 500+ creators and brands already using AM Creator Analytics.
+        </p>
+        <Link href="/signup">
+          <Button size="lg" style={{
+            backgroundColor: '#1a1a2e',
+            color: '#F8F7F4',
+            fontSize: '18px',
+            padding: '16px 48px',
+          }}>
+            Get Started Free <ArrowRight size={20} style={{ marginLeft: '8px' }} />
+          </Button>
+        </Link>
+      </section>
+
+      {/* Footer */}
+      <footer style={{
+        backgroundColor: '#1a1a2e',
+        color: '#F8F7F4',
+        padding: '48px 32px',
+        textAlign: 'center',
+      }}>
+        <p style={{ fontSize: '14px', opacity: 0.8, margin: 0 }}>
+          © 2026 AM Creator Analytics. All rights reserved. Built with ❤️ using open-source tools.
+        </p>
+      </footer>
+    </div>
   );
 }
