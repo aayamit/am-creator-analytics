@@ -7,11 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe, handleStripeWebhook } from '@/lib/stripe-connect';
 import { prisma } from '@/lib/prisma';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+
+// Disable body parser for raw body (Stripe webhook needs raw body)
+export const bodyParser = false;
 
 export async function POST(request: NextRequest) {
   try {

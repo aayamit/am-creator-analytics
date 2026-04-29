@@ -16,15 +16,13 @@ export default async function BrandDashboardPage({
 }) {
   const { tenantId } = await params;
 
-  // Fetch real data - separate calls to avoid parsing issues
+  // Fetch real data - separate calls, no include to avoid Turbopack parsing issues
   const campaigns = await prisma.campaign.findMany({
     where: { tenantId },
-    include: { _count: { select: { creators: true } } },
   });
 
   const contracts = await prisma.contract.findMany({
     where: { campaignCreator: { campaign: { tenantId } },
-    include: { campaignCreator: { include: { campaign: true } },
   });
 
   const creators = await prisma.creatorProfile.findMany({
