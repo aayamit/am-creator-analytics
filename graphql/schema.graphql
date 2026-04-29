@@ -1,0 +1,129 @@
+# GraphQL Schema for AM Creator Analytics
+# Single endpoint: /api/graphql
+
+type Creator {
+  id: ID!
+  name: String!
+  email: String!
+  platform: String
+  followerCount: Int
+  engagementRate: Float
+  niche: String
+  bio: String
+  campaigns: [Campaign!]!
+  contracts: [Contract!]!
+  createdAt: String!
+}
+
+type Campaign {
+  id: ID!
+  name: String!
+  description: String
+  status: CampaignStatus!
+  budget: Float
+  tenantId: String!
+  creators: [Creator!]!
+  contracts: [Contract!]!
+  createdAt: String!
+}
+
+type Contract {
+  id: ID!
+  campaignId: String!
+  creatorId: String!
+  status: ContractStatus!
+  signedAt: String
+  payoutAmount: Float
+  campaign: Campaign!
+  creator: Creator!
+  createdAt: String!
+}
+
+type Notification {
+  id: ID!
+  userId: String!
+  type: String!
+  title: String!
+  message: String!
+  read: Boolean!
+  createdAt: String!
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum ContractStatus {
+  DRAFT
+  SENT
+  SIGNED
+  COMPLETED
+  CANCELLED
+}
+
+# ---- Queries ----
+type Query {
+  # Creators
+  creator(id: ID!): Creator
+  creators(tenantId: String!): [Creator!]!
+  creatorsByPlatform(tenantId: String!, platform: String!): [Creator!]!
+
+  # Campaigns
+  campaign(id: ID!): Campaign
+  campaigns(tenantId: String!): [Campaign!]!
+  activeCampaigns(tenantId: String!): [Campaign!]!
+
+  # Contracts
+  contract(id: ID!): Contract
+  contracts(tenantId: String!): [Contract!]!
+  signedContracts(tenantId: String!): [Contract!]!
+
+  # Notifications
+  notifications(userId: String!): [Notification!]!
+  unreadNotificationCount(userId: String!): Int!
+}
+
+# ---- Mutations ----
+type Mutation {
+  # Creator mutations
+  createCreator(
+    name: String!
+    email: String!
+    tenantId: String!
+    platform: String
+    followerCount: Int
+  ): Creator!
+
+  # Campaign mutations
+  createCampaign(
+    name: String!
+    tenantId: String!
+    description: String
+    budget: Float
+  ): Campaign!
+
+  addCreatorToCampaign(campaignId: ID!, creatorId: ID!): Campaign!
+
+  updateCampaignStatus(id: ID!, status: CampaignStatus!): Campaign!
+
+  # Contract mutations
+  createContract(
+    campaignId: ID!
+    creatorId: ID!
+  ): Contract!
+
+  signContract(id: ID!): Contract!
+
+  # Notification mutations
+  markNotificationRead(id: ID!): Notification!
+  markAllNotificationsRead(userId: String!): Boolean!
+}
+
+# ---- Subscriptions (Real-time) ----
+type Subscription {
+  notificationAdded(userId: String!): Notification!
+  contractSigned(tenantId: String!): Contract!
+}
