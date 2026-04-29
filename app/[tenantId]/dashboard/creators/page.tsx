@@ -1,388 +1,403 @@
-"use client";
+/**
+ * Brand Creators Page (Discover)
+ * Browse and discover creators for campaigns
+ */
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Users, Eye, Heart, DollarSign } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { Metadata } from 'next';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Plus, Search, Filter, UserCheck, BarChart3, TrendingUp } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
 
-interface CreatorData {
-  profile: any;
-  analytics: any;
-  loading: boolean;
-}
+export const metadata: Metadata = {
+  title: 'Discover | Brand | AM Creator Analytics',
+  description: 'Browse and discover creators for your campaigns',
+};
 
-export default function CreatorDashboard() {
-  const [data, setData] = useState<CreatorData>({
-    profile: null,
-    analytics: null,
-    loading: true,
+export default async function BrandCreatorsPage({
+  params,
+}: {
+  params: Promise<{ tenantId: string }>;
+}) {
+  const { tenantId } = await params;
+
+  // Fetch all creator profiles
+  const creators = await prisma.creatorProfile.findMany({
+    include: {
+      user: true,
+      socialProfiles: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
   });
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch current user profile
-        const meRes = await fetch("/api/me");
-        const meData = await meRes.json();
-
-        if (!meData.profile?.id) {
-          console.error("No creator profile found");
-          return;
-        }
-
-        // Fetch analytics
-        const analyticsRes = await fetch(
-          `/api/creators/${meData.profile.id}/analytics`
-        );
-        const analyticsData = await analyticsRes.json();
-
-        setData({
-          profile: meData.profile,
-          analytics: analyticsData,
-          loading: false,
-        });
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-        setData((prev) => ({ ...prev, loading: false }));
-      }
-    }
-
-    fetchData();
-  }, []);
-
-  if (data.loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading your dashboard...</div>
-      </div>
-    );
-  }
-
-  const profile = data.profile;
-  const analytics = data.analytics;
-
-  // Transform API data for charts
-  const followerData = analytics?.followers || [];
-  const engagementData = analytics?.engagement || [];
-  const demographics = analytics?.demographics || [];
-
-  const COLORS = ["#C19A5B", "#3A3941", "#64748B", "#94A3B8"];
+  // Stats
+  const stats = {
+    total: creators.length,
+    available: creators.filter(c => (c.followerCount || 0) > 10000).length,
+    avgEngagement: creators.length > 0
+      ? creators.reduce((sum, c) => sum + (c.engagementRate || 0), 0) / creators.length
+      : 0,
+  };
 
   return (
-    <div className="space-y-8">
+    <div style={{
+      backgroundColor: '#F8F7F4',
+      minHeight: '100vh',
+      padding: '16px',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      '@media (min-width: 768px)': {
+        padding: '32px',
+      },
+    }}>
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground font-heading">
-          Welcome back, {profile?.displayName || "Creator"}
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Here&apos;s your performance overview for the last 30 days.
-        </p>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+        },
+      }}>
+        <div>
+          <h1 style={{
+            color: '#1a1a2e',
+            fontSize: '24px',
+            fontWeight: 600,
+            marginBottom: '4px',
+            '@media (min-width: 768px)': {
+              fontSize: '28px',
+            },
+          }}>
+            Discover Creators
+          </h1>
+          <p style={{
+            color: '#92400e',
+            fontSize: '14px',
+            margin: 0,
+          }}>
+            Browse and connect with creators for your campaigns
+          </p>
+        </div>
+        <button style={{
+          backgroundColor: '#92400e',
+          color: '#F8F7F4',
+          padding: '8px 16px',
+          borderRadius: '6px',
+          border: 'none',
+          fontSize: '14px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          width: '100%',
+          justifyContent: 'center',
+          '@media (min-width: 768px)': {
+            width: 'auto',
+          },
+        }}>
+          <Plus size={16} /> Post a Campaign
+        </button>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total Followers"
-          value={analytics?.summary?.totalFollowers?.toLocaleString() || "0"}
-          change="+9.3%"
-          trend="up"
-          icon={<Users className="h-5 w-5" />}
-        />
-        <MetricCard
-          title="Engagement Rate"
-          value={`${analytics?.summary?.avgEngagement?.toFixed(1) || "0"}%`}
-          change="+0.5%"
-          trend="up"
-          icon={<Heart className="h-5 w-5" />}
-        />
-        <MetricCard
-          title="Profile Views"
-          value="48.2K"
-          change="+12.1%"
-          trend="up"
-          icon={<Eye className="h-5 w-5" />}
-        />
-        <MetricCard
-          title="Est. Earnings"
-          value="$3,200"
-          change="+18.5%"
-          trend="up"
-          icon={<DollarSign className="h-5 w-5" />}
-        />
+      {/* Stats Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr',
+        gap: '12px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '16px',
+        },
+      }}>
+        <StatCard title="Total Creators" value={stats.total.toString()} color="#1a1a2e" icon={<Users size={20} />} />
+        <StatCard title="Available" value={stats.available.toString()} color="#16a34a" icon={<UserCheck size={20} />} />
+        <StatCard title="Avg Engagement" value={`${stats.avgEngagement.toFixed(1)}%`} color="#92400e" icon={<BarChart3 size={20} />} />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Follower Growth */}
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Follower Growth
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={followerData}>
-                <defs>
-                  <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#C19A5B" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#C19A5B" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e0db" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#64748B"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#64748B"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) =>
-                    `${(value / 1000).toFixed(0)}k`
-                  }
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#F8F7F4",
-                    border: "1px solid #E2E0DB",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#C19A5B"
-                  strokeWidth={2}
-                  fill="url(#gradient)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Engagement Rate */}
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Engagement Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={engagementData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e0db" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#64748B"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#64748B"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${value}%`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#F8F7F4",
-                    border: "1px solid #E2E0DB",
-                    borderRadius: "8px",
-                  }}
-                  formatter={(value) => [`${value ?? 0}%`, "Engagement"]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#3A3941"
-                  strokeWidth={2}
-                  dot={{ fill: "#3A3941", strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Filters */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          flexDirection: 'row',
+          alignItems: 'center',
+        },
+      }}>
+        <div style={{
+          position: 'relative',
+          flex: 1,
+        }}>
+          <Search size={16} style={{
+            position: 'absolute',
+            left: '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: '#6b7280',
+          }} />
+          <input
+            type="text"
+            placeholder="Search creators..."
+            style={{
+              width: '100%',
+              padding: '8px 12px 8px 36px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              fontSize: '14px',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+        <button style={{
+          backgroundColor: '#f1f5f9',
+          color: '#1a1a2e',
+          padding: '8px 16px',
+          borderRadius: '6px',
+          border: '1px solid #e5e7eb',
+          fontSize: '14px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          width: '100%',
+          justifyContent: 'center',
+          '@media (min-width: 768px)': {
+            width: 'auto',
+          },
+        }}>
+          <Filter size={16} /> Filter
+        </button>
       </div>
 
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Audience Demographics */}
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Audience Age
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={demographics}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {demographics.map((entry: any, index: number) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#F8F7F4",
-                    border: "1px solid #E2E0DB",
-                    borderRadius: "8px",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap justify-center gap-4 mt-4">
-              {demographics.map((item: any, index: number) => (
-                <div
-                  key={item.label}
-                  className="flex items-center space-x-2"
-                >
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {item.label} ({item.value}%)
+      {/* Creators Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr',
+        gap: '16px',
+        '@media (min-width: 768px)': {
+          gridTemplateColumns: 'repeat(2, 1fr)',
+        },
+        '@media (min-width: 1024px)': {
+          gridTemplateColumns: 'repeat(3, 1fr)',
+        },
+      }}>
+        {creators.map((creator) => (
+          <Card key={creator.id} style={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            overflow: 'hidden',
+          }}>
+            <CardContent style={{ padding: '16px' }}>
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                marginBottom: '12px',
+              }}>
+                {/* Avatar */}
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  backgroundColor: '#92400e',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#F8F7F4',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  flexShrink: 0,
+                }}>
+                  {(creator.user?.name?.[0] || 'C').toUpperCase()}
+                </div>
+
+                {/* Info */}
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    color: '#1a1a2e',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    marginBottom: '2px',
+                  }}>
+                    {creator.user?.name || 'Creator'}
+                  </div>
+                  <div style={{
+                    color: '#6b7280',
+                    fontSize: '12px',
+                  }}>
+                    {creator.user?.email || 'email@example.com'}
+                  </div>
+                </div>
+
+                {/* Status */}
+                <span style={{
+                  backgroundColor: (creator.followerCount || 0) > 10000 ? '#dcfce7' : '#f3f4f6',
+                  color: (creator.followerCount || 0) > 10000 ? '#166534' : '#374151',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                }}>
+                  {(creator.followerCount || 0) > 10000 ? 'Available' : 'New'}
+                </span>
+              </div>
+
+              {/* Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '8px',
+                marginBottom: '12px',
+                paddingBottom: '12px',
+                borderBottom: '1px solid #f1f5f9',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    color: '#1a1a2e',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                  }}>
+                    {Math.round((creator.followerCount || 0) / 1000)}K
+                  </div>
+                  <div style={{
+                    color: '#6b7280',
+                    fontSize: '11px',
+                  }}>
+                    Followers
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    color: '#1a1a2e',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                  }}>
+                    {creator.engagementRate || 0}%
+                  </div>
+                  <div style={{
+                    color: '#6b7280',
+                    fontSize: '11px',
+                  }}>
+                    Engagement
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    color: '#1a1a2e',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                  }}>
+                    {(creator.categories as string[])?.length || 0}
+                  </div>
+                  <div style={{
+                    color: '#6b7280',
+                    fontSize: '11px',
+                  }}>
+                    Categories
+                  </div>
+                </div>
+              </div>
+
+              {/* Categories */}
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '4px',
+                marginBottom: '12px',
+              }}>
+                {(creator.categories as string[])?.slice(0, 3).map((cat) => (
+                  <span key={cat} style={{
+                    backgroundColor: '#f3f4f6',
+                    color: '#1a1a2e',
+                    padding: '2px 8px',
+                    borderRadius: '9999px',
+                    fontSize: '11px',
+                  }}>
+                    {cat}
                   </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                )) || <span style={{ fontSize: '12px', color: '#6b7280' }}>No categories</span>}
+              </div>
 
-        {/* Top Content - Mock for now, will connect to API later */}
-        <Card className="border-border lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Top Performing Content
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                {
-                  title: "How to Build a SaaS MVP in 2026",
-                  platform: "YouTube",
-                  views: "12.4K",
-                  engagement: "8.2%",
-                },
-                {
-                  title: "3 Investment Strategies for Q2",
-                  platform: "LinkedIn",
-                  views: "8.7K",
-                  engagement: "6.5%",
-                },
-                {
-                  title: "React vs Vue: The Data",
-                  platform: "YouTube",
-                  views: "15.1K",
-                  engagement: "7.1%",
-                },
-              ].map((post, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors"
-                >
-                  <div className="flex-1">
-                    <h4 className="font-medium text-foreground">
-                      {post.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      {post.platform}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-6 text-sm">
-                    <div className="text-center">
-                      <p className="font-mono font-medium text-foreground">
-                        {post.views}
-                      </p>
-                      <p className="text-muted-foreground">Views</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-mono font-medium text-accent">
-                        {post.engagement}
-                      </p>
-                      <p className="text-muted-foreground">Engagement</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+              {/* Action */}
+              <button style={{
+                width: '100%',
+                backgroundColor: '#92400e',
+                color: '#F8F7F4',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}>
+                View Profile
+              </button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {creators.length === 0 && (
+        <Card style={{
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+        }}>
+          <CardContent style={{
+            padding: '48px 24px',
+            textAlign: 'center',
+            color: '#6b7280',
+          }}>
+            <Users size={48} style={{ color: '#d1d5db', marginBottom: '16px' }} />
+            <p style={{ fontSize: '16px', marginBottom: '8px' }}>No creators yet</p>
+            <p style={{ fontSize: '14px' }}>Creators will appear here when they join the platform.</p>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   );
 }
 
-function MetricCard({
-  title,
-  value,
-  change,
-  trend,
-  icon,
-}: {
-  title: string;
-  value: string;
-  change: string;
-  trend: "up" | "down";
-  icon: React.ReactNode;
-}) {
+function StatCard({ title, value, color, icon }: { title: string; value: string; color: string; icon: React.ReactNode }) {
   return (
-    <Card className="border-border">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-muted-foreground">
-            {title}
-          </span>
-          <div className="text-muted-foreground">{icon}</div>
+    <div style={{
+      backgroundColor: '#FFFFFF',
+      border: '1px solid #e5e7eb',
+      borderRadius: '8px',
+      padding: '16px',
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '4px',
+      }}>
+        <div style={{
+          color: '#6b7280',
+          fontSize: '12px',
+          fontWeight: 600,
+          textTransform: 'uppercase' as const,
+        }}>
+          {title}
         </div>
-        <div className="flex items-end justify-between">
-          <span className="text-3xl font-bold text-foreground font-mono">
-            {value}
-          </span>
-          <span
-            className={`text-sm font-medium ${
-              trend === "up" ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {change}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+        <div style={{ color: '#92400e' }}>{icon}</div>
+      </div>
+      <div style={{
+        color: color,
+        fontSize: '24px',
+        fontWeight: 600,
+      }}>
+        {value}
+      </div>
+    </div>
   );
 }
