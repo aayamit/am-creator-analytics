@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // i18n configuration for multi-language support
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'hi', 'ta', 'te', 'bn'],
+    localeDetection: true,
+  },
 };
 
 export default withSentryConfig(nextConfig, {
