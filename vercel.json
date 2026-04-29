@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next.js"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "NEXTAUTH_URL": "@nextauth_url",
+    "NEXTAUTH_SECRET": "@nextauth_secret",
+    "OPENSIGN_API_KEY": "@opensign_api_key",
+    "NANGO_SERVER_URL": "@nango_server_url",
+    "NANGO_SECRET_KEY": "@nango_secret_key",
+    "STRIPE_SECRET_KEY": "@stripe_secret_key",
+    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
+    "SENTRY_ORG": "@sentry_org",
+    "SENTRY_PROJECT": "@sentry_project",
+    "SENTRY_AUTH_TOKEN": "@sentry_auth_token"
+  },
+  "crons": [
+    {
+      "path": "/api/cron/check-contracts",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
