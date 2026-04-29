@@ -1,4 +1,4 @@
-import { Settings, User, Bell, CreditCard, Shield, Link2 } from 'lucide-react';
+import { Settings, User, Bell, CreditCard, Shield, Cookie, Download, Trash2 } from 'lucide-react';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/nextauth';
 import { prisma } from '@/lib/prisma';
@@ -19,6 +19,28 @@ export default async function SettingsPage({
     : [];
 
   const stripeAccount = payoutAccounts.find(acc => acc.type === 'STRIPE_CONNECT');
+
+  // Fetch DPDPA status
+  const user = session?.user?.id
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          id: true,
+          consentGiven: true,
+          consentDate: true,
+          dataProcessingAgreed: true,
+        },
+      })
+    : null;
+
+  // Fetch DPDPA requests
+  const dpdpaRequests = session?.user?.id
+    ? await prisma.dPDPRRequest.findMany({
+        where: { userId: session.user.id },
+        orderBy: { requestedAt: 'desc' },
+        take: 10,
+      })
+    : [];
 
   return (
     <div style={{
@@ -156,7 +178,6 @@ export default async function SettingsPage({
 
               <button
                 onClick={() => {
-                  // Call /api/stripe/connect to get onboarding link
                   fetch('/api/stripe/connect', { method: 'POST' })
                     .then(res => res.json())
                     .then(data => {
@@ -213,10 +234,180 @@ export default async function SettingsPage({
                   justifyContent: 'center',
                 }}
               >
-                <Link2 size={16} /> Connect Stripe Account
+                <Cookie size={16} /> Connect Stripe Account
               </button>
             </div>
           )}
+        </div>
+
+        {/* DPDPA Compliance */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          padding: '20px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <Shield size={20} style={{ color: '#92400e' }} />
+            <h3 style={{ color: '#1a1a2e', fontSize: '16px', fontWeight: 600, margin: 0 }}>
+              DPDPA Compliance
+            </h3>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Consent Status */}
+            <div style={{
+              backgroundColor: user?.consentGiven ? '#f0fdf4' : '#fef2f2',
+              border: `1px solid ${user?.consentGiven ? '#86efac' : '#fecaca'}`,
+              borderRadius: '6px',
+              padding: '12px',
+            }}>
+              <div style={{ 
+                color: user?.consentGiven ? '#16a34a' : '#dc2626', 
+                fontSize: '14px', 
+                fontWeight: 500, 
+                marginBottom: '4px' 
+              }}>
+                {user?.consentGiven ? '✅ Consent Given' : '⚠️ Consent Not Given'}
+              </div>
+              {user?.consentDate && (
+                <div style={{ color: user?.consentGiven ? '#15803d' : '#991b1b', fontSize: '12px' }}>
+                  Consent Date: {new Date(user.consentDate).toLocaleDateString('en-IN')}
+                </div>
+              )}
+            </div>
+
+            {/* DPDPA Actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                onClick={() => {
+                  fetch('/api/dpdpa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      consentGiven: true,
+                      dataProcessingAgreed: true,
+                    }),
+                  })
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.success) {
+                        alert('Consent updated successfully!');
+                        window.location.reload();
+                      }
+                    });
+                }}
+                style={{
+                  backgroundColor: '#1a1a2e',
+                  color: '#F8F7F4',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <Cookie size={16} /> Give Consent
+              </button>
+
+              <button
+                onClick={() => {
+                  fetch('/api/dpdpa', {
+                    method: 'PUT',
+                  })
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.success) {
+                        alert('Data export request submitted. You will receive an email when ready.');
+                      }
+                    });
+                }}
+                style={{
+                  backgroundColor: '#f1f5f9',
+                  color: '#1a1a2e',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <Download size={16} /> Request Data Export
+              </button>
+
+              <button
+                onClick={() => {
+                  if (confirm('Are you sure you want to request data erasure? This will delete all your data.')) {
+                    fetch('/api/dpdpa', {
+                      method: 'DELETE',
+                    })
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data.success) {
+                          alert('Data erasure request submitted. Admin approval required.');
+                        }
+                      });
+                  }
+                }}
+                style={{
+                  backgroundColor: '#fef2f2',
+                  color: '#dc2626',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid #fecaca',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <Trash2 size={16} /> Request Data Erasure
+              </button>
+            </div>
+
+            {/* DPDPA Request History */}
+            {dpdpaRequests.length > 0 && (
+              <div>
+                <h4 style={{ color: '#1a1a2e', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>
+                  Request History
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {dpdpaRequests.map(req => (
+                    <div
+                      key={req.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 12px',
+                        backgroundColor: '#f9fafb',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                      }}
+                    >
+                      <span style={{ color: '#1a1a2e' }}>{req.type} Request</span>
+                      <span style={{
+                        color: req.status === 'COMPLETED' ? '#16a34a' : '#92400e',
+                        fontWeight: 500,
+                      }}>
+                        {req.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Notification Settings */}
