@@ -1,7 +1,11 @@
+/**
+ * Notification SSE (Server-Sent Events) Route
+ * Real-time notification stream
+ */
+
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/nextauth';
-import { notificationEmitter } from '@/lib/notification-events';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -9,63 +13,53 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response('Unauthorized', { status: 401 });
   }
 
   const userId = session.user.id;
-  
-  // Create a ReadableStream for SSE
+  const encoder = new TextEncoder();
+  let closed = false;
+
   const stream = new ReadableStream({
-    start(controller) {
-      // Send initial connection established message
-      const encoder = new TextEncoder();
-      const initialData = {
-        type: 'connected',
-        unreadCount: 0, // Will be updated below
-      };
-      
-      // Get initial unread count
-      prisma.notification.count({
-        where: { userId, read: false },
-      }).then(count => {
-        initialData.unreadCount = count;
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(initialData)}\n\n`));
+    async start(controller) {
+      // Send initial unread count
+      const unreadCount = await prisma.notification.count({
+        where: { userId, isRead: false },
       });
-      
-      // Listen for new notifications for this user
-      const notificationHandler = (data: any) => {
-        if (data.userId === userId) {
-          const event = {
-            type: 'notification',
-            notification: data.notification,
-          };
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+      controller.enqueue(encoder.encode(`event: unread-count\ndata: ${JSON.stringify({ count: unreadCount })}\n\n`));
+
+      // Poll for new notifications every 5 seconds
+      const interval = setInterval(async () => {
+        if (closed) {
+          clearInterval(interval);
+          return;
         }
-      };
-      
-      notificationEmitter.on('new-notification', notificationHandler);
-      
-      // Send heartbeat every 30 seconds to keep connection alive
-      const heartbeat = setInterval(() => {
+
         try {
-          controller.enqueue(encoder.encode(`: heartbeat\n\n`));
-        } catch (e) {
-          clearInterval(heartbeat);
+          const latestNotification = await prisma.notification.findFirst({
+            where: { userId, isRead: false },
+            orderBy: { createdAt: 'desc' },
+          });
+
+          if (latestNotification) {
+            controller.enqueue(encoder.encode(`event: notification\ndata: ${JSON.stringify(latestNotification)}\n\n`));
+          }
+
+          const newUnreadCount = await prisma.notification.count({
+            where: { userId, isRead: false },
+          });
+
+          controller.enqueue(encoder.encode(`event: unread-count\ndata: ${JSON.stringify({ count: newUnreadCount })}\n\n`));
+        } catch (error) {
+          console.error('SSE error:', error);
         }
-      }, 30000);
-      
-      // Clean up on close
-      request.signal.addEventListener('abort', () => {
-        notificationEmitter.off('new-notification', notificationHandler);
-        clearInterval(heartbeat);
-        try {
-          controller.close();
-        } catch (e) {
-          // Already closed
-        }
+      }, 5000);
+
+      // Cleanup on close
+      request.signal?.addEventListener('abort', () => {
+        closed = true;
+        clearInterval(interval);
+        controller.close();
       });
     },
   });
@@ -73,7 +67,7 @@ export async function GET(request: NextRequest) {
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
+      'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
     },
   });

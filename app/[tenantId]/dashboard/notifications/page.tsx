@@ -1,250 +1,212 @@
-"use client";
+/**
+ * Notifications Page
+ * Full list of all notifications
+ */
 
-import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { Bell, CheckCheck, ArrowLeft, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
+import { Metadata } from 'next';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Bell, CheckCheck, Filter } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth/nextauth';
 
-interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  read: boolean;
-  link?: string;
-  createdAt: string;
-}
+export const metadata: Metadata = {
+  title: 'Notifications | AM Creator Analytics',
+  description: 'View all your notifications',
+};
 
-export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+export default async function NotificationsPage({
+  params,
+}: {
+  params: Promise<{ tenantId: string }>;
+}) {
+  const { tenantId } = await params;
+  const session = await getServerSession(authOptions);
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/notifications?limit=50`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setNotifications(data.notifications || []);
-      setUnreadCount(data.unreadCount || 0);
-    } catch (error) {
-      console.error("Fetch notifications error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // SSE connection for real-time updates
-  useEffect(() => {
-    fetchNotifications();
-
-    const eventSource = new EventSource("/api/notifications/stream");
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "notification") {
-          // New notification received
-          setNotifications((prev) => [data.notification, ...prev]);
-          setUnreadCount((prev) => prev + 1);
-        } else if (data.type === "connected") {
-          if (data.unreadCount !== undefined) {
-            setUnreadCount(data.unreadCount);
-          }
-        }
-      } catch (err) {
-        console.error("SSE parse error:", err);
-      }
-    };
-
-    eventSource.onerror = () => {
-      console.log("SSE connection lost, reconnecting...");
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [fetchNotifications]);
-
-  const markAsRead = async (id: string) => {
-    try {
-      setActionLoading(id);
-      const res = await fetch(`/api/notifications/${id}/read`, {
-        method: "PATCH",
-      });
-      if (!res.ok) throw new Error("Failed to mark as read");
-
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error("Mark as read error:", error);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      setActionLoading("all");
-      const res = await fetch("/api/notifications", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "mark-all-read" }),
-      });
-      if (!res.ok) throw new Error("Failed to mark all as read");
-
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch (error) {
-      console.error("Mark all as read error:", error);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleNotificationClick = (notification: Notification) => {
-    if (!notification.read) {
-      markAsRead(notification.id);
-    }
-    if (notification.link) {
-      window.location.href = notification.link;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+  if (!session?.user?.id) {
+    return <div>Unauthorized</div>;
   }
 
+  const notifications = await prisma.notification.findMany({
+    where: { userId: session.user.id },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  });
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - new Date(date).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'CONTRACT_SIGNED': return '✅';
+      case 'PAYOUT_COMPLETED': return '💰';
+      case 'CAMPAIGN_CREATED': return '📢';
+      case 'DPDPA_REQUEST': return '🔒';
+      default: return '🔔';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground flex items-center space-x-2">
-                <Bell className="h-6 w-6 text-accent" />
-                <span>Notifications</span>
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                {unreadCount} unread notification
-                {unreadCount !== 1 ? "s" : ""}
-              </p>
-            </div>
-          </div>
-
-          {unreadCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={markAllAsRead}
-              disabled={actionLoading === "all"}
-            >
-              {actionLoading === "all" ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <CheckCheck className="h-4 w-4 mr-2" />
-              )}
-              Mark all as read
-            </Button>
-          )}
+    <div style={{
+      backgroundColor: '#F8F7F4',
+      minHeight: '100vh',
+      padding: '16px',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      '@media (min-width: 768px)': {
+        padding: '32px',
+      },
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        },
+      }}>
+        <div>
+          <h1 style={{
+            color: '#1a1a2e',
+            fontSize: '24px',
+            fontWeight: 600,
+            marginBottom: '4px',
+            '@media (min-width: 768px)': {
+              fontSize: '28px',
+            },
+          }}>
+            Notifications
+          </h1>
+          <p style={{
+            color: '#92400e',
+            fontSize: '14px',
+            margin: 0,
+          }}>
+            {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+          </p>
         </div>
+        <button
+          style={{
+            backgroundColor: '#f1f5f9',
+            color: '#1a1a2e',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            border: '1px solid #e5e7eb',
+            fontSize: '14px',
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            width: '100%',
+            justifyContent: 'center',
+            '@media (min-width: 768px)': {
+              width: 'auto',
+            },
+          }}
+        >
+          <CheckCheck size={16} /> Mark All as Read
+        </button>
+      </div>
 
-        {/* Notifications List */}
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          {notifications.length === 0 ? (
-            <div className="p-12 text-center">
-              <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                No notifications yet
-              </h3>
-              <p className="text-muted-foreground">
-                When you receive notifications, they'll appear here.
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-6 hover:bg-accent/5 transition-colors cursor-pointer ${
-                    !notification.read ? "bg-accent/10" : ""
-                  }`}
-                  onClick={() => handleNotificationClick(notification)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h3 className="font-medium text-foreground">
-                          {notification.title}
-                        </h3>
-                        {!notification.read && (
-                          <Badge variant="default" className="bg-accent text-accent-foreground">
-                            New
-                          </Badge>
-                        )}
-                        <Badge variant="outline">
-                          {notification.type.replace("_", " ")}
-                        </Badge>
-                      </div>
-                      <p className="text-muted-foreground mt-2">
-                        {notification.message}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-3">
-                        {formatDistanceToNow(new Date(notification.createdAt), {
-                          addSuffix: true,
-                        })}
-                      </p>
+      {/* Notifications List */}
+      <Card style={{
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        overflow: 'hidden',
+      }}>
+        {notifications.length === 0 ? (
+          <CardContent style={{
+            padding: '48px 24px',
+            textAlign: 'center',
+            color: '#6b7280',
+          }}>
+            <Bell size={48} style={{ color: '#d1d5db', marginBottom: '16px' }} />
+            <p style={{ fontSize: '16px', marginBottom: '8px' }}>No notifications yet</p>
+            <p style={{ fontSize: '14px' }}>When you get notifications, they'll appear here.</p>
+          </CardContent>
+        ) : (
+          <div>
+            {notifications.map((notification, index) => (
+              <div
+                key={notification.id}
+                style={{
+                  padding: '16px',
+                  borderBottom: index < notifications.length - 1 ? '1px solid #f1f5f9' : 'none',
+                  backgroundColor: notification.isRead ? 'transparent' : '#f9fafb',
+                  transition: 'background-color 0.2s',
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  alignItems: 'flex-start',
+                }}>
+                  <span style={{ fontSize: '24px' }}>
+                    {getNotificationIcon(notification.type)}
+                  </span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '4px',
+                    }}>
+                      <span style={{
+                        color: '#1a1a2e',
+                        fontSize: '14px',
+                        fontWeight: notification.isRead ? 400 : 600,
+                      }}>
+                        {notification.title}
+                      </span>
+                      <span style={{
+                        color: '#9ca3af',
+                        fontSize: '11px',
+                        whiteSpace: 'nowrap' as const,
+                        marginLeft: '8px',
+                      }}>
+                        {formatTimeAgo(notification.createdAt)}
+                      </span>
                     </div>
-
-                    {!notification.read && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          markAsRead(notification.id);
-                        }}
-                        disabled={actionLoading === notification.id}
-                      >
-                        {actionLoading === notification.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <CheckCheck className="h-4 w-4" />
-                        )}
-                      </Button>
+                    <p style={{
+                      color: '#6b7280',
+                      fontSize: '13px',
+                      lineHeight: '1.5',
+                      margin: '0 0 4px 0',
+                    }}>
+                      {notification.message}
+                    </p>
+                    {!notification.isRead && (
+                      <span style={{
+                        fontSize: '11px',
+                        color: '#92400e',
+                        fontWeight: 600,
+                      }}>
+                        New
+                      </span>
                     )}
                   </div>
-
-                  {notification.link && (
-                    <div className="mt-4">
-                      <Link href={notification.link}>
-                        <Button variant="link" size="sm" className="px-0">
-                          View details →
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

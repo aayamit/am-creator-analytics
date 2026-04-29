@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { LayoutDashboard, Users, BarChart3, FileText, Settings, LogOut, TrendingUp, Link2, Bell, Contact, Wallet, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NotificationBell from '@/components/notifications/notification-bell';
+import { useSession } from 'next-auth/react';
 
 interface DashboardSidebarProps {
   role: "BRAND" | "CREATOR" | "AGENCY" | "ADMIN";
@@ -13,16 +14,17 @@ interface DashboardSidebarProps {
 }
 
 export default function DashboardSidebar({ role, tenantId, tenantName, tenantType }: DashboardSidebarProps) {
+  const { data: session } = useSession();
   const basePath = `/${tenantId}`;
-  
+
   const creatorNav = [
     { href: `${basePath}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
     { href: `${basePath}/dashboard/campaigns`, label: 'My Campaigns', icon: TrendingUp },
     { href: `${basePath}/dashboard/analytics`, label: 'Analytics', icon: BarChart3 },
     { href: `${basePath}/dashboard/media-kit`, label: 'Media Kit', icon: FileText },
     { href: `${basePath}/dashboard/connections`, label: 'Connections', icon: Link2 },
-    { href: `${basePath}/dashboard/settings/payouts`, label: 'Payout Settings', icon: Wallet },
-    { href: `${basePath}/notifications/preferences`, label: 'Notification Settings', icon: Bell },
+    { href: `${basePath}/dashboard/payouts`, label: 'Payouts', icon: Wallet },
+    { href: `${basePath}/dashboard/notifications`, label: 'Notifications', icon: Bell },
   ];
 
   const brandNav = [
@@ -32,8 +34,8 @@ export default function DashboardSidebar({ role, tenantId, tenantName, tenantTyp
     { href: `${basePath}/dashboard/creators`, label: 'Discover', icon: Users },
     { href: `${basePath}/dashboard/crm`, label: 'CRM', icon: Contact },
     { href: `${basePath}/dashboard/funding`, label: 'Funding', icon: Wallet },
+    { href: `${basePath}/dashboard/notifications`, label: 'Notifications', icon: Bell },
     { href: `${basePath}/dashboard/settings`, label: 'Settings', icon: Settings },
-    { href: `${basePath}/notifications/preferences`, label: 'Notification Settings', icon: Bell },
   ];
 
   const adminNav = [
@@ -41,6 +43,7 @@ export default function DashboardSidebar({ role, tenantId, tenantName, tenantTyp
     { href: `${basePath}/dashboard/admin/users`, label: 'Users', icon: Users },
     { href: `${basePath}/dashboard/admin/audit-logs`, label: 'Audit Logs', icon: FileText },
     { href: `${basePath}/dashboard/admin/gdpr`, label: 'GDPR', icon: Shield },
+    { href: `${basePath}/dashboard/notifications`, label: 'Notifications', icon: Bell },
   ];
 
   const navItems = role === "CREATOR" ? creatorNav : role === "BRAND" ? brandNav : adminNav;
@@ -141,8 +144,17 @@ export default function DashboardSidebar({ role, tenantId, tenantName, tenantTyp
         flexDirection: 'column',
         gap: '8px',
       }}>
-        <NotificationBell />
-        
+        {/* Notification Bell */}
+        {session?.user?.id && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            padding: '8px 0',
+          }}>
+            <NotificationBell userId={session.user.id} />
+          </div>
+        )}
+
         <Link
           href={`${basePath}/dashboard/settings`}
           style={{
@@ -162,7 +174,7 @@ export default function DashboardSidebar({ role, tenantId, tenantName, tenantTyp
           <Settings size={20} />
           Settings
         </Link>
-        
+
         <Button
           variant="ghost"
           style={{
