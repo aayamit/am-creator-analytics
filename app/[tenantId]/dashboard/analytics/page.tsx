@@ -63,6 +63,8 @@ export default async function AnalyticsPage({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         marginBottom: '32px',
+        flexWrap: 'wrap',
+        gap: '16px',
       }}>
         <div>
           <h1 style={{
@@ -78,10 +80,23 @@ export default async function AnalyticsPage({
             fontSize: '14px',
             margin: 0,
           }}>
-            Track performance and ROI across all campaigns
+            Campaign performance and creator insights
           </p>
         </div>
-        <button
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              // TODO: Call PDF export API
+              alert('PDF export coming soon!');
+            }}
+          >
+            <Download size={16} style={{ marginRight: '8px' }} />
+            Export PDF Report
+          </Button>
+        </div>
+      </div>
           style={{
             backgroundColor: '#1a1a2e',
             color: '#F8F7F4',
