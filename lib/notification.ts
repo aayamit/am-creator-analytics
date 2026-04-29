@@ -1,36 +1,93 @@
 /**
  * Notification Helper
  * Use this to create notifications from server-side code
+ * Now with Email integration (Resend + React Email)
  */
 
 import { prisma } from './prisma';
+import { sendEmail, shouldSendEmail, getTemplateForType } from './email';
+import WelcomeEmail from '@/emails/welcome';
+import ContractSignedEmail from '@/emails/contract-signed';
+import PayoutSentEmail from '@/emails/payout-sent';
 
 export interface CreateNotificationParams {
   userId: string;
-  type: 'CONTRACT_SIGNED' | 'PAYOUT_COMPLETED' | 'CAMPAIGN_CREATED' | 'DPDPA_REQUEST' | 'SYSTEM';
+  type: 'CONTRACT_SIGNED' | 'PAYOUT_SENT' | 'CAMPAIGN_INVITE' | 'WELCOME' | 'PASSWORD_RESET' | 'SYSTEM';
   title: string;
   message: string;
   link?: string;
+  metadata?: any;
 }
 
-export async function createNotification({
-  userId,
-  type,
-  title,
-  message,
-  link,
-}: CreateNotificationParams) {
+/**
+ * Create a notification AND send email if appropriate
+ */
+export async function createNotification(params: CreateNotificationParams) {
   try {
+    // 1. Create in-app notification
     const notification = await prisma.notification.create({
       data: {
-        userId,
-        type,
-        title,
-        message,
-        link,
-        isRead: false,
+        userId: params.userId,
+        type: params.type,
+        title: params.title,
+        message: params.message,
+        link: params.link,
+        metadata: params.metadata,
       },
     });
+
+    // 2. Get user email
+    const user = await prisma.user.findUnique({
+      where: { id: params.userId },
+      select: { email: true, name: true },
+    });
+
+    // 3. Send email if this notification type supports it
+    if (user?.email && shouldSendEmail(params.type)) {
+      try {
+        const templateType = getTemplateForType(params.type);
+        let emailTemplate;
+
+        // Select the right template
+        switch (templateType) {
+          case 'welcome':
+            emailTemplate = <WelcomeEmail userName={user.name || 'there'} />;
+            break;
+          case 'contract-signed':
+            emailTemplate = (
+              <ContractSignedEmail
+                creatorName={user.name || 'Creator'}
+                brandName={params.metadata?.brandName || 'Brand'}
+                campaignName={params.metadata?.campaignName || 'Campaign'}
+                contractAmount={params.metadata?.amount || 0}
+                signingBonus={params.metadata?.bonus || 0}
+              />
+            );
+            break;
+          case 'payout-sent':
+            emailTemplate = (
+              <PayoutSentEmail
+                creatorName={user.name || 'Creator'}
+                amount={params.metadata?.amount || 0}
+                transactionId={params.metadata?.transactionId || ''}
+              />
+            );
+            break;
+        }
+
+        if (emailTemplate) {
+          await sendEmail({
+            to: user.email,
+            subject: params.title,
+            react: emailTemplate,
+          });
+        }
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+        // Don't fail the notification if email fails
+      }
+    }
+
     return notification;
   } catch (error) {
     console.error('Error creating notification:', error);
@@ -39,97 +96,20 @@ export async function createNotification({
 }
 
 /**
- * Create notification for multiple users
+ * Mark notifications as read
  */
-export async function createNotificationForUsers(
-  userIds: string[],
-  params: Omit<CreateNotificationParams, 'userId'>
-) {
-  try {
-    const notifications = await prisma.$transaction(
-      userIds.map(userId =>
-        prisma.notification.create({
-          data: {
-            userId,
-            ...params,
-            isRead: false,
-          },
-        })
-      )
-    );
-    return notifications;
-  } catch (error) {
-    console.error('Error creating notifications for users:', error);
-    throw error;
-  }
-}
-
-/**
- * Notify when a contract is signed
- */
-export async function notifyContractSigned(
-  tenantId: string,
-  contractId: string,
-  creatorName: string
-) {
-  // Get all admin users in the tenant
-  const admins = await prisma.user.findMany({
-    where: {
-      tenantId,
-      role: 'ADMIN',
-    },
-  });
-
-  const userIds = admins.map(admin => admin.id);
-
-  await createNotificationForUsers(userIds, {
-    type: 'CONTRACT_SIGNED',
-    title: 'Contract Signed',
-    message: `${creatorName} has signed the contract.`,
-    link: `/${tenantId}/dashboard/contracts/${contractId}`,
+export async function markAsRead(notificationIds: string[]) {
+  return prisma.notification.updateMany({
+    where: { id: { in: notificationIds } },
+    data: { read: true },
   });
 }
 
 /**
- * Notify when a payout is completed
+ * Get unread notification count for a user
  */
-export async function notifyPayoutCompleted(
-  userId: string,
-  amount: number,
-  campaignName: string
-) {
-  await createNotification({
-    userId,
-    type: 'PAYOUT_COMPLETED',
-    title: 'Payout Completed',
-    message: `₹${amount.toLocaleString('en-IN')} payout for ${campaignName} has been completed.`,
-    link: `/${tenantId}/dashboard/earnings`,
+export async function getUnreadCount(userId: string) {
+  return prisma.notification.count({
+    where: { userId, read: false },
   });
-}
-
-/**
- * Notify when a DPDPA request is submitted
- */
-export async function notifyDPDPARequest(
-  tenantId: string,
-  requestId: string,
-  userName: string,
-  requestType: string
-) {
-  const admins = await prisma.user.findMany({
-    where: {
-      tenantId,
-      role: 'ADMIN',
-    },
-  });
-
-  await createNotificationForUsers(
-    admins.map(admin => admin.id),
-    {
-      type: 'DPDPA_REQUEST',
-      title: 'DPDPA Request Submitted',
-      message: `${userName} has submitted a ${requestType} request.`,
-      link: `/${tenantId}/dashboard/settings`,
-    }
-  );
 }

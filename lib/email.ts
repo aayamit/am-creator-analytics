@@ -1,141 +1,69 @@
-import { Resend } from "resend";
-import { createElement } from "react";
-import { Html, Head, Body, Container, Section, Heading, Text, Button, Hr, Link } from "@react-email/components";
+/**
+ * Email Utility using Resend + React Email
+ * Saves ₹8K/month vs SendGrid
+ */
 
-// Lazy initialization of Resend
-let resendInstance: Resend | null = null;
+import { Resend } from 'resend';
+import { render } from '@react-email/components';
 
-function getResend() {
-  if (!resendInstance) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.warn("RESEND_API_KEY not set. Email sending will be disabled.");
-      return null;
-    }
-    resendInstance = new Resend(apiKey);
-  }
-  return resendInstance;
-}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export interface EmailOptions {
-  to: string;
+  to: string | string[];
   subject: string;
-  html: string;
+  react?: React.ReactElement;
+  html?: string;
+  from?: string;
 }
 
-export async function sendEmail({ to, subject, html }: EmailOptions) {
+export async function sendEmail({ to, subject, react, html, from }: EmailOptions) {
   try {
-    const resend = getResend();
-    
-    if (!resend) {
-      console.warn("Resend not initialized. Skipping email send.");
-      return { success: false, error: "Email service not configured" };
+    const fromAddress = from || process.env.EMAIL_FROM || 'AM Creator Analytics <noreply@amcreatoranalytics.com>';
+
+    let htmlContent = html;
+    if (react && !html) {
+      htmlContent = await render(react as any);
     }
 
     const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "AM Creator Analytics <noreply@amcreatoranalytics.com>",
-      to,
+      from: fromAddress,
+      to: Array.isArray(to) ? to : [to],
       subject,
-      html,
+      html: htmlContent!,
     });
 
     if (error) {
-      console.error("Resend error:", error);
-      return { success: false, error };
+      console.error('Resend error:', error);
+      throw error;
     }
 
-    return { success: true, data };
+    console.log('✅ Email sent:', data?.id);
+    return data;
   } catch (error) {
-    console.error("Email sending failed:", error);
-    return { success: false, error };
+    console.error('Email sending failed:', error);
+    throw error;
   }
 }
 
-// Email verification template
-export function VerificationEmail({ name, verificationUrl }: { name: string; verificationUrl: string }) {
-  return createElement(
-    Html,
-    null,
-    createElement(Head, null),
-    createElement(
-      Body,
-      { style: { backgroundColor: "#F8F7F4", fontFamily: "Inter, sans-serif" } },
-      createElement(
-        Container,
-        { style: { maxWidth: "600px", margin: "0 auto", padding: "20px" } },
-        createElement(
-          Section,
-          { style: { backgroundColor: "#ffffff", borderRadius: "8px", padding: "40px", textAlign: "center" } },
-          createElement(Heading, { style: { color: "#3A3941", fontSize: "24px", marginBottom: "20px" } }, "Verify Your Email"),
-          createElement(Text, { style: { color: "#666666", fontSize: "16px", marginBottom: "30px" } }, `Hi ${name},`),
-          createElement(Text, { style: { color: "#666666", fontSize: "14px", marginBottom: "30px" } }, "Please verify your email address to activate your AM Creator Analytics account."),
-          createElement(
-            Button,
-            { href: verificationUrl, style: { backgroundColor: "#C19A5B", color: "#ffffff", padding: "12px 30px", borderRadius: "6px", textDecoration: "none", fontSize: "16px", fontWeight: "600" } },
-            "Verify Email"
-          ),
-          createElement(Text, { style: { color: "#999999", fontSize: "12px", marginTop: "30px" } }, "This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.")
-        )
-      )
-    )
-  );
+// Email templates mapping
+export function getTemplateForType(type: string) {
+  const templateMap: Record<string, string> = {
+    'CONTRACT_SIGNED': 'contract-signed',
+    'PAYOUT_SENT': 'payout-sent',
+    'CAMPAIGN_INVITE': 'campaign-invite',
+    'WELCOME': 'welcome',
+  };
+  return templateMap[type] || 'welcome';
 }
 
-// Password reset email template
-export function PasswordResetEmail({ name, resetUrl }: { name: string; resetUrl: string }) {
-  return createElement(
-    Html,
-    null,
-    createElement(Head, null),
-    createElement(
-      Body,
-      { style: { backgroundColor: "#F8F7F4", fontFamily: "Inter, sans-serif" } },
-      createElement(
-        Container,
-        { style: { maxWidth: "600px", margin: "0 auto", padding: "20px" } },
-        createElement(
-          Section,
-          { style: { backgroundColor: "#ffffff", borderRadius: "8px", padding: "40px", textAlign: "center" } },
-          createElement(Heading, { style: { color: "#3A3941", fontSize: "24px", marginBottom: "20px" } }, "Reset Your Password"),
-          createElement(Text, { style: { color: "#666666", fontSize: "16px", marginBottom: "30px" } }, `Hi ${name},`),
-          createElement(Text, { style: { color: "#666666", fontSize: "14px", marginBottom: "30px" } }, "Click the button below to reset your password. This link expires in 1 hour."),
-          createElement(
-            Button,
-            { href: resetUrl, style: { backgroundColor: "#C19A5B", color: "#ffffff", padding: "12px 30px", borderRadius: "6px", textDecoration: "none", fontSize: "16px", fontWeight: "600" } },
-            "Reset Password"
-          ),
-          createElement(Text, { style: { color: "#999999", fontSize: "12px", marginTop: "30px" } }, "If you didn't request a password reset, you can safely ignore this email.")
-        )
-      )
-    )
-  );
-}
-
-// Welcome email template
-export function WelcomeEmail({ name }: { name: string }) {
-  return createElement(
-    Html,
-    null,
-    createElement(Head, null),
-    createElement(
-      Body,
-      { style: { backgroundColor: "#F8F7F4", fontFamily: "Inter, sans-serif" } },
-      createElement(
-        Container,
-        { style: { maxWidth: "600px", margin: "0 auto", padding: "20px" } },
-        createElement(
-          Section,
-          { style: { backgroundColor: "#ffffff", borderRadius: "8px", padding: "40px", textAlign: "center" } },
-          createElement(Heading, { style: { color: "#3A3941", fontSize: "24px", marginBottom: "20px" } }, "Welcome to AM Creator Analytics! 🎉"),
-          createElement(Text, { style: { color: "#666666", fontSize: "16px", marginBottom: "20px" } }, `Hi ${name},`),
-          createElement(Text, { style: { color: "#666666", fontSize: "14px", marginBottom: "30px", lineHeight: "1.6" } }, "Your email has been verified! You now have full access to AM Creator Analytics. Start by exploring creator discovery or setting up your media kit."),
-          createElement(
-            Button,
-            { href: `${process.env.NEXTAUTH_URL}/dashboard`, style: { backgroundColor: "#C19A5B", color: "#ffffff", padding: "12px 30px", borderRadius: "6px", textDecoration: "none", fontSize: "16px", fontWeight: "600" } },
-            "Go to Dashboard"
-          )
-        )
-      )
-    )
-  );
+// Check if email should be sent for notification type
+export function shouldSendEmail(type: string): boolean {
+  const emailTypes = [
+    'CONTRACT_SIGNED',
+    'PAYOUT_SENT',
+    'CAMPAIGN_INVITE',
+    'WELCOME',
+    'PASSWORD_RESET',
+  ];
+  return emailTypes.includes(type);
 }
