@@ -31,6 +31,7 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^1.11.0",
+    "minio": "^8.0.7",
     "next": "^15.5.15",
     "next-auth": "^4.24.14",
     "prisma": "5.22.0",

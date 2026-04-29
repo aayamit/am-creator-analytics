@@ -8,54 +8,46 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: am_creator_analytics
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  app:
-    build: .
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/am_creator_analytics?schema=public
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-secret}
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
-    depends_on:
-      db:
-        condition: service_healthy
-    command: >
-      sh -c "npx prisma migrate deploy && npm start"
-
-  # Nango self-hosted integration platform
   nango:
     image: nango/nango:latest
     restart: unless-stopped
     ports:
-      - "3003:3003"   # Nango server
-      - "3004:3004"   # Nango UI
+      - "3003:3003"
     environment:
-      - NANGO_DB_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/nango?schema=public
-      - NANGO_SECRET_KEY=${NANGO_SECRET_KEY:-nango-secret-key-change-in-prod}
-      - NANGO_ENCRYPTION_KEY=${NANGO_ENCRYPTION_KEY:-nango-encryption-key-change-in-prod}
-      - NANGO_ADMIN_KEY=${NANGO_ADMIN_KEY:-nango-admin-key-change-in-prod}
-      - NANGO_CALLBACK_URL=http://localhost:3003/oauth/callback
-      - NANGO_FRONTEND_URL=http://localhost:3004
-      - NANGO_SERVER_URL=http://localhost:3003
+      NANGO_SECRET_KEY: ${NANGO_SECRET_KEY:-}
+      NANGO_ENVIRONMENT: production
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+
+  # MinIO - Self-hosted S3-compatible storage (saves ₹10K/month vs Cloudinary)
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
     volumes:
-      - nango_data:/tmp/nango
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
 volumes:
   postgres_data:
-  nango_data:
+  minio_data:
