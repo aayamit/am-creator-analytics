@@ -1,9 +1,11 @@
 import { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Users, TrendingUp, FileText, Plus, Send, BarChart3 } from 'lucide-react';
-import { prisma } from '@/lib/prisma';
 import RevenueMarginChart from '@/components/dashboard/charts';
 import CreatorGrowthChart from '@/components/dashboard/charts';
+import RevenueForecast from '@/components/analytics/revenue-forecast';
+import RetentionCurve from '@/components/analytics/retention-curve';
+import { prisma } from '@/lib/prisma';
 
 export const metadata: Metadata = {
   title: 'Agency Command Center | AM Creator Analytics',
