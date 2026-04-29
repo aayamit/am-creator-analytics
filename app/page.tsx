@@ -392,16 +392,48 @@ export default function LandingPage() {
         }}>
           Join 500+ creators and brands already using AM Creator Analytics.
         </p>
-        <Link href="/signup">
-          <Button size="lg" style={{
-            backgroundColor: '#1a1a2e',
-            color: '#F8F7F4',
-            fontSize: '18px',
-            padding: '16px 48px',
-          }}>
-            Get Started Free <ArrowRight size={20} style={{ marginLeft: '8px' }} />
+        <div style={{
+          display: 'flex',
+          gap: '16px',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+        }}>
+          <Link href="/signup">
+            <Button size="lg" style={{
+              backgroundColor: '#1a1a2e',
+              color: '#F8F7F4',
+              fontSize: '18px',
+              padding: '16px 48px',
+            }}>
+              Get Started Free <ArrowRight size={20} style={{ marginLeft: '8px' }} />
+            </Button>
+          </Link>
+          <Button 
+            size="lg" 
+            variant="outline"
+            style={{
+              borderColor: '#1a1a2e',
+              color: '#1a1a2e',
+              fontSize: '18px',
+              padding: '16px 48px',
+            }}
+            onClick={() => {
+              fetch('/api/export/pitch-deck', { method: 'POST' })
+                .then(res => res.blob())
+                .then(blob => {
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'AM-Creator-Analytics-Pitch-Deck.pptx';
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                });
+            }}
+          >
+            <Download size={20} style={{ marginRight: '8px' }} />
+            Export Pitch Deck
           </Button>
-        </Link>
+        </div>
       </section>
 
       {/* Footer */}
