@@ -1,221 +1,292 @@
-"use client";
+/**
+ * Admin Audit Logs Page
+ * Track all admin actions for compliance
+ */
 
-import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Search, Loader2, FileText } from "lucide-react";
+import { Metadata } from 'next';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileText, Search, Filter, Shield, Download } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth/nextauth';
 
-interface AuditLog {
-  id: string;
-  action: string;
-  resource: string;
-  timestamp: string;
-  metadata: any;
-  user: {
-    name: string;
-    email: string;
-    role: string;
-  };
-}
+export const metadata: Metadata = {
+  title: 'Audit Logs | Admin | AM Creator Analytics',
+  description: 'Track admin actions and system changes',
+};
 
-export default function AdminAuditLogsPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [actionFilter, setActionFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+export default async function AdminAuditLogsPage({
+  params,
+}: {
+  params: Promise<{ tenantId: string }>;
+}) {
+  const { tenantId } = await params;
+  const session = await getServerSession(authOptions);
 
-  const fetchLogs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      params.set("page", page.toString());
-      if (search) params.set("search", search);
-      if (actionFilter) params.set("action", actionFilter);
-
-      // Mock data - in production, fetch from /api/admin/audit-logs
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const mockLogs: AuditLog[] = [
-        {
-          id: "1",
-          action: "CREATE_CAMPAIGN",
-          resource: "Campaign:123",
-          timestamp: new Date().toISOString(),
-          metadata: { budget: 5000 },
-          user: { name: "John Brand", email: "john@example.com", role: "BRAND" },
-        },
-        {
-          id: "2",
-          action: "UPDATE_USER_ROLE",
-          resource: "User:456",
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          metadata: { oldRole: "CREATOR", newRole: "ADMIN" },
-          user: { name: "Admin", email: "admin@example.com", role: "ADMIN" },
-        },
-        {
-          id: "3",
-          action: "GDPR_EXPORT",
-          resource: "User:789",
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          metadata: { exportedBy: "admin@example.com" },
-          user: { name: "Admin", email: "admin@example.com", role: "ADMIN" },
-        },
-      ];
-      setLogs(mockLogs);
-      setTotalPages(1);
-    } catch (error) {
-      console.error("Failed to fetch audit logs:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, actionFilter]);
-
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
-
-  const getActionColor = (action: string) => {
-    if (action.includes("CREATE") || action.includes("UPDATE")) return "bg-blue-100 text-blue-800";
-    if (action.includes("DELETE") || action.includes("GDPR")) return "bg-red-100 text-red-800";
-    if (action.includes("EXPORT")) return "bg-green-100 text-green-800";
-    return "bg-gray-100 text-gray-800";
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+  if (!session?.user?.id) {
+    return <div>Unauthorized</div>;
   }
 
+  // Fetch audit logs (using notifications as audit trail for now)
+  const logs = await prisma.notification.findMany({
+    where: {
+      userId: { in: await prisma.user.findMany({
+        where: { tenantId, role: 'ADMIN' },
+        select: { id: true },
+      }).then(users => users.map(u => u.id))),
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  });
+
+  const getActionIcon = (type: string) => {
+    if (type.includes('CONTRACT')) return '📄';
+    if (type.includes('PAYOUT')) return '💰';
+    if (type.includes('DPDPA')) return '🔒';
+    if (type.includes('CAMPAIGN')) return '📢';
+    return '🔔';
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Link href="/admin">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-[#3A3941]">
-                Audit Logs
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Track all admin and system actions
-              </p>
-            </div>
-          </div>
-          <Button onClick={fetchLogs} variant="outline" size="sm">
-            <Loader2 className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+    <div style={{
+      backgroundColor: '#F8F7F4',
+      minHeight: '100vh',
+      padding: '16px',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      '@media (min-width: 768px)': {
+        padding: '32px',
+      },
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+        },
+      }}>
+        <div>
+          <h1 style={{
+            color: '#1a1a2e',
+            fontSize: '24px',
+            fontWeight: 600,
+            marginBottom: '4px',
+            '@media (min-width: 768px)': {
+              fontSize: '28px',
+            },
+          }}>
+            Audit Logs
+          </h1>
+          <p style={{
+            color: '#92400e',
+            fontSize: '14px',
+            margin: 0,
+          }}>
+            Track all admin actions and system changes
+          </p>
         </div>
-
-        {/* Filters */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by action or resource..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Select value={actionFilter} onValueChange={(value) => setActionFilter(value || "")}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by action" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All Actions</SelectItem>
-              <SelectItem value="CREATE">Create</SelectItem>
-              <SelectItem value="UPDATE">Update</SelectItem>
-              <SelectItem value="DELETE">Delete</SelectItem>
-              <SelectItem value="GDPR">GDPR</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Logs List */}
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle className="text-[#3A3941]">
-              Logs ({logs.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="p-4 border border-border rounded-lg"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-[#C19A5B]" />
-                      <Badge className={getActionColor(log.action)}>
-                        {log.action.replace("_", " ")}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {log.resource}
-                      </span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(log.timestamp).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">By: </span>
-                      <span className="text-[#3A3941]">{log.user.name}</span>
-                      <span className="text-muted-foreground"> ({log.user.role})</span>
-                    </div>
-                    {log.metadata && (
-                      <div className="text-xs text-muted-foreground">
-                        {JSON.stringify(log.metadata).slice(0, 100)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <span className="flex items-center px-4">
-                  Page {page} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <button style={{
+          backgroundColor: '#f1f5f9',
+          color: '#1a1a2e',
+          padding: '8px 16px',
+          borderRadius: '6px',
+          border: '1px solid #e5e7eb',
+          fontSize: '14px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          width: '100%',
+          justifyContent: 'center',
+          '@media (min-width: 768px)': {
+            width: 'auto',
+          },
+        }}>
+          <Download size={16} /> Export Logs
+        </button>
       </div>
+
+      {/* Filters */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          flexDirection: 'row',
+          alignItems: 'center',
+        },
+      }}>
+        <div style={{
+          position: 'relative',
+          flex: 1,
+        }}>
+          <Search size={16} style={{
+            position: 'absolute',
+            left: '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: '#6b7280',
+          }} />
+          <input
+            type="text"
+            placeholder="Search logs..."
+            style={{
+              width: '100%',
+              padding: '8px 12px 8px 36px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              fontSize: '14px',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+        <button style={{
+          backgroundColor: '#f1f5f9',
+          color: '#1a1a2e',
+          padding: '8px 16px',
+          borderRadius: '6px',
+          border: '1px solid #e5e7eb',
+          fontSize: '14px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          width: '100%',
+          justifyContent: 'center',
+          '@media (min-width: 768px)': {
+            width: 'auto',
+          },
+        }}>
+          <Filter size={16} /> Filter
+        </button>
+      </div>
+
+      {/* Logs Table */}
+      <Card style={{
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        overflow: 'hidden',
+      }}>
+        <CardHeader>
+          <CardTitle style={{ color: '#1a1a2e', fontSize: '16px', fontWeight: 600 }}>
+            Recent Activity ({logs.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent style={{ padding: 0 }}>
+          {logs.length === 0 ? (
+            <div style={{
+              padding: '48px 24px',
+              textAlign: 'center',
+              color: '#6b7280',
+            }}>
+              <Shield size={48} style={{ color: '#d1d5db', marginBottom: '16px' }} />
+              <p style={{ fontSize: '16px', marginBottom: '8px' }}>No audit logs yet</p>
+              <p style={{ fontSize: '14px' }}>Admin actions will appear here.</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                minWidth: '800px',
+              }}>
+                <thead>
+                  <tr style={{
+                    backgroundColor: '#f9fafb',
+                    borderBottom: '2px solid #e5e7eb',
+                  }}>
+                    <th style={thStyle}>Action</th>
+                    <th style={thStyle}>Details</th>
+                    <th style={thStyle}>User</th>
+                    <th style={thStyle}>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((log) => (
+                    <tr key={log.id} style={{
+                      borderBottom: '1px solid #f1f5f9',
+                    }}>
+                      <td style={tdStyle}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}>
+                          <span style={{ fontSize: '16px' }}>
+                            {getActionIcon(log.type)}
+                          </span>
+                          <span style={{
+                            color: '#1a1a2e',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                          }}>
+                            {log.type.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          color: '#374151',
+                          fontSize: '14px',
+                        }}>
+                          {log.title}
+                        </span>
+                        <div style={{
+                          color: '#6b7280',
+                          fontSize: '12px',
+                          marginTop: '2px',
+                        }}>
+                          {log.message}
+                        </div>
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          color: '#1a1a2e',
+                          fontSize: '14px',
+                        }}>
+                          {log.userId.substring(0, 8)}...
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          color: '#6b7280',
+                          fontSize: '12px',
+                        }}>
+                          {new Date(log.createdAt).toLocaleString('en-IN')}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
+const thStyle = {
+  textAlign: 'left' as const,
+  padding: '12px 16px',
+  color: '#1a1a2e',
+  fontSize: '12px',
+  fontWeight: 600,
+  textTransform: 'uppercase' as const,
+};
+
+const tdStyle = {
+  padding: '12px 16px',
+  color: '#1a1a2e',
+  fontSize: '14px',
+};
