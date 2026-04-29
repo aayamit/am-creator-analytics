@@ -5,7 +5,7 @@
 
 import { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link2, Plus, CheckCircle, AlertCircle, Instagram, Youtube, TikTok, Linkedin } from 'lucide-react';
+import { Link2, Plus, CheckCircle, AlertCircle, User, Video, Music } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/nextauth';
@@ -47,14 +47,14 @@ export default async function CreatorConnectionsPage({
     {
       name: 'YouTube',
       key: 'YOUTUBE',
-      icon: <Youtube size={20} />,
+      icon: <YoutubeIcon size={20} />,
       connected: socialProfiles.some(p => p.platform === 'YOUTUBE'),
       profile: socialProfiles.find(p => p.platform === 'YOUTUBE'),
     },
     {
       name: 'TikTok',
       key: 'TIKTOK',
-      icon: <TikTok size={20} />,
+      icon: <Music size={20} />,
       connected: socialProfiles.some(p => p.platform === 'TIKTOK'),
       profile: socialProfiles.find(p => p.platform === 'TIKTOK'),
     },

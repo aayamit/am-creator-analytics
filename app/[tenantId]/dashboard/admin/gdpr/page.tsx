@@ -28,12 +28,18 @@ export default async function AdminGDPRPage({
   }
 
   // Fetch DPDPA requests (using notifications as placeholder)
+  // First get user IDs for this tenant
+  const tenantUsers = await prisma.user.findMany({
+    where: { tenantId },
+    select: { id: true },
+  });
+  const tenantUserIds = tenantUsers.map(u => u.id);
+
+  // Then fetch requests
   const requests = await prisma.dPDPARequest.findMany({
-    where: { userId: { in: await prisma.user.findMany({
-      where: { tenantId },
-      select: { id: true },
-    }).then(users => users.map(u => u.id)) },
+    where: { userId: { in: tenantUserIds } },
     orderBy: { createdAt: 'desc' },
+    take: 100,
   });
 
   // Stats

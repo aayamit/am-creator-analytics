@@ -10,22 +10,22 @@ export default async function AnalyticsPage({
 }) {
   const { tenantId } = await params;
 
-  // Fetch real data
-  const [campaigns, contracts, creators] = await Promise.all([
-    prisma.campaign.findMany({
-      where: { tenantId },
-      include: { _count: { select: { creators: true } },
-    }),
-    prisma.contract.findMany({
-      where: { campaignCreator: { campaign: { tenantId } },
-      include: { campaignCreator: { include: { creator: true } },
-    }),
-    prisma.creatorProfile.findMany({
-      where: { user: { tenantId } },
-      take: 10,
-      orderBy: { followerCount: 'desc' },
-    }),
-  ]);
+  // Fetch real data - separate calls to avoid parsing issues
+  const campaigns = await prisma.campaign.findMany({
+    where: { tenantId },
+    include: { _count: { select: { creators: true } } },
+  });
+
+  const contracts = await prisma.contract.findMany({
+    where: { campaignCreator: { campaign: { tenantId } },
+    include: { campaignCreator: { include: { creator: true } } },
+  });
+
+  const creators = await prisma.creatorProfile.findMany({
+    where: { user: { tenantId } },
+    take: 10,
+    orderBy: { followerCount: 'desc' },
+  });
 
   // Calculate KPIs
   const totalViews = creators.reduce((sum, c) => sum + (c.followerCount || 0) * 5, 0); // Mock: 5 views per follower

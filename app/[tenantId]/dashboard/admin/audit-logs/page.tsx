@@ -28,13 +28,16 @@ export default async function AdminAuditLogsPage({
   }
 
   // Fetch audit logs (using notifications as audit trail for now)
+  // First get admin user IDs
+  const adminUsers = await prisma.user.findMany({
+    where: { tenantId, role: 'ADMIN' },
+    select: { id: true },
+  });
+  const adminUserIds = adminUsers.map(u => u.id);
+
+  // Then fetch logs
   const logs = await prisma.notification.findMany({
-    where: {
-      userId: { in: await prisma.user.findMany({
-        where: { tenantId, role: 'ADMIN' },
-        select: { id: true },
-      }).then(users => users.map(u => u.id))),
-    },
+    where: { userId: { in: adminUserIds } },
     orderBy: { createdAt: 'desc' },
     take: 100,
   });

@@ -376,14 +376,5 @@ function DetailRow({ label, value, isStatus }: { label: string; value: string; i
   );
 }
 
-function ArrowLeft({ size }: { size: number }) {
-  return <span style={{ fontSize: size }}>←</span>;
-}
-
-function Send({ size }: { size: number }) {
-  return <span style={{ fontSize: size }}>📤</span>;
-}
-
-function Download({ size }: { size: number }) {
-  return <span style={{ fontSize: size }}>↓</span>;
-}
+// ArrowLeft icon removed - using lucide-react import
+// Icon functions removed - using lucide-react imports

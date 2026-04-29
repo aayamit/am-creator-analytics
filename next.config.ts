@@ -6,9 +6,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    turbopack: false, // Disable Turbopack - use stable Webpack
-  },
   images: {
     remotePatterns: [
       {

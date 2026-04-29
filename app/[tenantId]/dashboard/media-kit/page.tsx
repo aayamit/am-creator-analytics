@@ -5,7 +5,7 @@
 
 import { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Instagram, Youtube, TikTok, Linkedin, Download, Share2, Camera, BarChart3, Users, TrendingUp } from 'lucide-react';
+import { User, Camera, Download, Share2, Video, BarChart3, Users, TrendingUp, Music } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/nextauth';
@@ -228,12 +228,12 @@ export default async function MediaKitPage({
                     )}
                     {youtubeProfile && (
                       <a href={youtubeProfile.profileUrl || '#'} target="_blank" rel="noopener noreferrer" style={{ color: '#92400e' }}>
-                        <Youtube size={20} />
+                        <YoutubeIcon size={20} />
                       </a>
                     )}
                     {tiktokProfile && (
                       <a href={tiktokProfile.profileUrl || '#'} target="_blank" rel="noopener noreferrer" style={{ color: '#92400e' }}>
-                        <TikTok size={20} />
+                        <Music size={20} />
                       </a>
                     )}
                     {linkedinProfile && (

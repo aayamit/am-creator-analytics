@@ -16,20 +16,20 @@ export default async function BrandDashboardPage({
 }) {
   const { tenantId } = await params;
 
-  // Fetch real data
-  const [campaigns, contracts, creators] = await Promise.all([
-    prisma.campaign.findMany({
-      where: { tenantId },
-      include: { _count: { select: { creators: true } },
-    }),
-    prisma.contract.findMany({
-      where: { campaignCreator: { campaign: { tenantId } },
-      include: { campaignCreator: { include: { campaign: true } },
-    }),
-    prisma.creatorProfile.findMany({
-      where: { user: { tenantId } },
-    }),
-  ]);
+  // Fetch real data - separate calls to avoid parsing issues
+  const campaigns = await prisma.campaign.findMany({
+    where: { tenantId },
+    include: { _count: { select: { creators: true } } },
+  });
+
+  const contracts = await prisma.contract.findMany({
+    where: { campaignCreator: { campaign: { tenantId } },
+    include: { campaignCreator: { include: { campaign: true } },
+  });
+
+  const creators = await prisma.creatorProfile.findMany({
+    where: { user: { tenantId } },
+  });
 
   // Calculate KPIs
   const activeCampaigns = campaigns.filter(c => c.status === 'ACTIVE').length;

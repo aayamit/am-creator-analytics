@@ -16,19 +16,19 @@ export default async function CreatorDashboardPage({
 }) {
   const { tenantId } = await params;
 
-  // Fetch real data
-  const [campaigns, contracts, creatorProfile] = await Promise.all([
-    prisma.campaign.findMany({
-      where: { tenantId, status: 'ACTIVE' },
-    }),
-    prisma.contract.findMany({
-      where: { campaignCreator: { creator: { user: { tenantId } } },
-      include: { campaignCreator: { include: { campaign: true } },
-    }),
-    prisma.creatorProfile.findFirst({
-      where: { user: { tenantId } },
-    }),
-  ]);
+  // Fetch real data - separate calls to avoid parsing issues
+  const campaigns = await prisma.campaign.findMany({
+    where: { tenantId, status: 'ACTIVE' },
+  });
+
+  const contracts = await prisma.contract.findMany({
+    where: { campaignCreator: { creator: { user: { tenantId } } },
+    include: { campaignCreator: { include: { campaign: true } },
+  });
+
+  const creatorProfile = await prisma.creatorProfile.findFirst({
+    where: { user: { tenantId } },
+  });
 
   const activeCampaigns = campaigns.length;
   const totalEarnings = contracts.reduce((sum, c) => sum + (c.amount || 0), 0);
