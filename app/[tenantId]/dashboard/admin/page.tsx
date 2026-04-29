@@ -24,7 +24,7 @@ export default async function AgencyDashboardPage({
       include: { _count: { select: { creators: true } } },
     }),
     prisma.contract.findMany({
-      where: { campaignCreator: { campaign: { tenantId } },
+      where: { campaignCreator: { campaign: { tenantId } } },
       include: { campaignCreator: { include: { creator: true } } },
     }),
     prisma.creatorProfile.findMany({
@@ -70,17 +70,46 @@ export default async function AgencyDashboardPage({
     <div style={{
       backgroundColor: '#F8F7F4',
       minHeight: '100vh',
-      padding: '32px',
+      padding: '16px',
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      '@media (min-width: 768px)': {
+        padding: '32px',
+      },
     }}>
       {/* Header */}
-      <header style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+      <header style={{
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          marginBottom: '32px',
+        },
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          '@media (min-width: 768px)': {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          },
+        }}>
           <div>
-            <h1 style={{ color: '#1a1a2e', fontSize: '28px', fontWeight: 600, marginBottom: '4px' }}>
+            <h1 style={{
+              color: '#1a1a2e',
+              fontSize: '24px',
+              fontWeight: 600,
+              marginBottom: '4px',
+              '@media (min-width: 768px)': {
+                fontSize: '28px',
+              },
+            }}>
               Agency Command Center
             </h1>
-            <p style={{ color: '#92400e', fontSize: '14px', margin: 0 }}>
+            <p style={{
+              color: '#92400e',
+              fontSize: '14px',
+              margin: 0,
+            }}>
               Multi-tenant overview • {new Date().toLocaleDateString('en-IN')} • Tenant: {tenantId}
             </p>
           </div>
@@ -96,6 +125,11 @@ export default async function AgencyDashboardPage({
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
+              width: '100%',
+              justifyContent: 'center',
+              '@media (min-width: 768px)': {
+                width: 'auto',
+              },
             }}
           >
             <Plus size={16} /> New Campaign
@@ -106,9 +140,14 @@ export default async function AgencyDashboardPage({
       {/* KPI Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: '16px',
-        marginBottom: '32px',
+        gridTemplateColumns: '1fr',
+        gap: '12px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '16px',
+          marginBottom: '32px',
+        },
       }}>
         <KPICard
           title="Total Revenue"
@@ -143,9 +182,14 @@ export default async function AgencyDashboardPage({
       {/* Charts Row */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '24px',
-        marginBottom: '32px',
+        gridTemplateColumns: '1fr',
+        gap: '16px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          gridTemplateColumns: '1fr 1fr',
+          gap: '24px',
+          marginBottom: '32px',
+        },
       }}>
         {/* Revenue & Margin Chart */}
         <Card style={{
@@ -183,9 +227,14 @@ export default async function AgencyDashboardPage({
       {/* Bottom Row: Top Creators + Activity */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1.5fr 1fr',
-        gap: '24px',
-        marginBottom: '32px',
+        gridTemplateColumns: '1fr',
+        gap: '16px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          gridTemplateColumns: '1.5fr 1fr',
+          gap: '24px',
+          marginBottom: '32px',
+        },
       }}>
         {/* Top Creators Table */}
         <Card style={{
@@ -198,8 +247,8 @@ export default async function AgencyDashboardPage({
               Top Creators by Revenue
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <CardContent style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                   <th style={{ textAlign: 'left', padding: '12px 8px', color: '#1a1a2e', fontSize: '12px', fontWeight: 600 }}>Creator</th>
@@ -253,7 +302,7 @@ export default async function AgencyDashboardPage({
                   key={activity.id}
                   style={{
                     display: 'flex',
-                    alignItems: 'center',
+                    alignItems: 'flex-start',
                     gap: '12px',
                     padding: '8px 0',
                     borderBottom: '1px solid #f1f5f9',
@@ -285,8 +334,11 @@ export default async function AgencyDashboardPage({
         <CardContent>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: '1fr',
             gap: '12px',
+            '@media (min-width: 768px)': {
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            },
           }}>
             <button
               style={{

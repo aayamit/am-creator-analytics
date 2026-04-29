@@ -50,17 +50,46 @@ export default async function BrandDashboardPage({
     <div style={{
       backgroundColor: '#F8F7F4',
       minHeight: '100vh',
-      padding: '32px',
+      padding: '16px',
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      '@media (min-width: 768px)': {
+        padding: '32px',
+      },
     }}>
       {/* Header */}
-      <header style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+      <header style={{
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          marginBottom: '32px',
+        },
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          '@media (min-width: 768px)': {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          },
+        }}>
           <div>
-            <h1 style={{ color: '#1a1a2e', fontSize: '28px', fontWeight: 600, marginBottom: '4px' }}>
+            <h1 style={{
+              color: '#1a1a2e',
+              fontSize: '24px',
+              fontWeight: 600,
+              marginBottom: '4px',
+              '@media (min-width: 768px)': {
+                fontSize: '28px',
+              },
+            }}>
               Brand Dashboard
             </h1>
-            <p style={{ color: '#92400e', fontSize: '14px', margin: 0 }}>
+            <p style={{
+              color: '#92400e',
+              fontSize: '14px',
+              margin: 0,
+            }}>
               Campaign overview & ROI analytics
             </p>
           </div>
@@ -76,6 +105,11 @@ export default async function BrandDashboardPage({
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
+              width: '100%',
+              justifyContent: 'center',
+              '@media (min-width: 768px)': {
+                width: 'auto',
+              },
             }}
           >
             <Plus size={16} /> New Campaign
@@ -86,9 +120,14 @@ export default async function BrandDashboardPage({
       {/* KPI Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: '16px',
-        marginBottom: '32px',
+        gridTemplateColumns: '1fr',
+        gap: '12px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '16px',
+          marginBottom: '32px',
+        },
       }}>
         <KPICard title="Active Campaigns" value={activeCampaigns.toString()} change="+3" icon={<FileText size={20} />} accentColor="#1a1a2e" />
         <KPICard title="Total Spend" value={`₹${(totalSpend / 100000).toFixed(1)}L`} change="+15%" icon={<DollarSign size={20} />} accentColor="#92400e" />
@@ -101,7 +140,11 @@ export default async function BrandDashboardPage({
         backgroundColor: '#FFFFFF',
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
-        marginBottom: '32px',
+        marginBottom: '24px',
+        '@media (min-width: 768px)': {
+          marginBottom: '32px',
+        },
+        overflow: 'hidden',
       }}>
         <CardHeader>
           <CardTitle style={{ color: '#1a1a2e', fontSize: '16px', fontWeight: 600 }}>
@@ -118,7 +161,7 @@ export default async function BrandDashboardPage({
         backgroundColor: '#FFFFFF',
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
-        padding: '48px',
+        padding: '24px',
         textAlign: 'center',
         color: '#6b7280',
       }}>

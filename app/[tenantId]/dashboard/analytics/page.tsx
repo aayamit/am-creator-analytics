@@ -1,16 +1,56 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, TrendingUp, DollarSign, Download } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import RevenueMarginChart from '@/components/dashboard/charts';
 
-export default function AnalyticsPage({
+export default async function AnalyticsPage({
   params,
 }: {
   params: Promise<{ tenantId: string }>;
 }) {
-  const topCreators = [
-    { name: 'Priya Sharma', followers: '245K', views: '1.2M', engagement: '4.8%', roi: '312%' },
-    { name: 'Arjun Kapoor', followers: '189K', views: '0.9M', engagement: '3.2%', roi: '245%' },
-    { name: 'Tech Reviews', followers: '512K', views: '2.5M', engagement: '5.1%', roi: '420%' },
-    { name: 'Fashion Forward', followers: '98K', views: '0.6M', engagement: '6.8%', roi: '180%' },
+  const { tenantId } = await params;
+
+  // Fetch real data
+  const [campaigns, contracts, creators] = await Promise.all([
+    prisma.campaign.findMany({
+      where: { tenantId },
+      include: { _count: { select: { creators: true } },
+    }),
+    prisma.contract.findMany({
+      where: { campaignCreator: { campaign: { tenantId } },
+      include: { campaignCreator: { include: { creator: true } },
+    }),
+    prisma.creatorProfile.findMany({
+      where: { user: { tenantId } },
+      take: 10,
+      orderBy: { followerCount: 'desc' },
+    }),
+  ]);
+
+  // Calculate KPIs
+  const totalViews = creators.reduce((sum, c) => sum + (c.followerCount || 0) * 5, 0); // Mock: 5 views per follower
+  const avgEngagement = 4.2; // TODO: calculate from real data
+  const totalSpend = contracts.reduce((sum, c) => sum + (c.amount || 0), 0);
+  const avgROI = 312; // TODO: calculate from campaign ROI
+
+  // Chart data (mock for now, replace with real aggregation)
+  const chartData = [
+    { month: 'Jan', revenue: 420000, margin: 84000, creators: 45 },
+    { month: 'Feb', revenue: 380000, margin: 76000, creators: 52 },
+    { month: 'Mar', revenue: 510000, margin: 102000, creators: 61 },
+    { month: 'Apr', revenue: 475000, margin: 95000, creators: 58 },
+    { month: 'May', revenue: 580000, margin: 116000, creators: 67 },
   ];
+
+  // Top creators by ROI
+  const topCreators = creators.slice(0, 5).map(c => ({
+    id: c.id,
+    name: c.user?.name || 'Unknown',
+    followers: `${Math.round((c.followerCount || 0) / 1000)}K`,
+    views: `${Math.round((c.followerCount || 0) * 5 / 1000000)}M`,
+    engagement: `${c.engagementRate || 4.2}%`,
+    roi: `${c.roi || 312}%`,
+  }));
 
   return (
     <div style={{
@@ -43,19 +83,21 @@ export default function AnalyticsPage({
             Track performance and ROI across all campaigns
           </p>
         </div>
-        <button style={{
-          backgroundColor: '#1a1a2e',
-          color: '#F8F7F4',
-          padding: '8px 16px',
-          borderRadius: '6px',
-          border: 'none',
-          fontSize: '14px',
-          fontWeight: 500,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}>
+        <button
+          style={{
+            backgroundColor: '#1a1a2e',
+            color: '#F8F7F4',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            border: 'none',
+            fontSize: '14px',
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
           <Download size={16} /> Export Report
         </button>
       </div>
@@ -67,10 +109,36 @@ export default function AnalyticsPage({
         gap: '16px',
         marginBottom: '32px',
       }}>
-        <KPICard title="Total Views" value="12.5M" change="+18%" icon={<BarChart3 size={20} />} accentColor="#1a1a2e" />
-        <KPICard title="Avg Engagement" value="4.2%" change="+0.3%" icon={<TrendingUp size={20} />} accentColor="#92400e" />
-        <KPICard title="Total Spend" value="₹18.5L" change="+12%" icon={<DollarSign size={20} />} accentColor="#16a34a" />
-        <KPICard title="Avg ROI" value="312%" change="+28%" icon={<BarChart3 size={20} />} accentColor="#2563eb" />
+        <KPICard title="Total Views" value={`${(totalViews / 1000000).toFixed(1)}M`} change="+18%" icon={<BarChart3 size={20} />} accentColor="#1a1a2e" />
+        <KPICard title="Avg Engagement" value={`${avgEngagement}%`} change="+0.3%" icon={<TrendingUp size={20} />} accentColor="#92400e" />
+        <KPICard title="Total Spend" value={`₹${(totalSpend / 100000).toFixed(1)}L`} change="+12%" icon={<DollarSign size={20} />} accentColor="#16a34a" />
+        <KPICard title="Avg ROI" value={`${avgROI}%`} change="+28%" icon={<BarChart3 size={20} />} accentColor="#2563eb" />
+      </div>
+
+      {/* Chart */}
+      <div style={{
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        marginBottom: '32px',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          padding: '16px 20px',
+          borderBottom: '1px solid #e5e7eb',
+        }}>
+          <h3 style={{
+            color: '#1a1a2e',
+            fontSize: '16px',
+            fontWeight: 600,
+            margin: 0,
+          }}>
+            Revenue & Margin Trends
+          </h3>
+        </div>
+        <div style={{ padding: '20px' }}>
+          <RevenueMarginChart data={chartData} />
+        </div>
       </div>
 
       {/* Top Creators Table */}
@@ -145,9 +213,9 @@ export default function AnalyticsPage({
             </tr>
           </thead>
           <tbody>
-            {topCreators.map((creator, index) => (
+            {topCreators.map((creator) => (
               <tr
-                key={index}
+                key={creator.id}
                 style={{
                   borderBottom: '1px solid #f1f5f9',
                   cursor: 'pointer',
@@ -214,36 +282,37 @@ function KPICard({
 }) {
   const isPositive = !change.startsWith('-');
   return (
-    <div style={{
+    <Card style={{
       backgroundColor: '#FFFFFF',
       border: '1px solid #e5e7eb',
       borderRadius: '8px',
-      padding: '20px',
     }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '12px',
-      }}>
-        <span style={{ color: '#1a1a2e', fontSize: '14px', fontWeight: 500 }}>{title}</span>
-        <span style={{ color: accentColor || '#1a1a2e' }}>{icon}</span>
-      </div>
-      <div style={{
-        color: '#1a1a2e',
-        fontSize: '28px',
-        fontWeight: 600,
-        marginBottom: '8px',
-      }}>
-        {value}
-      </div>
-      <div style={{
-        color: isPositive ? '#16a34a' : '#dc2626',
-        fontSize: '12px',
-        fontWeight: 500,
-      }}>
-        {change} vs last period
-      </div>
-    </div>
+      <CardContent style={{ padding: '20px' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '12px',
+        }}>
+          <span style={{ color: '#1a1a2e', fontSize: '14px', fontWeight: 500 }}>{title}</span>
+          <span style={{ color: accentColor || '#1a1a2e' }}>{icon}</span>
+        </div>
+        <div style={{
+          color: '#1a1a2e',
+          fontSize: '28px',
+          fontWeight: 600,
+          marginBottom: '8px',
+        }}>
+          {value}
+        </div>
+        <div style={{
+          color: isPositive ? '#16a34a' : '#dc2626',
+          fontSize: '12px',
+          fontWeight: 500,
+        }}>
+          {change} vs last period
+        </div>
+      </CardContent>
+    </Card>
   );
 }
