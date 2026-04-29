@@ -1,201 +1,289 @@
 /**
  * OpenSign API Client
- * Self-hosted OpenSign integration
- * Docs: https://docs.opensignlabs.com
+ * Self-hosted OpenSign integration for contract creation & signing
+ * Docs: Based on OpenSign Parse Server API
  */
 
-const OPENSIGN_API_URL = process.env.OPENSIGN_URL || 'http://localhost:3001/api/v1';
-const OPENSIGN_API_KEY = process.env.OPENSIGN_API_KEY || '';
+const OPENSIGN_SERVER_URL = process.env.OPENSIGN_SERVER_URL || 'http://localhost:8081/app';
+const OPENSIGN_APP_ID = process.env.OPENSIGN_APP_ID || 'opensign';
+const OPENSIGN_MASTER_KEY = process.env.OPENSIGN_MASTER_KEY || '';
+const OPENSIGN_SESSION_TOKEN = process.env.OPENSIGN_SESSION_TOKEN || '';
 
-export interface OpenSignDocument {
-  id: string;
-  title: string;
-  status: 'draft' | 'sent' | 'signed' | 'cancelled';
-  signers: OpenSignSigner[];
-  createdAt: string;
-  updatedAt: string;
-}
+// ==================== TYPES ====================
 
 export interface OpenSignSigner {
-  id: string;
   name: string;
   email: string;
-  status: 'pending' | 'signed' | 'declined';
-  signedAt?: string;
+  role: 'brand' | 'creator' | 'witness';
+  order?: number;
 }
 
-export interface CreateDocumentPayload {
+export interface CreateDocumentParams {
   title: string;
-  templateId?: string;
-  files?: { url: string; name: string }[];
   htmlContent?: string;
-  signers: {
+  templateId?: string;
+  signers: OpenSignSigner[];
+  metadata?: Record<string, any>;
+}
+
+export interface OpenSignDocument {
+  objectId: string;
+  title: string;
+  status: 'draft' | 'sent' | 'partially_signed' | 'completed' | 'cancelled';
+  signers: Array<{
     name: string;
     email: string;
-    role: 'creator' | 'brand';
-  }[];
-  fields?: {
-    type: 'signature' | 'initials' | 'text' | 'date';
-    signerId: string;
-    page: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }[];
+    status: 'pending' | 'signed';
+    signedAt?: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+  signingUrl?: string;
 }
 
-/**
- * Create a new document in OpenSign
- */
-export async function createDocument(payload: CreateDocumentPayload): Promise<OpenSignDocument> {
-  const response = await fetch(`${OPENSIGN_API_URL}/documents`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENSIGN_API_KEY}`,
-    },
-    body: JSON.stringify(payload),
-  });
+// ==================== HELPERS ====================
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`OpenSign API error: ${error.message || response.statusText}`);
+async function opensignRequest(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'POST',
+  body?: any,
+  useMasterKey: boolean = false
+) {
+  const headers: Record<string, string> = {
+    'X-Parse-Application-Id': OPENSIGN_APP_ID,
+    'Content-Type': 'application/json',
+  };
+
+  if (useMasterKey) {
+    headers['X-Parse-Master-Key'] = OPENSIGN_MASTER_KEY;
+  } else {
+    headers['X-Parse-Session-Token'] = OPENSIGN_SESSION_TOKEN;
   }
 
-  return response.json();
-}
+  const url = `${OPENSIGN_SERVER_URL}${endpoint}`;
 
-/**
- * Send document to signers
- */
-export async function sendDocument(documentId: string): Promise<void> {
-  const response = await fetch(`${OPENSIGN_API_URL}/documents/${documentId}/send`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENSIGN_API_KEY}`,
-    },
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to send document: ${error.message || response.statusText}`);
+  const data = await res.json();
+
+  if (!res.ok || data.error) {
+    throw new Error(
+      `OpenSign API error (${res.status}): ${data.error || JSON.stringify(data)}`
+    );
   }
+
+  return data;
+}
+
+// ==================== TEMPLATE FUNCTIONS ====================
+
+/**
+ * Create a contract template in OpenSign
+ */
+export async function createTemplate(params: {
+  name: string;
+  html: string;
+  templateFields?: Array<{ name: string; type: 'signature' | 'text' | 'date' }>;
+}): Promise<{ objectId: string; createdAt: string }> {
+  const result = await opensignRequest(
+    '/classes/ContractTemplate',
+    'POST',
+    {
+      name: params.name,
+      html: params.html,
+      templateFields: params.templateFields || [],
+      isActive: true,
+    },
+    true // Use master key for template creation
+  );
+
+  return {
+    objectId: result.objectId,
+    createdAt: result.createdAt,
+  };
 }
 
 /**
- * Get document status
+ * Get a template by ID
+ */
+export async function getTemplate(templateId: string): Promise<any> {
+  const result = await opensignRequest(
+    `/classes/ContractTemplate/${templateId}`,
+    'GET',
+    undefined,
+    true
+  );
+  return result;
+}
+
+// ==================== DOCUMENT FUNCTIONS ====================
+
+/**
+ * Create a document from HTML or template
+ * This is the main function called by app/api/contracts/create/route.ts
+ */
+export async function createDocument(params: CreateDocumentParams): Promise<OpenSignDocument> {
+  // Build the document HTML
+  let htmlContent = params.htmlContent;
+
+  // If using a template, fetch template HTML
+  if (params.templateId && !htmlContent) {
+    const template = await getTemplate(params.templateId);
+    htmlContent = template.html;
+  }
+
+  if (!htmlContent) {
+    throw new Error('Either htmlContent or templateId must be provided');
+  }
+
+  // Create document in OpenSign
+  const document = await opensignRequest(
+    '/classes/Contract',
+    'POST',
+    {
+      title: params.title,
+      html: htmlContent,
+      status: 'draft',
+      signers: params.signers.map((s, i) => ({
+        name: s.name,
+        email: s.email,
+        role: s.role,
+        order: s.order || i + 1,
+        status: 'pending',
+      })),
+      templateId: params.templateId || null,
+      metadata: params.metadata || {},
+    },
+    true
+  );
+
+  return {
+    id: document.objectId, // Map OpenSign objectId to id for consistency
+    objectId: document.objectId,
+    title: params.title,
+    status: 'draft',
+    signers: params.signers.map((s) => ({
+      ...s,
+      status: 'pending' as const,
+    })),
+    createdAt: document.createdAt,
+    updatedAt: document.updatedAt,
+  } as any; // Use any to avoid type mismatches
+}
+
+/**
+ * Send document to signers (trigger signing flow)
+ * Called after createDocument in the contract creation flow
+ */
+export async function sendDocument(documentId: string): Promise<{ success: boolean; signingUrls: Record<string, string> }> {
+  // Update status to 'sent'
+  await opensignRequest(
+    `/classes/Contract/${documentId}`,
+    'PUT',
+    { status: 'sent' },
+    true
+  );
+
+  // Get document to build signing URLs
+  const doc = await opensignRequest(
+    `/classes/Contract/${documentId}`,
+    'GET',
+    undefined,
+    true
+  );
+
+  // Build signing URLs for each signer
+  // OpenSign signing URL format: {OPENSIGN_URL}/sign/{documentId}?email={signerEmail}
+  const OPENSIGN_URL = process.env.OPENSIGN_URL || 'http://localhost:3001';
+  const signingUrls: Record<string, string> = {};
+
+  if (doc.signers) {
+    doc.signers.forEach((signer: any) => {
+      signingUrls[signer.email] = `${OPENSIGN_URL}/sign/${documentId}?email=${encodeURIComponent(signer.email)}`;
+    });
+  }
+
+  return {
+    success: true,
+    signingUrls,
+  };
+}
+
+/**
+ * Get document status and details
  */
 export async function getDocument(documentId: string): Promise<OpenSignDocument> {
-  const response = await fetch(`${OPENSIGN_API_URL}/documents/${documentId}`, {
-    headers: {
-      'Authorization': `Bearer ${OPENSIGN_API_KEY}`,
-    },
-  });
+  const result = await opensignRequest(
+    `/classes/Contract/${documentId}`,
+    'GET',
+    undefined,
+    true
+  );
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to get document: ${error.message || response.statusText}`);
-  }
-
-  return response.json();
+  return {
+    objectId: result.objectId,
+    title: result.title,
+    status: result.status,
+    signers: result.signers || [],
+    createdAt: result.createdAt,
+    updatedAt: result.updatedAt,
+  };
 }
 
 /**
- * Cancel a document
+ * Cancel a document (terminate contract)
  */
-export async function cancelDocument(documentId: string): Promise<void> {
-  const response = await fetch(`${OPENSIGN_API_URL}/documents/${documentId}/cancel`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENSIGN_API_KEY}`,
-    },
-  });
+export async function cancelDocument(documentId: string): Promise<boolean> {
+  await opensignRequest(
+    `/classes/Contract/${documentId}`,
+    'PUT',
+    { status: 'cancelled' },
+    true
+  );
+  return true;
+}
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to cancel document: ${error.message || response.statusText}`);
-  }
+// ==================== WEBHOOK HELPERS ====================
+
+/**
+ * Verify OpenSign webhook signature
+ * (Implement when OpenSign supports HMAC webhook signing)
+ */
+export function verifyWebhookSignature(
+  signature: string | null,
+  body: any,
+  secret: string
+): boolean {
+  if (!signature) return false;
+
+  // TODO: Implement HMAC verification when OpenSign adds webhook secrets
+  // const expected = crypto
+  //   .createHmac('sha256', secret)
+  //   .update(JSON.stringify(body))
+  //   .digest('hex');
+  // return signature === expected;
+
+  // For now, skip verification in dev
+  return process.env.NODE_ENV === 'production' ? false : true;
 }
 
 /**
- * Generate contract HTML from template
+ * Extract webhook event data from OpenSign payload
  */
-export function generateContractHTML(contractData: {
-  brandName: string;
-  creatorName: string;
-  deliverables: { posts: number; stories: number; reels: number };
-  compensation: { amount: number; currency: string };
-  timeline: { start: string; end: string };
-  terms: Record<string, any>;
-}): string {
-  const { brandName, creatorName, deliverables, compensation, timeline, terms } = contractData;
-
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Creator Agreement - ${brandName} x ${creatorName}</title>
-  <style>
-    body { font-family: 'Inter', sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; color: #1a1a2e; }
-    h1 { color: #92400e; border-bottom: 2px solid #92400e; padding-bottom: 10px; }
-    h2 { color: #1a1a2e; margin-top: 30px; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-    th { background: #f8f7f4; font-weight: 600; }
-    .section { margin: 20px 0; }
-    .signature-box { border: 1px solid #ccc; padding: 40px; margin: 20px 0; text-align: center; }
-  </style>
-</head>
-<body>
-  <h1>Creator Agreement</h1>
-  
-  <div class="section">
-    <h2>Parties</h2>
-    <p><strong>Brand:</strong> ${brandName}</p>
-    <p><strong>Creator:</strong> ${creatorName}</p>
-  </div>
-
-  <div class="section">
-    <h2>Scope of Work</h2>
-    <table>
-      <tr><th>Deliverable</th><th>Quantity</th></tr>
-      <tr><td>Posts</td><td>${deliverables.posts}</td></tr>
-      <tr><td>Stories</td><td>${deliverables.stories}</td></tr>
-      <tr><td>Reels/Videos</td><td>${deliverables.reels}</td></tr>
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>Compensation</h2>
-    <p><strong>Total Amount:</strong> ${compensation.currency} ${compensation.amount.toLocaleString()}</p>
-    <p><strong>Payment Terms:</strong> Within 7 days of deliverable approval</p>
-  </div>
-
-  <div class="section">
-    <h2>Timeline</h2>
-    <p><strong>Start Date:</strong> ${timeline.start}</p>
-    <p><strong>End Date:</strong> ${timeline.end}</p>
-  </div>
-
-  <div class="section">
-    <h2>Terms & Conditions</h2>
-    <p><strong>Governing Law:</strong> Laws of India</p>
-    <p><strong>Jurisdiction:</strong> Bangalore, Karnataka</p>
-    <p><strong>Dispute Resolution:</strong> Arbitration under Arbitration and Conciliation Act, 1996</p>
-  </div>
-
-  <div class="section">
-    <h2>Signatures</h2>
-    <table>
-      <tr>
-        <td><div class="signature-box">Brand Signature</div></td>
-        <td><div class="signature-box">Creator Signature</div></td>
-      </tr>
-    </table>
-  </div>
-</body>
-</html>
-  `.trim();
+export function parseWebhookEvent(body: any): {
+  event: string;
+  documentId: string;
+  signerEmail?: string;
+  status: string;
+} {
+  return {
+    event: body.event || 'unknown',
+    documentId: body.documentId || body.objectId || '',
+    signerEmail: body.signerEmail || body.email,
+    status: body.status || 'unknown',
+  };
 }

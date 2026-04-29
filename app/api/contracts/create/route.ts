@@ -1,10 +1,10 @@
 /**
  * API Route: Create Contract & Send via OpenSign
- * Either Brand or Creator can initiate
+ * Creates a contract linked to a campaign-creator assignment
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import { createDocument, sendDocument } from '@/lib/opensign';
 
 const prisma = new PrismaClient();
@@ -13,81 +13,82 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      // Who is creating this contract?
-      initiatorType, // 'BRAND' or 'CREATOR'
-      initiatorId,   // User ID
-      
-      // Other party
-      counterpartyId, // User ID of the other party
-      
+      // Campaign & Creator
+      campaignId,
+      creatorId,
+
       // Contract details
-      contractType,  // 'STANDARD', 'EXCLUSIVE', 'NDA'
-      country,       // 'IN', 'US', 'EU'
-      
+      contractType = 'STANDARD',
+      country = 'IN',
+
       // Timeline
-      startDate,
-      endDate,
-      
+      startDate = new Date().toISOString(),
+      endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+
       // Compensation
       amount,
       currency = 'INR',
       paymentTerms = 'Within 7 days of deliverable approval',
-      
+
       // Deliverables
-      deliverables, // { posts: 3, stories: 5, reels: 2 }
-      platforms,    // ['YouTube', 'Instagram']
-      
+      deliverables = {},
+      platforms = [],
+
       // Template
       templateId,
     } = body;
 
     // Validation
-    if (!initiatorType || !counterpartyId || !amount) {
+    if (!campaignId || !creatorId || !amount) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: campaignId, creatorId, amount' },
         { status: 400 }
       );
     }
 
-    // Get initiator and counterparty details
-    const initiator = await prisma.user.findUnique({
-      where: { id: initiatorId },
-      include: {
-        brandProfile: true,
-        creatorProfile: true,
-      },
+    // Get campaign and creator details
+    const campaign = await prisma.campaign.findUnique({
+      where: { id: campaignId },
+      include: { brand: { include: { user: true } } },
     });
 
-    const counterparty = await prisma.user.findUnique({
-      where: { id: counterpartyId },
-      include: {
-        brandProfile: true,
-        creatorProfile: true,
-      },
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { id: creatorId },
+      include: { user: true },
     });
 
-    if (!initiator || !counterparty) {
+    if (!campaign || !creatorProfile) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'Campaign or Creator not found' },
         { status: 404 }
       );
     }
 
-    // Determine brand and creator
-    const brand = initiatorType === 'BRAND' ? initiator.brandProfile : counterparty.brandProfile;
-    const creator = initiatorType === 'CREATOR' ? initiator.creatorProfile : counterparty.creatorProfile;
+    // Find or create CampaignCreator
+    let campaignCreator = await prisma.campaignCreator.findUnique({
+      where: {
+        campaignId_creatorId: {
+          campaignId,
+          creatorId,
+        },
+      },
+    });
 
-    if (!brand || !creator) {
-      return NextResponse.json(
-        { error: 'Invalid contract parties' },
-        { status: 400 }
-      );
+    if (!campaignCreator) {
+      campaignCreator = await prisma.campaignCreator.create({
+        data: {
+          campaignId,
+          creatorId,
+          status: 'ACTIVE',
+          revenueSharePercent: 10, // Default
+        },
+      });
     }
 
     // Generate contract HTML
     const contractHTML = generateContractHTML({
-      brandName: brand.companyName,
-      creatorName: creator.displayName,
+      brandName: campaign.brand.companyName || 'Brand',
+      creatorName: creatorProfile.displayName || 'Creator',
       deliverables,
       compensation: { amount, currency },
       timeline: { start: startDate, end: endDate },
@@ -101,48 +102,60 @@ export async function POST(request: NextRequest) {
     // Create document in OpenSign
     const signers = [
       {
-        name: brand.companyName,
-        email: initiatorType === 'BRAND' ? initiator.email! : counterparty.email!,
+        name: campaign.brand.companyName || 'Brand',
+        email: campaign.brand.user.email!,
         role: 'brand' as const,
       },
       {
-        name: creator.displayName,
-        email: initiatorType === 'CREATOR' ? initiator.email! : counterparty.email!,
+        name: creatorProfile.displayName || 'Creator',
+        email: creatorProfile.user.email!,
         role: 'creator' as const,
       },
     ];
 
     const document = await createDocument({
-      title: `Contract: ${brand.companyName} x ${creator.displayName}`,
+      title: `Contract: ${campaign.brand.companyName || 'Brand'} x ${creatorProfile.displayName || 'Creator'}`,
       htmlContent: contractHTML,
       signers,
       templateId,
     });
 
     // Create contract record in our DB
-    // (Assuming you have a Contract model - adjust as needed)
-    // For now, just return the OpenSign document ID
+    const contract = await prisma.contract.create({
+      data: {
+        campaignCreatorId: campaignCreator.id,
+        status: 'DRAFT',
+        openSignDocumentId: (document as any).id || (document as any).objectId,
+      },
+    });
 
     // Send document to signers
-    await sendDocument(document.id);
+    const sendResult = await sendDocument((document as any).id || (document as any).objectId);
+
+    // Update contract status
+    await prisma.contract.update({
+      where: { id: contract.id },
+      data: { status: 'SENT' },
+    });
 
     return NextResponse.json({
       success: true,
-      contractId: document.id,
-      openSignUrl: document.id, // URL to view/sign
+      contractId: contract.id,
+      openSignDocumentId: (document as any).id || (document as any).objectId,
+      signingUrls: sendResult.signingUrls,
       message: 'Contract created and sent for signature',
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Contract creation error:', error);
     return NextResponse.json(
-      { error: 'Failed to create contract' },
+      { error: error.message || 'Failed to create contract' },
       { status: 500 }
     );
   }
 }
 
 /**
- * Generate contract HTML (from lib/opensign.ts)
+ * Generate contract HTML
  */
 function generateContractHTML(contractData: any): string {
   const { brandName, creatorName, deliverables, compensation, timeline, terms } = contractData;
@@ -164,7 +177,7 @@ function generateContractHTML(contractData: any): string {
 </head>
 <body>
   <h1>Creator Agreement</h1>
-  
+
   <div>
     <h2>Parties</h2>
     <p><strong>Brand:</strong> ${brandName}</p>
@@ -183,7 +196,7 @@ function generateContractHTML(contractData: any): string {
 
   <div>
     <h2>Compensation</h2>
-    <p><strong>Total Amount:</strong> ${compensation.currency} ${compensation.amount.toLocaleString()}</p>
+    <p><strong>Total Amount:</strong> ₹${Number(compensation.amount).toLocaleString()}</p>
     <p><strong>Payment Terms:</strong> ${terms.paymentTerms}</p>
   </div>
 

@@ -6,12 +6,15 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Disable Turbopack to avoid internal errors
+  experimental: {
+    turbopack: false,
+  },
 };
 
 export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
-
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
 

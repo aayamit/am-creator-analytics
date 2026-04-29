@@ -3,7 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
@@ -14,7 +14,7 @@ declare module "next-auth" {
       email: string;
       name?: string | null;
       image?: string | null;
-      role: "BRAND" | "CREATOR";
+      role: UserRole; // Use Prisma UserRole enum
     };
   }
 
@@ -23,7 +23,7 @@ declare module "next-auth" {
     email: string;
     name?: string | null;
     image?: string | null;
-    role: "BRAND" | "CREATOR";
+    role: UserRole; // Use Prisma UserRole enum
   }
 }
 
@@ -42,7 +42,8 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: "https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+          scope:
+            "https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
@@ -54,7 +55,7 @@ export const authOptions: NextAuthOptions = {
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          role: "CREATOR", // Default to creator for Google OAuth
+          role: "CREATOR" as UserRole, // Default to creator for Google OAuth
         };
       },
     }),
@@ -72,7 +73,7 @@ export const authOptions: NextAuthOptions = {
           name: profile.localizedFirstName + " " + profile.localizedLastName,
           email: profile.email,
           image: profile.profilePicture?.displayImage,
-          role: "CREATOR",
+          role: "CREATOR" as UserRole,
         };
       },
     }),
@@ -88,7 +89,6 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // For demo purposes - in production, fetch from DB
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
           include: {
@@ -101,9 +101,10 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // For demo: accept any password (remove in production)
-        // In production, use: bcrypt.compare(credentials.password, user.password)
-        
+        // Verify password (simplified for dev - add bcrypt.compare in prod)
+        // const isValid = await bcrypt.compare(credentials.password, user.password || '');
+        // if (!isValid) return null;
+
         return {
           id: user.id,
           email: user.email!,
@@ -117,14 +118,13 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       // If OAuth sign in, check if user exists and has proper role
       if (account?.provider === "google" || account?.provider === "linkedin") {
-        // Find or create user
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email! },
           include: { creatorProfile: true },
         });
 
+        // Create creator profile if not exists
         if (existingUser && !existingUser.creatorProfile) {
-          // Create creator profile if not exists
           await prisma.creatorProfile.create({
             data: {
               userId: existingUser.id,
@@ -134,54 +134,33 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Store social account connection
-        if (account.provider === "google") {
+        if (account.provider === "google" && existingUser?.creatorProfile) {
           await prisma.socialAccount.upsert({
             where: {
               creatorId_platform: {
-                creatorId: existingUser?.creatorProfile?.id || "",
+                creatorId: existingUser.creatorProfile.id,
                 platform: "YOUTUBE",
               },
             },
             update: {
               accessToken: account.access_token!,
               refreshToken: account.refresh_token,
-              expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : undefined,
-              platformId: profile?.sub || "",
-              username: profile?.email?.split("@")[0] || "",
+              expiresAt: account.expires_at
+                ? new Date(account.expires_at * 1000)
+                : undefined,
+              platformId: (profile as any)?.sub || "",
+              username: user.email?.split("@")[0] || "",
             },
             create: {
-              creatorId: existingUser?.creatorProfile?.id || "",
+              creatorId: existingUser.creatorProfile.id,
               platform: "YOUTUBE",
-              platformId: profile?.sub || "",
+              platformId: (profile as any)?.sub || "",
               accessToken: account.access_token!,
               refreshToken: account.refresh_token,
-              expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : undefined,
-              username: profile?.email?.split("@")[0] || "",
-            },
-          });
-        } else if (account.provider === "linkedin") {
-          await prisma.socialAccount.upsert({
-            where: {
-              creatorId_platform: {
-                creatorId: existingUser?.creatorProfile?.id || "",
-                platform: "LINKEDIN",
-              },
-            },
-            update: {
-              accessToken: account.access_token!,
-              refreshToken: account.refresh_token,
-              expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : undefined,
-              platformId: (profile as any)?.id || "",
-              username: (profile as any)?.localizedFirstName || "",
-            },
-            create: {
-              creatorId: existingUser?.creatorProfile?.id || "",
-              platform: "LINKEDIN",
-              platformId: (profile as any)?.id || "",
-              accessToken: account.access_token!,
-              refreshToken: account.refresh_token,
-              expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : undefined,
-              username: (profile as any)?.localizedFirstName || "",
+              expiresAt: account.expires_at
+                ? new Date(account.expires_at * 1000)
+                : undefined,
+              username: user.email?.split("@")[0] || "",
             },
           });
         }
@@ -201,7 +180,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as "BRAND" | "CREATOR";
+        session.user.role = token.role as UserRole;
       }
       return session;
     },

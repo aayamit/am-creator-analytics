@@ -7,11 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
+// ================ ENUMS ================
 enum UserRole {
+  SUPER_ADMIN
+  AGENCY
   BRAND
   CREATOR
   ADMIN
+}
+
+enum TenantType {
+  AGENCY
+  BRAND
+  ENTERPRISE
 }
 
 enum SocialPlatform {
@@ -39,333 +47,12 @@ enum PaymentStatus {
   REFUNDED
 }
 
-enum MetricType {
-  FOLLOWERS
-  ENGAGEMENT_RATE
-  VIEWS
-  LIKES
-  COMMENTS
-  SHARES
-  CLICKS
-  CONVERSIONS
-}
-
-enum DemographicType {
-  AGE
-  GENDER
-  LOCATION
-  INTEREST
-  INCOME_BRACKET
-}
-
-// NextAuth Compatible Models
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  role          UserRole  @default(CREATOR)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
-
-  // NextAuth relations
-  accounts Account[]
-  sessions Session[]
-
-  // Role-specific profiles
-  brandProfile    BrandProfile?
-  creatorProfile CreatorProfile?
-
-  // Subscriptions
-  subscriptions   Subscription[]  // Cashfree subscriptions
-
-  // Audit logs
-  auditLogs        AuditLog[]
-  notifications    Notification[]
-  complianceAudits ComplianceAudit[]
-  invitesSent      CampaignInvite[]  // Added: invites sent by this user (brand)
-
-  @@index([email])
-  @@index([role])
-  
-  // Contract relations
-  negotiationsCreated ContractNegotiation[]  @relation("NegotiationCreator")
-  ticketsCreated      SupportTicket[]        @relation("TicketCreator")
-  ticketsAssigned     SupportTicket[]        @relation("TicketAssignee")
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@index([userId])
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-  @@unique([identifier, token])
-}
-
-// Brand Models
-model BrandProfile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  companyName String
-  industry    String?
-  website     String?
-  description String?   @db.Text
-  logoUrl     String?
-  address     String?
-  taxId       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-
-  // Relations
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  campaigns Campaign[]
-  crmConnections CrmConnection[]
-
-  @@index([userId])
-}
-
-// Creator Models
-model CreatorProfile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  displayName String
-  bio         String?   @db.Text
-  niche       String?   // Tech, Finance, SaaS, etc.
-  website     String?
-  pricing     Json?     // { cpm: number, cpe: number, per_post: number }
-  
-  // NEW: Follower count for bonus eligibility
-  followerCount Int      @default(0)  // Track total followers across platforms
-  signingBonusPaid Boolean  @default(false)  // ₹1500 bonus tracking
-  bonusPaidAt    DateTime?  // When bonus was paid
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-
-  // Relations
-  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  socialAccounts     SocialAccount[]
-  campaignCreators   CampaignCreator[]
-  mediaKit           MediaKit?
-  audienceDemographics AudienceDemographic[]
-  leads              Lead[]
-  trackingEvents     TrackingEvent[]
-  payoutAccount      PayoutAccount?
-  invitesReceived   CampaignInvite[]  // Added: invites received by this creator
-  
-  @@index([userId])
-  @@index([niche])
-  @@index([followerCount])  // NEW: For bonus eligibility queries
-}
-
-model SocialAccount {
-  id           String        @id @default(cuid())
-  creatorId    String
-  platform     SocialPlatform
-  platformId   String       // Platform's user/channel ID
-  accessToken  String        @db.Text // Encrypted at rest
-  refreshToken String?       @db.Text // Encrypted at rest
-  expiresAt    DateTime?
-  username     String?
-  profileUrl   String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-
-  // Relations
-  creator         CreatorProfile  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  metrics         AnalyticsMetric[]
-
-  @@unique([creatorId, platform])
-  @@index([creatorId])
-  @@index([platform])
-}
-
-// Campaign Models
-model Campaign {
-  id             String         @id @default(cuid())
-  brandId        String
-  title          String
-  description    String?        @db.Text
-  budget         Decimal        @db.Decimal(10, 2)
-  spent          Decimal        @default(0) @db.Decimal(10, 2)
-  startDate      DateTime
-  endDate        DateTime
-  status         CampaignStatus @default(DRAFT)
-  objectives     Json?          // { awareness: boolean, conversions: boolean }
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  deletedAt      DateTime?
-
-  // Relations
-  brand          BrandProfile    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  campaignCreators CampaignCreator[]
-  leads           Lead[]
-  trackingEvents   TrackingEvent[]
-  payoutTransactions PayoutTransaction[]
-  invites         CampaignInvite[]  // Added: invites for this campaign
-
-  @@index([brandId])
-  @@index([status])
-}
-
-model CampaignCreator {
-  id             String         @id @default(cuid())
-  campaignId     String
-  creatorId      String
-  deliverables   Json?          // { posts: 3, stories: 5 }
-  rate           Decimal        @db.Decimal(10, 2)
-  paymentStatus  PaymentStatus  @default(PENDING)
-  performance    Json?          // { impressions: number, clicks: number }
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-
-  // Relations
-  campaign  Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  invoice   Invoice?
-  payoutTransactions PayoutTransaction[]
-  deliverableRecords Deliverable[]    // Added: link to deliverables
-  contractRecord     Contract?         // Added: link to contract
-
-  @@unique([campaignId, creatorId])
-  @@index([campaignId])
-  @@index([creatorId])
-}
-
-// Analytics Models
-model AnalyticsMetric {
-  id             String     @id @default(cuid())
-  socialAccountId String
-  type           MetricType
-  value          Decimal    @db.Decimal(15, 2)
-  date           DateTime   @default(now())
-  metadata       Json?      // Additional platform-specific data
-
-  // Relations
-  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
-
-  @@index([socialAccountId])
-  @@index([type])
-  @@index([date])
-}
-
-model AudienceDemographic {
-  id             String        @id @default(cuid())
-  creatorId      String
-  type           DemographicType
-  label          String        // e.g., "18-24", "Male", "US"
-  percentage     Decimal       @db.Decimal(5, 2)
-  updatedAt      DateTime      @updatedAt
-
-  // Relations
-  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-
-  @@index([creatorId])
-  @@index([type])
-}
-
-// Media Kit Model
-model MediaKit {
-  id             String    @id @default(cuid())
-  creatorId      String    @unique
-  slug           String    @unique // Public-facing slug for sharing
-  isPublic       Boolean   @default(false)
-  settings       Json?     // { showPastCampaigns: boolean, showPricing: boolean }
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  // Relations
-  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-
-  @@index([slug])
-}
-
-// Invoice Model
-model Invoice {
-  id                String         @id @default(cuid())
-  campaignCreatorId String         @unique
-  amount            Decimal        @db.Decimal(10, 2)
-  status            PaymentStatus  @default(PENDING)
-  dueDate           DateTime
-  paidAt            DateTime?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-
-  // Relations
-  campaignCreator CampaignCreator @relation(fields: [campaignCreatorId], references: [id], onDelete: Cascade)
-
-  @@index([campaignCreatorId])
-}
-
-// Audit Log Model
-model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  action    String   // e.g., "VIEW_CREATOR_PROFILE", "UPDATE_CAMPAIGN_BUDGET"
-  resource  String   // e.g., "CreatorProfile:123", "Campaign:456"
-  timestamp DateTime @default(now())
-  metadata  Json?    // Additional context
-
-  // Relations
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([timestamp])
-}
-
-// Notification Models
-enum NotificationType {
-  CAMPAIGN_INVITE
-  CAMPAIGN_UPDATE
-  PAYMENT_RECEIVED
-  MILESTONE_REACHED
-  SYSTEM
-}
-
-// B2B Pipeline Enums
 enum LeadStage {
-  MQL             // Marketing Qualified Lead
-  SQL              // Sales Qualified Lead
+  MQL
+  SQL
   OPPORTUNITY
   CLOSED_WON
   CLOSED_LOST
-}
-
-enum CrmType {
-  SALESFORCE
-  HUBSPOT
 }
 
 enum LeadSource {
@@ -373,238 +60,10 @@ enum LeadSource {
   CREATOR_STORY
   CREATOR_VIDEO
   DIRECT_LINK
+  UGC_AD_CODE
   OTHER
 }
 
-model Notification {
-  id        String        @id @default(cuid())
-  userId    String
-  type      NotificationType
-  title     String
-  message   String        @db.Text
-  read      Boolean       @default(false)
-  link      String?       // Relative path to navigate, e.g., /brands/campaigns/123
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@index([userId, read])
-}
-
-// B2B Pipeline Models
-
-// CRM Connection Model - Stores OAuth tokens for Salesforce/HubSpot integrations
-model CrmConnection {
-  id              String    @id @default(cuid())
-  brandId         String
-  brand           BrandProfile @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  type            CrmType
-  accessToken     String    @db.Text // Encrypted at rest
-  refreshToken    String?   @db.Text // Encrypted at rest
-  instanceUrl     String?   // For Salesforce
-  lastSync        DateTime?
-  syncErrors      Json?     // Track integration errors
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  @@index([brandId])
-  @@index([type])
-}
-
-// Lead Model - Tracks pipeline from creator content to closed deals
-model Lead {
-  id                String      @id @default(cuid())
-  campaignId        String
-  campaign          Campaign    @relation(fields: [campaignId], references: [id])
-  creatorId         String
-  creator           CreatorProfile @relation(fields: [creatorId], references: [id])
-  
-  // Lead identification
-  email             String?
-  linkedInProfile   String?
-  companyName       String?
-  jobTitle          String?
-  companySize       String?     // "1-10", "11-50", "51-200", "201-1000", "1000+"
-  
-  // Pipeline tracking
-  stage             LeadStage  @default(MQL)
-  source            LeadSource @default(CREATOR_POST)
-  sourceUrl         String?    // URL of the creator post/content
-  firstTouchAt      DateTime   @default(now())
-  lastTouchAt       DateTime   @updatedAt
-  convertedAt       DateTime?
-  
-  // Revenue attribution
-  dealValue         Decimal?   @db.Decimal(12, 2)
-  currency          String?    @default("USD")
-  
-  // CRM sync status
-  crmContactId      String?   // External CRM contact ID
-  crmDealId         String?   // External CRM deal ID
-  crmSyncedAt       DateTime?
-  
-  // Custom fields for enterprise CRMs
-  customFields      Json?     // Store custom object data
-
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
-  deletedAt         DateTime?
-
-  // Relations
-  trackingEvents   TrackingEvent[]
-
-  @@index([campaignId])
-  @@index([creatorId])
-  @@index([stage])
-  @@index([email])
-  @@index([crmContactId])
-  @@index([firstTouchAt])
-}
-
-// Tracking Event Model - Server-side conversion tracking
-model TrackingEvent {
-  id                String    @id @default(cuid())
-  leadId            String?
-  lead              Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  campaignId        String?
-  campaign          Campaign?  @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  creatorId         String?
-  creator           CreatorProfile? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
-  
-  // Event details
-  type              String    // "PAGE_VIEW", "FORM_FILL", "DEMO_REQUEST", "DEAL_CLOSED"
-  url               String?
-  referrer          String?
-  utmSource         String?
-  utmMedium         String?
-  utmCampaign       String?
-  utmContent        String?
-  
-  // Attribution preservation (critical for when CRM contacts merge)
-  originalEmail     String?   // Store original email even if contact merges
-  originalSource    String?   // Store original attribution source
-  touchPoint        Int       @default(1) // Multi-touch attribution
-  
-  // Technical data
-  ipAddress         String?   // Hashed for privacy
-  userAgent         String?   @db.Text
-  fingerprint       String?   // Browser fingerprint for identity resolution
-  
-  // Conversion data
-  value             Decimal?  @db.Decimal(10, 2)
-  metadata          Json?     // Additional event-specific data
-  
-  timestamp         DateTime  @default(now())
-  
-  @@index([leadId])
-  @@index([campaignId])
-  @@index([creatorId])
-  @@index([type])
-  @@index([timestamp])
-  @@index([originalEmail])
-}
-
-// Campaign Invite Model - Brand invites creators to campaigns
-enum InviteStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  EXPIRED
-}
-
-model CampaignInvite {
-  id             String        @id @default(cuid())
-  campaignId     String
-  creatorId      String
-  invitedBy      String        // Brand user ID
-  
-  // Invite details
-  status          InviteStatus  @default(PENDING)
-  message         String?       @db.Text
-  deliverables    Json?         // { posts: 3, stories: 5, rate: 500 }
-  
-  // Timing
-  expiresAt       DateTime      @default(dbgenerated("now() + interval '7 days'"))
-  respondedAt     DateTime?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  // Relations
-  campaign       Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  creator        CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  inviter        User          @relation(fields: [invitedBy], references: [id], onDelete: SetNull)
-  
-  @@index([campaignId])
-  @@index([creatorId])
-}
-
-// Deliverable Model - Track individual deliverables within a campaign
-enum DeliverableStatus {
-  PENDING        // Not yet started
-  IN_PROGRESS    // Creator is working on it
-  SUBMITTED      // Creator submitted for review
-  APPROVED       // Brand approved
-  REVISION_NEEDED // Brand requested changes
-  COMPLETED      // Final approval
-}
-
-enum DeliverableType {
-  POST            // Feed post
-  STORY           // Story
-  REEL            // Reel/Short
-  VIDEO           // Long-form video
-  BLOG            // Blog post
-  TWEET           // Tweet/Thread
-  LIVE            // Live stream
-  OTHER
-}
-
-model Deliverable {
-  id                String            @id @default(cuid())
-  campaignCreatorId String
-  campaignCreator  CampaignCreator   @relation(fields: [campaignCreatorId], references: [id], onDelete: Cascade)
-  
-  // Deliverable details
-  type              DeliverableType
-  title             String?
-  description       String?           @db.Text
-  platform          SocialPlatform
-  dueDate           DateTime
-  
-  // Status tracking
-  status            DeliverableStatus @default(PENDING)
-  submittedAt       DateTime?
-  approvedAt        DateTime?
-  
-  // Content links
-  contentUrl        String?           // Link to post/story
-  previewUrl        String?           // Screenshot/thumbnail
-  
-  // Metrics (populated after publication)
-  impressions       Int               @default(0)
-  clicks            Int               @default(0)
-  likes             Int               @default(0)
-  comments          Int               @default(0)
-  shares            Int               @default(0)
-  
-  // Revision tracking
-  revisionCount     Int               @default(0)
-  revisionNotes     String?           @db.Text
-  
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  
-  @@index([campaignCreatorId])
-  @@index([status])
-  @@index([dueDate])
-  @@index([platform])
-}
-
-// Contract Model - Stores contract data for campaigns
 enum ContractStatus {
   DRAFT
   SENT
@@ -616,82 +75,80 @@ enum ContractStatus {
 }
 
 enum ContractType {
-  STANDARD        // Standard creator agreement
-  EXCLUSIVE       // Exclusive partnership
-  USAGE_RIGHTS     // Content licensing only
-  NDA             // Non-disclosure agreement
+  STANDARD
+  EXCLUSIVE
+  USAGE_RIGHTS
+  NDA
+  IP_TRANSFER
 }
 
-model Contract {
-  id                String          @id @default(cuid())
-  campaignCreatorId String          @unique
-  campaignCreator  CampaignCreator @relation(fields: [campaignCreatorId], references: [id], onDelete: Cascade)
-  
-  // Contract details
-  type              ContractType    @default(STANDARD)
-  
-  // OpenSign integration
-  initiatedBy       String?                         // BRAND or CREATOR - who created the contract
-  openSignDocumentId String?        @unique        // OpenSign document ID
-  openSignUrl        String?                         // URL for signing
-
-  status            ContractStatus  @default(DRAFT)
-  version           Int             @default(1)
-  
-  // Content
-  templateId        String?         // Reference to contract template
-  terms             Json?           // Structured contract terms
-  contentUrl         String?         // Generated PDF/HTML content
-  
-  // Signatures
-  creatorSignedAt   DateTime?
-  brandSignedAt     DateTime?
-  creatorIp         String?         // Hashed for privacy
-  brandIp           String?         // Hashed for privacy
-  
-  // Expiration
-  expiresAt         DateTime?       @default(dbgenerated("now() + interval '1 year'"))
-  terminatedAt      DateTime?
-  terminationReason String?         @db.Text
-  
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  
-  @@index([campaignCreatorId])
-  @@index([status])
-  @@index([expiresAt])
-  
-  // Relations
-  negotiations     ContractNegotiation[]  @relation("ContractNegotiations")
-  tickets          SupportTicket[]        @relation("ContractTickets")
+enum DeliverableStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  REVISION_NEEDED
+  COMPLETED
 }
 
-model ContractNegotiation {
-  id          String    @id @default(cuid())
-  contractId  String
-  contract    Contract  @relation("ContractNegotiations", fields: [contractId], references: [id], onDelete: Cascade)
-  
-  // Who proposed this version
-  proposedById String
-  proposedBy  User      @relation("NegotiationCreator", fields: [proposedById], references: [id], onDelete: SetNull)
-  
-  // Negotiation details
-  version     Int       @default(1)
-  changes     Json      // { field: oldValue → newValue }
-  message     String?   @db.Text  // Optional message from proposer
-  
-  // Status
-  status      String    @default("PROPOSED")  // PROPOSED, ACCEPTED, REJECTED
-  
-  createdAt   DateTime  @default(now())
-  
-  @@index([contractId])
-  @@index([proposedById])
+enum DeliverableType {
+  POST
+  STORY
+  REEL
+  VIDEO
+  BLOG
+  TWEET
+  LIVE
+  OTHER
 }
 
-// ============================================
-// NEW: Support Ticket for Contract Disputes
-// ============================================
+enum PaymentProvider {
+  STRIPE
+  RAZORPAY
+  CASHFREE
+  WIRE_TRANSFER
+  UPI
+}
+
+enum PayoutTransactionStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum TaxFormType {
+  W9
+  W8BEN
+  FORM26AS
+}
+
+enum TaxFormStatus {
+  NOT_SUBMITTED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  CAMPAIGN_INVITE
+  CAMPAIGN_UPDATE
+  PAYMENT_RECEIVED
+  MILESTONE_REACHED
+  SYSTEM
+  COMPLIANCE_ALERT
+  AUTHENTICITY_FLAG
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
 enum TicketStatus {
   OPEN
   IN_PROGRESS
@@ -706,288 +163,320 @@ enum TicketPriority {
   URGENT
 }
 
-model SupportTicket {
-  id          String        @id @default(cuid())
-  
-  // Ticket creator
-  createdById  String
-  createdBy    User         @relation("TicketCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  
-  // Related contract (if any)
-  contractId   String?
-  contract     Contract?    @relation("ContractTickets", fields: [contractId], references: [id], onDelete: SetNull)
-  
-  // Ticket details
-  subject      String
-  description  String      @db.Text
-  status       TicketStatus @default(OPEN)
-  priority     TicketPriority @default(MEDIUM)
-  
-  // Assignment
-  assignedToId String?     // Admin user ID
-  assignedTo   User?        @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
-  
-  // Resolution
-  resolvedAt   DateTime?
-  resolution   String?      @db.Text
-  
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  
-  @@index([createdById])
-  @@index([contractId])
-  @@index([status])
-  @@index([priority])
-  @@index([assignedToId])
+// ================ MULTI-TENANT MODELS ================
+model Tenant {
+  id          String     @id @default(cuid())
+  name        String
+  type        TenantType @default(AGENCY)
+
+  domain      String?    @unique @map("tenant_domain_unique")
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  users           User[]
+  brandProfiles   BrandProfile[]
+  campaigns       Campaign[]
+
+  creatorRoster  CreatorProfile[] @relation("TenantExclusiveCreators")
+
+  @@unique([domain], map: "tenant_domain_unique")
 }
 
-// ============================================
-// NEW: Contract Template (Standard Terms)
-// ============================================
-model ContractTemplate {
-  id          String   @id @default(cuid())
-  name        String   // "Standard Creator Agreement", "NDA", etc.
-  type        ContractType
-  country     String?  // "IN", "US", "EU" - country-specific terms
-  
-  // Template content (JSON structure for terms)
-  terms       Json     // Structured terms and conditions
-  htmlContent String?  @db.Text  // Pre-rendered HTML template
-  
-  isActive    Boolean  @default(true)
-  isDefault   Boolean  @default(false)  // Default template for new contracts
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@index([type])
-  @@index([country])
-  @@index([isActive])
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  role          UserRole  @default(CREATOR)
+
+  tenantId      String?
+  tenant        Tenant?    @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  brandProfile    BrandProfile?
+  creatorProfile CreatorProfile?
+
+  @@index([email])
+  @@index([tenantId])
 }
 
-// Compliance & Audit Enhancement - Extended audit log for SOC2/GDPR/DPDP
-model ComplianceAudit {
-  id                String    @id @default(cuid())
-  userId            String?
-  user              User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
-  // Action details
-  action            String    // "DATA_EXPORT", "CRM_SYNC", "LEAD_UPDATED", "CONSENT_GIVEN"
-  resource          String    // "Lead:123", "Campaign:456", "User:789"
-  resourceType      String    // "Lead", "Campaign", "User", "CrmConnection"
-  resourceId        String?
-  
-  // Change tracking (for SOC2 compliance)
-  before            Json?     // State before change
-  after             Json?     // State after change
-  
-  // Request context (for GDPR/DPDP)
-  ipAddress         String?
-  userAgent         String?   @db.Text
-  consentToken      String?   // Link to consent record
-  
-  // Data residency (for DPDP Act India compliance)
-  dataRegion        String?   @default("US") // "US", "EU", "IN"
-  
-  timestamp         DateTime  @default(now())
-  metadata          Json?
-  
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ================ BRAND & CREATOR MODELS ================
+model BrandProfile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tenantId    String?
+  tenant      Tenant?    @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  companyName String
+  industry    String?
+  website     String?
+
+  campaigns Campaign[]
+
   @@index([userId])
-  @@index([action])
-  @@index([resourceType, resourceId])
-  @@index([timestamp])
-  @@index([dataRegion])
+  @@index([tenantId])
 }
 
-// Payment Infrastructure Models
+model CreatorProfile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-enum PayoutProvider {
-  STRIPE
-  RAZORPAY
+  tenantId    String?
+  tenant      Tenant?    @relation("TenantExclusiveCreators", fields: [tenantId], references: [id], onDelete: SetNull)
+
+  displayName String
+  bio         String?   @db.Text
+  niche       String?
+  website     String?
+
+  followerCount Int      @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  socialAccounts     SocialAccount[]
+  campaignCreators   CampaignCreator[]
+  leads             Lead[]             @relation("CreatorLeads")
+  linkedinUgcAds    LinkedinUgcAd[]   @relation("CreatorLinkedInAds")
+  payoutAccounts    PayoutAccount[]
+  campaignInvites   CampaignInvite[]   @relation("CreatorInvites")
+  authenticityAudits AuthenticityAudit[] @relation("CreatorAuthenticityAudits")
+
+  @@index([userId])
+  @@index([tenantId])
 }
 
-enum PayoutAccountStatus {
-  PENDING
-  ACTIVE
-  RESTRICTED
-  DISABLED
+// ================ CAMPAIGN MODELS ================
+model Campaign {
+  id             String         @id @default(cuid())
+  brandId        String
+  brand           BrandProfile   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  tenantId        String?
+  tenant          Tenant?        @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  title           String
+  budget          Decimal        @db.Decimal(10, 2)
+  startDate       DateTime
+  endDate         DateTime
+  status          CampaignStatus @default(DRAFT)
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  campaignCreators CampaignCreator[]
+  leads           Lead[]             @relation("CampaignLeads")
+  linkedinUgcAds  LinkedinUgcAd[]   @relation("CampaignLinkedInAds")
+  invites         CampaignInvite[]   @relation("CampaignInvites")
+
+  @@index([brandId])
+  @@index([tenantId])
+  @@index([status])
 }
 
-enum PayoutTransactionStatus {
-  PENDING
-  PROCESSING
-  PAID
-  FAILED
-  REFUNDED
-  CANCELLED
+model CampaignCreator {
+  id             String         @id @default(cuid())
+  campaignId     String
+  campaign       Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId      String
+  creator        CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  rate           Decimal        @db.Decimal(10, 2)
+  paymentStatus  PaymentStatus  @default(PENDING)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  contractRecord     Contract?
+
+  @@unique([campaignId, creatorId])
+  @@index([campaignId])
+  @@index([creatorId])
 }
 
-enum TaxFormType {
-  W9      // US creators
-  W8BEN   // Non-US creators
-  FORM26AS // Indian creators (tax statement)
+model Contract {
+  id                String          @id @default(cuid())
+  campaignCreatorId String          @unique
+  campaignCreator  CampaignCreator @relation(fields: [campaignCreatorId], references: [id], onDelete: Cascade)
+
+  status            ContractStatus  @default(DRAFT)
+
+  openSignDocumentId String?        @unique
+  openSignUrl        String?
+
+  // Signing bonus fields
+  signedAt          DateTime?
+  bonusPaidAt       DateTime?
+  bonusAmount       Decimal?        @db.Decimal(10, 2)
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([campaignCreatorId])
+  @@index([status])
 }
 
-enum TaxFormStatus {
-  NOT_SUBMITTED
-  PENDING_REVIEW
-  APPROVED
-  REJECTED
+// ================ LEAD & TRACKING ================
+model Lead {
+  id                String      @id @default(cuid())
+  campaignId        String
+  campaign          Campaign    @relation("CampaignLeads", fields: [campaignId], references: [id])
+  creatorId         String
+  creator           CreatorProfile @relation("CreatorLeads", fields: [creatorId], references: [id])
+
+  email             String?
+  stage             LeadStage  @default(MQL)
+  source            LeadSource @default(CREATOR_POST)
+  firstTouchAt      DateTime   @default(now())
+
+  originalEmail     String?
+  touchPoint        Int       @default(1)
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  trackingEvents   TrackingEvent[]
+
+  @@index([campaignId])
+  @@index([creatorId])
+  @@index([email])
+  @@index([originalEmail])
 }
 
-// Creator payout accounts (Stripe Connect / Razorpay)
+model TrackingEvent {
+  id                String    @id @default(cuid())
+  leadId            String?
+  lead              Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  campaignId        String?
+  creatorId         String?
+
+  type              String
+  timestamp         DateTime   @default(now())
+
+  originalEmail     String?
+
+  @@index([leadId])
+  @@index([campaignId])
+  @@index([originalEmail])
+}
+
+// ================ LINKEDIN UGC ADS ================
+model LinkedinUgcAd {
+  id                String    @id @default(cuid())
+  campaignId        String
+  campaign          Campaign  @relation("CampaignLinkedInAds", fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId        String
+  creator          CreatorProfile @relation("CreatorLinkedInAds", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  adCode           String    @unique
+  status            String    @default("PENDING")
+
+  @@index([campaignId])
+  @@index([creatorId])
+  @@index([adCode])
+}
+
+// ================ FINANCIAL MODELS ================
 model PayoutAccount {
   id                String                @id @default(cuid())
-  creatorId         String                @unique
+  creatorId         String
   creator           CreatorProfile        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  
-  // Provider details
-  provider          PayoutProvider
-  providerAccountId String                // Stripe account ID or Razorpay contact ID
-  status            PayoutAccountStatus   @default(PENDING)
-  
-  // Compliance
-  kycVerified       Boolean               @default(false)
-  kycDocumentIds    Json?                 // Store document references
-  
-  // Bank details (encrypted at rest, minimal storage)
-  bankLast4         String?               // Last 4 digits only
-  bankName          String?
-  currency          String                @default("USD")
-  
-  // Tax info
-  taxForm           TaxForm?
-  taxFormStatus     TaxFormStatus         @default(NOT_SUBMITTED)
-  taxFormUrl        String?               // URL to W9/W8-BEN in secure storage
-  
-  // Metadata
-  onboardingComplete Boolean             @default(false)
-  onboardingUrl     String?               // Stripe Connect onboarding link
-  dashboardUrl      String?               // Provider dashboard link
-  
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  
-  // Relations
+
+  provider          PaymentProvider
+  status            String                @default("PENDING")
+
   transactions      PayoutTransaction[]
-  
+
   @@index([creatorId])
   @@index([provider])
-  @@index([status])
-  @@index([kycVerified])
 }
 
-// Individual payout transactions
 model PayoutTransaction {
   id                String                @id @default(cuid())
   payoutAccountId   String
   payoutAccount     PayoutAccount        @relation(fields: [payoutAccountId], references: [id], onDelete: Cascade)
-  
-  // Campaign context
-  campaignId        String?
-  campaign          Campaign?             @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  campaignCreatorId String?
-  campaignCreator   CampaignCreator?      @relation(fields: [campaignCreatorId], references: [id], onDelete: SetNull)
-  
-  // Transaction details
+
   amount            Decimal               @db.Decimal(10, 2)
-  currency          String                @default("USD")
-  fee               Decimal               @default(0) @db.Decimal(10, 2) // Platform fee
-  netAmount         Decimal               @db.Decimal(10, 2) // Amount after fees
-  
-  // Provider details
-  provider          PayoutProvider
-  providerTxId      String?               // Stripe/Razorpay transaction ID
   status            PayoutTransactionStatus @default(PENDING)
-  
-  // Timing
-  processedAt       DateTime?
-  estimatedArrival  DateTime?             // When funds should arrive
-  
-  // Metadata
-  description       String?
-  metadata          Json?
-  
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  
+
+  commissionRate    Decimal?              @db.Decimal(5, 2)
+  attributedRevenue Decimal?              @db.Decimal(12, 2)
+
   @@index([payoutAccountId])
+}
+
+// ================ AI TRUST & AUTHENTICITY ================
+model AuthenticityAudit {
+  id          String   @id @default(cuid())
+  creatorId   String
+  creator     CreatorProfile @relation("CreatorAuthenticityAudits", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  score       Decimal  @db.Decimal(5, 2)
+  auditedAt   DateTime @default(now())
+
+  @@index([creatorId])
+  @@index([score])
+}
+
+// ================ SUPPORT & COMPLIANCE ================
+model CampaignInvite {
+  id             String        @id @default(cuid())
+  campaignId     String
+  campaign       Campaign      @relation("CampaignInvites", fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId      String
+  creator        CreatorProfile @relation("CreatorInvites", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  status          InviteStatus  @default(PENDING)
+
   @@index([campaignId])
-  @@index([status])
-  @@index([providerTxId])
-  @@index([createdAt])
+  @@index([creatorId])
 }
 
-// Tax forms for compliance (W9, W8-BEN, etc.)
-model TaxForm {
-  id                String                @id @default(cuid())
-  payoutAccountId   String                @unique
-  payoutAccount     PayoutAccount         @relation(fields: [payoutAccountId], references: [id], onDelete: Cascade)
-  
-  type              TaxFormType
-  status            TaxFormStatus         @default(NOT_SUBMITTED)
-  
-  // Form data (encrypted at rest)
-  formData          Json?                 // Structured tax form data
-  documentUrl       String?               // Secure URL to signed form
-  
-  // Verification
-  verifiedAt        DateTime?
-  verifiedBy        String?               // Admin user ID
-  rejectionReason   String?
-  
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  
-  @@index([payoutAccountId])
-  @@index([type])
-  @@index([status])
+model SocialAccount {
+  id           String        @id @default(cuid())
+  creatorId    String
+  creator      CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform     SocialPlatform
+  username     String?
+
+  @@unique([creatorId, platform])
+  @@index([creatorId])
 }
 
-// ============================================
-// Subscription Model - Cashfree Integration
-// ============================================
-model Subscription {
-  id                 String   @id @default(cuid())
-  userId             String
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Cashfree identifiers
-  cashfreeSubId      String   @unique  // Cashfree subscription ID (sub_...)
-  cashfreeCustomerId String   // Cashfree customer ID (customer_...)
-  
-  // Plan details
-  planId             String   // Our internal plan ID (e.g., "plan_brand_professional")
-  planName           String   // Display name ("Professional", "Creator Pro", "Creator Elite")
-  planTier           String   // "free", "professional", "creator_pro", "creator_elite"
-  
-  // Billing cycle
-  amount             Decimal  @db.Decimal(10, 2)
-  currency           String   @default("INR")
-  interval           String   @default("MONTH")  // MONTH, YEAR, WEEK
-  
-  // Subscription status
-  status             String   // "ACTIVE", "CANCELLED", "PAST_DUE", "PAUSED", "EXPIRED"
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  
-  // Cancellation
-  cancelledAt        DateTime?
-  cancelReason       String?  @db.Text
-  cancelAtPeriodEnd  Boolean  @default(false)
-  
-  // Payment failure tracking
-  failedAttempts     Int      @default(0)
-  lastPaymentError   String?  @db.Text
-  lastPaymentAt      DateTime?
-  
-  // Timestamps
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  
-  @@index([userId])
-  @@index([cashfreeSubId])
+model SupportTicket {
+  id          String        @id @default(cuid())
+  subject      String
+  description  String      @db.Text
+  status       TicketStatus @default(OPEN)
+  priority     TicketPriority @default(MEDIUM)
+
   @@index([status])
-  @@index([planTier])
-  @@index([currentPeriodEnd])
 }
