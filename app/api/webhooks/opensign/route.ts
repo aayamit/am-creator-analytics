@@ -4,9 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { notifyContractSigned, notifyPayoutCompleted } from '@/lib/notification';
 
 // Signing bonus amount (₹1,500 in paise)
 const SIGNING_BONUS_AMOUNT = 150000;
@@ -70,7 +69,18 @@ async function handleDocumentCompleted(documentId: string) {
     // Find contract with campaign creator (which has creator + campaign)
     const contract = await prisma.contract.findFirst({
       where: { openSignDocumentId: documentId },
-      include: { campaignCreator: { include: { creator: true, campaign: true } } },
+      include: {
+        campaignCreator: {
+          include: {
+            creator: {
+              include: { user: true },
+            },
+            campaign: {
+              include: { tenant: true },
+            },
+          },
+        },
+      },
     });
 
     if (!contract) {
@@ -81,10 +91,28 @@ async function handleDocumentCompleted(documentId: string) {
     // Update contract status
     await prisma.contract.update({
       where: { id: contract.id },
-      data: { status: 'FULLY_EXECUTED' as any, signedAt: new Date(), updatedAt: new Date() },
+      data: {
+        status: 'FULLY_EXECUTED' as any,
+        signedAt: new Date(),
+        updatedAt: new Date(),
+      },
     });
 
     console.log('✅ Contract status updated to FULLY_EXECUTED');
+
+    // Send notification to admins about contract signing
+    if (contract.campaignCreator?.creator?.user?.name) {
+      try {
+        await notifyContractSigned(
+          contract.tenantId,
+          contract.id,
+          contract.campaignCreator.creator.user.name
+        );
+        console.log(`✅ Notification sent for contract signing`);
+      } catch (notifyError) {
+        console.error('❌ Error sending notification:', notifyError);
+      }
+    }
 
     // Check signing bonus eligibility
     const creator = contract.campaignCreator?.creator;
@@ -92,7 +120,7 @@ async function handleDocumentCompleted(documentId: string) {
       const followerCount = creator.followerCount || 0;
       if (followerCount < SIGNING_BONUS_FOLLOWER_THRESHOLD) {
         console.log(`💰 Creator eligible for signing bonus! (${followerCount} followers < ${SIGNING_BONUS_FOLLOWER_THRESHOLD})`);
-        await triggerSigningBonus(contract.id, creator.id, followerCount);
+        await triggerSigningBonus(contract.id, creator.id, followerCount, contract.tenantId);
       } else {
         console.log(`ℹ️ Creator not eligible: ${followerCount} >= ${SIGNING_BONUS_FOLLOWER_THRESHOLD} followers`);
       }
@@ -102,8 +130,14 @@ async function handleDocumentCompleted(documentId: string) {
   }
 }
 
-async function triggerSigningBonus(contractId: string, creatorId: string, followerCount: number) {
+async function triggerSigningBonus(
+  contractId: string,
+  creatorId: string,
+  followerCount: number,
+  tenantId: string
+) {
   console.log(`💰 Triggering signing bonus for contract ${contractId}`);
+  const bonusAmountRupees = SIGNING_BONUS_AMOUNT / 100;
 
   try {
     // Update contract with bonus info
@@ -111,12 +145,35 @@ async function triggerSigningBonus(contractId: string, creatorId: string, follow
       where: { id: contractId },
       data: {
         bonusPaidAt: new Date(),
-        bonusAmount: SIGNING_BONUS_AMOUNT / 100, // Store in rupees
+        bonusAmount: bonusAmountRupees,
         updatedAt: new Date(),
       },
     });
 
-    console.log(`✅ Signing bonus of ₹${SIGNING_BONUS_AMOUNT / 100} recorded for contract ${contractId}`);
+    console.log(`✅ Signing bonus of ₹${bonusAmountRupees} recorded for contract ${contractId}`);
+
+    // Notify creator about bonus
+    const creator = await prisma.creatorProfile.findUnique({
+      where: { id: creatorId },
+      include: { user: true },
+    });
+
+    if (creator?.user) {
+      try {
+        const { createNotification } = await import('@/lib/notification');
+        await createNotification({
+          userId: creator.user.id,
+          type: 'PAYOUT_COMPLETED',
+          title: 'Signing Bonus Received!',
+          message: `You have received a ₹${bonusAmountRupees} signing bonus for completing your contract.`,
+          link: `/${tenantId}/dashboard/earnings`,
+        });
+        console.log(`✅ Bonus notification sent to creator`);
+      } catch (notifyError) {
+        console.error('❌ Error sending bonus notification:', notifyError);
+      }
+    }
+
     console.log('ℹ️ Stripe payout would be triggered here (if Stripe configured)');
   } catch (error) {
     console.error('❌ Error recording bonus:', error);
