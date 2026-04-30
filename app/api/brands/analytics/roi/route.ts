@@ -1,12 +1,47 @@
-import { NextResponse } from "next/server";
+/**
+ * ROI Analytics API (Brand)
+ * GET /api/brands/analytics/roi
+ * Returns ROI data for all brand campaigns
+ * With rate limiting (60 req/min)
+ */
+
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { withRateLimit, apiLimiter } from "@/lib/with-rate-limit";
 
-const prisma = new PrismaClient();
+interface ROIResult {
+  campaignId: string;
+  campaignTitle: string;
+  status: string;
+  budget: number;
+  spent: number;
+  remaining: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  revenue: number;
+  metrics: {
+    ctr: number;
+    conversionRate: number;
+    cpm: number;
+    cpc: number;
+    cpa: number;
+    roas: number;
+    roi: number;
+  };
+  creatorPerformance: Array<{
+    creatorId: string;
+    creatorName: string;
+    impressions: number;
+    clicks: number;
+    rate: number;
+    efficiency: number;
+  }>;
+}
 
-// GET /api/brands/analytics/roi - Get ROI data for all campaigns
-export async function GET() {
+export const GET = withRateLimit(apiLimiter, async (request: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -38,7 +73,7 @@ export async function GET() {
     });
 
     // Calculate ROI metrics per campaign
-    const roiData = campaigns.map((campaign) => {
+    const roiData: ROIResult[] = campaigns.map((campaign) => {
       // Aggregate tracking events
       const impressions = campaign.trackingEvents
         .filter((e) => e.eventType === "IMPRESSION")
@@ -59,7 +94,8 @@ export async function GET() {
       // Calculate metrics
       const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
       const conversionRate = clicks > 0 ? (conversions / clicks) * 100 : 0;
-      const cpm = impressions > 0 ? (campaign.spent / impressions) * 1000 : 0;
+      const cpm =
+        impressions > 0 ? (campaign.spent / impressions) * 1000 : 0;
       const cpc = clicks > 0 ? campaign.spent / clicks : 0;
       const cpa = conversions > 0 ? campaign.spent / conversions : 0;
       const roas = campaign.spent > 0 ? revenue / campaign.spent : 0;
@@ -71,8 +107,7 @@ export async function GET() {
       const creatorPerformance = campaign.campaignCreators.map((cc) => {
         const creatorImpressions = campaign.trackingEvents
           .filter(
-            (e) =>
-              e.eventType === "IMPRESSION" && e.creatorId === cc.creatorId
+            (e) => e.eventType === "IMPRESSION" && e.creatorId === cc.creatorId
           )
           .reduce((sum, e) => sum + (e.count || 0), 0);
 
@@ -124,13 +159,11 @@ export async function GET() {
       totalRevenue: roiData.reduce((sum, c) => sum + c.revenue, 0),
       averageRoas:
         roiData.length > 0
-          ? roiData.reduce((sum, c) => sum + c.metrics.roas, 0) /
-            roiData.length
+          ? roiData.reduce((sum, c) => sum + c.metrics.roas, 0) / roiData.length
           : 0,
       averageRoi:
         roiData.length > 0
-          ? roiData.reduce((sum, c) => sum + c.metrics.roi, 0) /
-            roiData.length
+          ? roiData.reduce((sum, c) => sum + c.metrics.roi, 0) / roiData.length
           : 0,
     };
 
@@ -142,4 +175,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
