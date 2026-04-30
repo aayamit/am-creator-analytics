@@ -239,7 +239,8 @@ model BrandProfile {
   industry    String?
   website     String?
 
-  campaigns Campaign[]
+  campaigns        Campaign[]
+  CampaignTemplate CampaignTemplate[]
 
   @@index([userId])
   @@index([tenantId])
@@ -573,6 +574,38 @@ model PushToken {
 
   @@unique([deviceId, userId])
   @@map("push_tokens")
+}
+
+model CampaignTemplate {
+  id          String  @id @default(cuid())
+  name        String
+  description String? @db.Text
+
+  // Template Details
+  category String // Fashion, Tech, Food, Travel, etc.
+  budget   Decimal @db.Decimal(10, 2)
+  duration Int // Days
+
+  // Requirements (JSON)
+  requirements Json? // Deliverables, guidelines
+
+  // Creator Criteria
+  niche         String? // Target creator niche
+  minFollowers  Int     @default(0)
+  minEngagement Decimal @default(0) @db.Decimal(5, 2)
+
+  // Ownership
+  brandId  String?
+  brand    BrandProfile? @relation(fields: [brandId], references: [id])
+  isPublic Boolean       @default(false) // Public template or brand-only
+
+  // Usage tracking
+  usedCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("campaign_templates")
 }
 
 enum PaymentType {

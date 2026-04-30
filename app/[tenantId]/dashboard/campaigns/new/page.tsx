@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import TemplateSelector from './new/template-selector';
 
 export const metadata: Metadata = {
   title: 'New Campaign | AM Creator Analytics',
@@ -24,6 +25,9 @@ export default async function NewCampaignPage({
   const brands = await prisma.brandProfile.findMany({
     where: { user: { tenantId } },
   });
+
+  // State for template selection (will be passed to client component later)
+  const [showTemplates, setShowTemplates] = useState(false);
 
   async function createCampaign(formData: FormData) {
     'use server';
