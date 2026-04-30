@@ -262,13 +262,14 @@ model CreatorProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  socialAccounts     SocialAccount[]
-  campaignCreators   CampaignCreator[]
-  leads              Lead[]              @relation("CreatorLeads")
-  linkedinUgcAds     LinkedinUgcAd[]     @relation("CreatorLinkedInAds")
-  payoutAccounts     PayoutAccount[]
-  campaignInvites    CampaignInvite[]    @relation("CreatorInvites")
-  authenticityAudits AuthenticityAudit[] @relation("CreatorAuthenticityAudits")
+  socialAccounts      SocialAccount[]
+  campaignCreators    CampaignCreator[]
+  leads               Lead[]               @relation("CreatorLeads")
+  linkedinUgcAds      LinkedinUgcAd[]      @relation("CreatorLinkedInAds")
+  payoutAccounts      PayoutAccount[]
+  campaignInvites     CampaignInvite[]     @relation("CreatorInvites")
+  authenticityAudits  AuthenticityAudit[]  @relation("CreatorAuthenticityAudits")
+  CreatorVerification CreatorVerification?
 
   @@index([userId])
   @@index([tenantId])
@@ -487,4 +488,45 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model CreatorVerification {
+  id        String         @id @default(cuid())
+  creatorId String         @unique
+  creator   CreatorProfile @relation(fields: [creatorId], references: [id])
+
+  // ID Documents
+  idType     String // AADHAAR, PAN, PASSPORT
+  idNumber   String // Encrypted/masked
+  idFrontUrl String // MinIO URL
+  idBackUrl  String? // For PAN/Aadhaar
+  idVerified Boolean @default(false)
+
+  // Bank Details
+  bankName      String?
+  accountNumber String? // Encrypted
+  ifscCode      String?
+  upiId         String?
+  bankVerified  Boolean @default(false)
+
+  // Video Selfie
+  videoUrl      String? // MinIO URL
+  videoVerified Boolean @default(false)
+
+  // Status
+  status     VerificationStatus @default(PENDING)
+  verifiedAt DateTime?
+  notes      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("creator_verification")
+}
+
+enum VerificationStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
 }

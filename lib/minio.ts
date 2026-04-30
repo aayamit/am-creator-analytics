@@ -1,12 +1,13 @@
 /**
- * MinIO Client for self-hosted S3-compatible storage
- * Saves ₹10K/month vs Cloudinary
+ * MinIO Helper
+ * Upload files to self-hosted MinIO (S3-compatible)
+ * Saves vs Cloudinary ($39/month)
  */
 
-import { Client, BucketItem } from 'minio';
+import * as Minio from 'minio';
 
 // Initialize MinIO client
-export const minioClient = new Client({
+const minioClient = new Minio.Client({
   endPoint: process.env.MINIO_ENDPOINT || 'localhost',
   port: parseInt(process.env.MINIO_PORT || '9000'),
   useSSL: process.env.MINIO_USE_SSL === 'true',
@@ -14,86 +15,96 @@ export const minioClient = new Client({
   secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
 });
 
-export const BUCKET_NAME = process.env.MINIO_BUCKET || 'am-creator-uploads';
+// Bucket name
+const BUCKET_NAME = process.env.MINIO_BUCKET || 'am-creator-analytics';
 
-// Initialize bucket on startup
-export async function initBucket() {
-  try {
-    const exists = await minioClient.bucketExists(BUCKET_NAME);
-    if (!exists) {
-      await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
-      console.log(`✅ Bucket '${BUCKET_NAME}' created`);
-    } else {
-      console.log(`✅ Bucket '${BUCKET_NAME}' already exists`);
-    }
-  } catch (error) {
-    console.error('❌ Error initializing MinIO bucket:', error);
+/**
+ * Ensure bucket exists
+ */
+async function ensureBucket() {
+  const exists = await minioClient.bucketExists(BUCKET_NAME);
+  if (!exists) {
+    await minioClient.makeBucket(BUCKET_NAME, process.env.MINIO_REGION || 'us-east-1');
+    console.log(`Created bucket: ${BUCKET_NAME}`);
   }
 }
 
-// Generate presigned URL for direct upload (client-side)
-export async function getPresignedUploadUrl(
-  objectName: string,
-  expirySeconds: number = 3600
-): Promise<string> {
-  try {
-    const url = await minioClient.presignedPutObject(
-      BUCKET_NAME,
-      objectName,
-      expirySeconds
-    );
-    return url;
-  } catch (error) {
-    console.error('Error generating presigned URL:', error);
-    throw error;
-  }
-}
-
-// Upload file buffer to MinIO
+/**
+ * Upload file to MinIO
+ * @returns The object name (path) in the bucket
+ */
 export async function uploadFile(
   objectName: string,
   buffer: Buffer,
   metaData: { [key: string]: string }
 ): Promise<string> {
-  try {
-    await minioClient.putObject(BUCKET_NAME, objectName, buffer, metaData);
-    return `https://${process.env.MINIO_PUBLIC_URL || 'localhost:9000'}/${BUCKET_NAME}/${objectName}`;
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    throw error;
-  }
+  await ensureBucket();
+
+  await minioClient.putObject(
+    BUCKET_NAME,
+    objectName,
+    buffer,
+    buffer.length,
+    metaData
+  );
+
+  // Return the path (for DB storage)
+  return objectName;
 }
 
-// List files in a tenant folder
-export async function listFiles(tenantId: string): Promise<BucketItem[]> {
-  try {
-    const objectsList: BucketItem[] = [];
-    const objectsStream = minioClient.listObjects(BUCKET_NAME, `${tenantId}/`, true);
-    
-    // Convert stream to array
-    return new Promise((resolve, reject) => {
-      const items: BucketItem[] = [];
-      objectsStream.on('data', (obj) => items.push(obj as BucketItem));
-      objectsStream.on('end', () => resolve(items));
-      objectsStream.on('error', reject);
+/**
+ * Get public URL for file (using presigned URL)
+ * Note: For production, you might want to use a CDN or public bucket
+ */
+export async function getPublicUrl(
+  objectName: string,
+  expirySeconds = 604800 // 7 days
+): Promise<string> {
+  return minioClient.presignedGetObject(
+    BUCKET_NAME,
+    objectName,
+    expirySeconds
+  );
+}
+
+/**
+ * List files in bucket with prefix
+ */
+export async function listFiles(
+  prefix: string,
+  recursive = true
+): Promise<string[]> {
+  const objectsList: string[] = [];
+  const objectsStream = minioClient.listObjects(BUCKET_NAME, prefix, recursive);
+
+  return new Promise((resolve, reject) => {
+    objectsStream.on('data', (obj) => {
+      if (obj.name) objectsList.push(obj.name);
     });
-  } catch (error) {
-    console.error('Error listing files:', error);
-    throw error;
-  }
+    objectsStream.on('end', () => resolve(objectsList));
+    objectsStream.on('error', reject);
+  });
 }
 
-// Delete a file
+/**
+ * Delete file from MinIO
+ */
 export async function deleteFile(objectName: string): Promise<void> {
-  try {
-    await minioClient.removeObject(BUCKET_NAME, objectName);
-  } catch (error) {
-    console.error('Error deleting file:', error);
-    throw error;
-  }
+  await minioClient.removeObject(BUCKET_NAME, objectName);
 }
 
-// Get public URL for a file
-export function getPublicUrl(objectName: string): string {
-  return `${process.env.MINIO_PUBLIC_URL || 'http://localhost:9000'}/${BUCKET_NAME}/${objectName}`;
+/**
+ * Get presigned URL for download (alias for getPublicUrl)
+ */
+export async function getPresignedUrl(
+  objectName: string,
+  expirySeconds = 604800
+): Promise<string> {
+  return getPublicUrl(objectName, expirySeconds);
 }
+
+// Export minio client as default
+export default minioClient;
+
+// Also export bucket name constant
+export { BUCKET_NAME };
