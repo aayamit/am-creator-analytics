@@ -3,9 +3,25 @@
  * Receives signature completion events and triggers signing bonuses
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { notifyContractSigned, notifyPayoutCompleted } from '@/lib/notification';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { notifyContractSigned, notifyPayoutCompleted } from "@/lib/notification";
+
+// Helper to send push notification
+async function sendPushNotification(userId: string, title: string, body: string, data?: Record<string, any>) {
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/mobile/send-push`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, title, body, data }),
+    });
+    if (!response.ok) {
+      console.error("Failed to send push notification:", await response.text());
+    }
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+  }
+}
 
 // Signing bonus amount (₹1,500 in paise)
 const SIGNING_BONUS_AMOUNT = 150000;
@@ -101,7 +117,19 @@ async function handleDocumentCompleted(documentId: string) {
     console.log('✅ Contract status updated to FULLY_EXECUTED');
 
     // Send notification to admins about contract signing
-    if (contract.campaignCreator?.creator?.user?.name) {
+    if (contract.campaignCreator?.creator?.user?.id) {
+      try {
+        await sendPushNotification(
+          contract.campaignCreator.creator.user.id,
+          "Contract Fully Signed! 🎉",
+          `Your contract for ${contract.campaign?.title || 'campaign'} is now fully executed.`,
+          { type: 'contract_signed', contractId: contract.id }
+        );
+        console.log(`✅ Push notification sent for contract signing`);
+      } catch (pushError) {
+        console.error('❌ Error sending push notification:', pushError);
+      }
+      
       try {
         await notifyContractSigned(
           contract.tenantId,

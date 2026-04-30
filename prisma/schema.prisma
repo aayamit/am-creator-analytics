@@ -200,6 +200,7 @@ model User {
 
   brandProfile   BrandProfile?
   creatorProfile CreatorProfile?
+  PushToken      PushToken[]
 
   @@index([email])
   @@index([tenantId])
@@ -556,6 +557,22 @@ model PaymentMethod {
   updatedAt DateTime @updatedAt
 
   @@map("payment_methods")
+}
+
+model PushToken {
+  id       String @id @default(cuid())
+  token    String @unique
+  platform String // 'ios' or 'android'
+  deviceId String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([deviceId, userId])
+  @@map("push_tokens")
 }
 
 enum PaymentType {
