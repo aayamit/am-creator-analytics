@@ -613,3 +613,5 @@ enum PaymentType {
   BANK_TRANSFER
   RAZORPAY
 }
+
+// End of schema
