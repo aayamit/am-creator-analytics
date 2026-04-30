@@ -257,7 +257,13 @@ model CreatorProfile {
   niche       String?
   website     String?
 
-  followerCount Int @default(0)
+  followerCount  Int     @default(0)
+  engagementRate Decimal @default(0) @db.Decimal(5, 2)
+
+  // GST Details
+  gstin     String? // 15-digit GST number (if registered)
+  panNumber String? // 10-digit PAN
+  stateCode String? // 2-digit state code
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
