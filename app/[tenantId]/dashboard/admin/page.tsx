@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Users, TrendingUp, FileText, Plus, Send, BarChart3 } from 'lucide-react';
-import RevenueMarginChart from '@/components/dashboard/charts';
-import CreatorGrowthChart from '@/components/dashboard/charts';
+import { RevenueMarginChart, CreatorGrowthChart } from '@/components/dashboard/charts';
 import RevenueForecast from '@/components/analytics/revenue-forecast';
 import RetentionCurve from '@/components/analytics/retention-curve';
 import { prisma } from '@/lib/prisma';
@@ -54,7 +53,7 @@ export default async function AgencyDashboardPage({
     id: c.id,
     name: c.user?.name || 'Unknown',
     followers: `${Math.round((c.followerCount || 0) / 1000)}K`,
-    revenue: `₹${(c.totalEarnings || 0).toLocaleString('en-IN')}`,
+    revenue: `Rs.${(c.totalEarnings || 0).toLocaleString('en-IN')}`,
     margin: `${c.marginPercentage || 0}%`,
     status: c.verified ? 'Active' : 'Pending',
   }));
@@ -62,7 +61,7 @@ export default async function AgencyDashboardPage({
   // Recent activity (mock for now)
   const recentActivity = [
     { id: 1, icon: '✅', text: `Contract signed: ${contracts[0]?.campaignCreator?.creator?.user?.name || 'New Creator'}`, time: '2 min ago' },
-    { id: 2, icon: '💰', text: 'Bonus triggered: Creator-pro (₹1,500)', time: '5 min ago' },
+    { id: 2, icon: '💰', text: 'Bonus triggered: Creator-pro (Rs.1,500)', time: '5 min ago' },
     { id: 3, icon: '📊', text: `New campaign: ${campaigns[0]?.name || 'Q2 Campaign'}`, time: '12 min ago' },
     { id: 4, icon: '🎯', text: 'Lead converted: Arjun Kapoor', time: '25 min ago' },
     { id: 5, icon: '📈', text: 'Margin alert: Brand X campaign at 28%', time: '1 hour ago' },
@@ -153,7 +152,7 @@ export default async function AgencyDashboardPage({
       }}>
         <KPICard
           title="Total Revenue"
-          value={`₹${(totalRevenue / 100000).toFixed(1)}L`}
+          value={`Rs.${(totalRevenue / 100000).toFixed(1)}L`}
           change="+12%"
           icon={<DollarSign size={20} />}
           accentColor="#1a1a2e"

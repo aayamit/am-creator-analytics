@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, TrendingUp, DollarSign, Download } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
-import RevenueMarginChart from '@/components/dashboard/charts';
+import { RevenueMarginChart } from '@/components/dashboard/charts';
 
 export default async function AnalyticsPage({
   params,
@@ -10,17 +10,17 @@ export default async function AnalyticsPage({
 }) {
   const { tenantId } = await params;
 
-  // Fetch real data - separate calls, no include to avoid Turbopack parsing issues
+  // Fetch real data - simplified calls to avoid parsing errors
   const campaigns = await prisma.campaign.findMany({
-    where: { tenantId },
+    where: { tenantId: tenantId },
   });
 
   const contracts = await prisma.contract.findMany({
-    where: { campaignCreator: { campaign: { tenantId } },
+    where: { campaignCreator: { campaign: { tenantId: tenantId } } },
   });
 
   const creators = await prisma.creatorProfile.findMany({
-    where: { user: { tenantId } },
+    where: { user: { tenantId: tenantId } },
     take: 10,
     orderBy: { followerCount: 'desc' },
   });
@@ -97,23 +97,6 @@ export default async function AnalyticsPage({
           </Button>
         </div>
       </div>
-          style={{
-            backgroundColor: '#1a1a2e',
-            color: '#F8F7F4',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: 'none',
-            fontSize: '14px',
-            fontWeight: 500,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <Download size={16} /> Export Report
-        </button>
-      </div>
 
       {/* KPI Cards */}
       <div style={{
@@ -124,7 +107,7 @@ export default async function AnalyticsPage({
       }}>
         <KPICard title="Total Views" value={`${(totalViews / 1000000).toFixed(1)}M`} change="+18%" icon={<BarChart3 size={20} />} accentColor="#1a1a2e" />
         <KPICard title="Avg Engagement" value={`${avgEngagement}%`} change="+0.3%" icon={<TrendingUp size={20} />} accentColor="#92400e" />
-        <KPICard title="Total Spend" value={`₹${(totalSpend / 100000).toFixed(1)}L`} change="+12%" icon={<DollarSign size={20} />} accentColor="#16a34a" />
+        <KPICard title="Total Spend" value={`Rs.${(totalSpend / 100000).toFixed(1)}L`} change="+12%" icon={<DollarSign size={20} />} accentColor="#16a34a" />
         <KPICard title="Avg ROI" value={`${avgROI}%`} change="+28%" icon={<BarChart3 size={20} />} accentColor="#2563eb" />
       </div>
 

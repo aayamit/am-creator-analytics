@@ -113,3 +113,31 @@ export async function getUnreadCount(userId: string) {
     where: { userId, read: false },
   });
 }
+
+/**
+ * Notify contract signed - wrapper for webhook
+ */
+export async function notifyContractSigned(userId: string, metadata: any) {
+  return createNotification({
+    userId,
+    type: 'CONTRACT_SIGNED',
+    title: 'Contract Signed',
+    message: `Contract "${metadata?.campaignName || 'Campaign'}" signed successfully.`,
+    link: `/dashboard/contracts/${metadata?.contractId}`,
+    metadata,
+  });
+}
+
+/**
+ * Notify payout completed - wrapper for webhook
+ */
+export async function notifyPayoutCompleted(userId: string, metadata: any) {
+  return createNotification({
+    userId,
+    type: 'PAYMENT_RECEIVED',
+    title: 'Payout Sent',
+    message: `Payout of ₹${metadata?.amount || 0} has been sent.`,
+    link: '/dashboard/payouts',
+    metadata,
+  });
+}

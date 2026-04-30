@@ -165,20 +165,20 @@ enum TicketPriority {
 
 // ================ MULTI-TENANT MODELS ================
 model Tenant {
-  id          String     @id @default(cuid())
-  name        String
-  type        TenantType @default(AGENCY)
+  id   String     @id @default(cuid())
+  name String
+  type TenantType @default(AGENCY)
 
-  domain      String?    @unique @map("tenant_domain_unique")
+  domain String? @unique @map("tenant_domain_unique")
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  users           User[]
-  brandProfiles   BrandProfile[]
-  campaigns       Campaign[]
+  users         User[]
+  brandProfiles BrandProfile[]
+  campaigns     Campaign[]
 
-  creatorRoster  CreatorProfile[] @relation("TenantExclusiveCreators")
+  creatorRoster CreatorProfile[] @relation("TenantExclusiveCreators")
 
   @@unique([domain], map: "tenant_domain_unique")
 }
@@ -187,18 +187,18 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
+  emailVerified DateTime?
   role          UserRole  @default(CREATOR)
-
   tenantId      String?
-  tenant        Tenant?    @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   accounts Account[]
   sessions Session[]
 
-  brandProfile    BrandProfile?
+  brandProfile   BrandProfile?
   creatorProfile CreatorProfile?
 
   @@index([email])
@@ -206,7 +206,7 @@ model User {
 }
 
 model Account {
-  id                String  @id @default(cuid())
+  id                String @id @default(cuid())
   userId            String
   type              String
   provider          String
@@ -227,12 +227,12 @@ model Session {
 
 // ================ BRAND & CREATOR MODELS ================
 model BrandProfile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  tenantId    String?
-  tenant      Tenant?    @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   companyName String
   industry    String?
@@ -245,29 +245,29 @@ model BrandProfile {
 }
 
 model CreatorProfile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  tenantId    String?
-  tenant      Tenant?    @relation("TenantExclusiveCreators", fields: [tenantId], references: [id], onDelete: SetNull)
+  tenantId String?
+  tenant   Tenant? @relation("TenantExclusiveCreators", fields: [tenantId], references: [id], onDelete: SetNull)
 
   displayName String
-  bio         String?   @db.Text
+  bio         String? @db.Text
   niche       String?
   website     String?
 
-  followerCount Int      @default(0)
+  followerCount Int @default(0)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   socialAccounts     SocialAccount[]
   campaignCreators   CampaignCreator[]
-  leads             Lead[]             @relation("CreatorLeads")
-  linkedinUgcAds    LinkedinUgcAd[]   @relation("CreatorLinkedInAds")
-  payoutAccounts    PayoutAccount[]
-  campaignInvites   CampaignInvite[]   @relation("CreatorInvites")
+  leads              Lead[]              @relation("CreatorLeads")
+  linkedinUgcAds     LinkedinUgcAd[]     @relation("CreatorLinkedInAds")
+  payoutAccounts     PayoutAccount[]
+  campaignInvites    CampaignInvite[]    @relation("CreatorInvites")
   authenticityAudits AuthenticityAudit[] @relation("CreatorAuthenticityAudits")
 
   @@index([userId])
@@ -276,26 +276,26 @@ model CreatorProfile {
 
 // ================ CAMPAIGN MODELS ================
 model Campaign {
-  id             String         @id @default(cuid())
-  brandId        String
-  brand           BrandProfile   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  id      String       @id @default(cuid())
+  brandId String
+  brand   BrandProfile @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
-  tenantId        String?
-  tenant          Tenant?        @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
-  title           String
-  budget          Decimal        @db.Decimal(10, 2)
-  startDate       DateTime
-  endDate         DateTime
-  status          CampaignStatus @default(DRAFT)
+  title     String
+  budget    Decimal        @db.Decimal(10, 2)
+  startDate DateTime
+  endDate   DateTime
+  status    CampaignStatus @default(DRAFT)
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   campaignCreators CampaignCreator[]
-  leads           Lead[]             @relation("CampaignLeads")
-  linkedinUgcAds  LinkedinUgcAd[]   @relation("CampaignLinkedInAds")
-  invites         CampaignInvite[]   @relation("CampaignInvites")
+  leads            Lead[]            @relation("CampaignLeads")
+  linkedinUgcAds   LinkedinUgcAd[]   @relation("CampaignLinkedInAds")
+  invites          CampaignInvite[]  @relation("CampaignInvites")
 
   @@index([brandId])
   @@index([tenantId])
@@ -303,19 +303,19 @@ model Campaign {
 }
 
 model CampaignCreator {
-  id             String         @id @default(cuid())
-  campaignId     String
-  campaign       Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  creatorId      String
-  creator        CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  id         String         @id @default(cuid())
+  campaignId String
+  campaign   Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId  String
+  creator    CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
-  rate           Decimal        @db.Decimal(10, 2)
-  paymentStatus  PaymentStatus  @default(PENDING)
+  rate          Decimal       @db.Decimal(10, 2)
+  paymentStatus PaymentStatus @default(PENDING)
 
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  contractRecord     Contract?
+  contractRecord Contract?
 
   @@unique([campaignId, creatorId])
   @@index([campaignId])
@@ -325,20 +325,20 @@ model CampaignCreator {
 model Contract {
   id                String          @id @default(cuid())
   campaignCreatorId String          @unique
-  campaignCreator  CampaignCreator @relation(fields: [campaignCreatorId], references: [id], onDelete: Cascade)
+  campaignCreator   CampaignCreator @relation(fields: [campaignCreatorId], references: [id], onDelete: Cascade)
 
-  status            ContractStatus  @default(DRAFT)
+  status ContractStatus @default(DRAFT)
 
-  openSignDocumentId String?        @unique
+  openSignDocumentId String? @unique
   openSignUrl        String?
 
   // Signing bonus fields
-  signedAt          DateTime?
-  bonusPaidAt       DateTime?
-  bonusAmount       Decimal?        @db.Decimal(10, 2)
+  signedAt    DateTime?
+  bonusPaidAt DateTime?
+  bonusAmount Decimal?  @db.Decimal(10, 2)
 
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([campaignCreatorId])
   @@index([status])
@@ -346,24 +346,24 @@ model Contract {
 
 // ================ LEAD & TRACKING ================
 model Lead {
-  id                String      @id @default(cuid())
-  campaignId        String
-  campaign          Campaign    @relation("CampaignLeads", fields: [campaignId], references: [id])
-  creatorId         String
-  creator           CreatorProfile @relation("CreatorLeads", fields: [creatorId], references: [id])
+  id         String         @id @default(cuid())
+  campaignId String
+  campaign   Campaign       @relation("CampaignLeads", fields: [campaignId], references: [id])
+  creatorId  String
+  creator    CreatorProfile @relation("CreatorLeads", fields: [creatorId], references: [id])
 
-  email             String?
-  stage             LeadStage  @default(MQL)
-  source            LeadSource @default(CREATOR_POST)
-  firstTouchAt      DateTime   @default(now())
+  email        String?
+  stage        LeadStage  @default(MQL)
+  source       LeadSource @default(CREATOR_POST)
+  firstTouchAt DateTime   @default(now())
 
-  originalEmail     String?
-  touchPoint        Int       @default(1)
+  originalEmail String?
+  touchPoint    Int     @default(1)
 
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  trackingEvents   TrackingEvent[]
+  trackingEvents TrackingEvent[]
 
   @@index([campaignId])
   @@index([creatorId])
@@ -372,16 +372,16 @@ model Lead {
 }
 
 model TrackingEvent {
-  id                String    @id @default(cuid())
-  leadId            String?
-  lead              Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  campaignId        String?
-  creatorId         String?
+  id         String  @id @default(cuid())
+  leadId     String?
+  lead       Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  campaignId String?
+  creatorId  String?
 
-  type              String
-  timestamp         DateTime   @default(now())
+  type      String
+  timestamp DateTime @default(now())
 
-  originalEmail     String?
+  originalEmail String?
 
   @@index([leadId])
   @@index([campaignId])
@@ -390,14 +390,14 @@ model TrackingEvent {
 
 // ================ LINKEDIN UGC ADS ================
 model LinkedinUgcAd {
-  id                String    @id @default(cuid())
-  campaignId        String
-  campaign          Campaign  @relation("CampaignLinkedInAds", fields: [campaignId], references: [id], onDelete: Cascade)
-  creatorId        String
-  creator          CreatorProfile @relation("CreatorLinkedInAds", fields: [creatorId], references: [id], onDelete: Cascade)
+  id         String         @id @default(cuid())
+  campaignId String
+  campaign   Campaign       @relation("CampaignLinkedInAds", fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId  String
+  creator    CreatorProfile @relation("CreatorLinkedInAds", fields: [creatorId], references: [id], onDelete: Cascade)
 
-  adCode           String    @unique
-  status            String    @default("PENDING")
+  adCode String @unique
+  status String @default("PENDING")
 
   @@index([campaignId])
   @@index([creatorId])
@@ -406,41 +406,41 @@ model LinkedinUgcAd {
 
 // ================ FINANCIAL MODELS ================
 model PayoutAccount {
-  id                String                @id @default(cuid())
-  creatorId         String
-  creator           CreatorProfile        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  id        String         @id @default(cuid())
+  creatorId String
+  creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
-  provider          PaymentProvider
-  status            String                @default("PENDING")
+  provider PaymentProvider
+  status   String          @default("PENDING")
 
-  transactions      PayoutTransaction[]
+  transactions PayoutTransaction[]
 
   @@index([creatorId])
   @@index([provider])
 }
 
 model PayoutTransaction {
-  id                String                @id @default(cuid())
-  payoutAccountId   String
-  payoutAccount     PayoutAccount        @relation(fields: [payoutAccountId], references: [id], onDelete: Cascade)
+  id              String        @id @default(cuid())
+  payoutAccountId String
+  payoutAccount   PayoutAccount @relation(fields: [payoutAccountId], references: [id], onDelete: Cascade)
 
-  amount            Decimal               @db.Decimal(10, 2)
-  status            PayoutTransactionStatus @default(PENDING)
+  amount Decimal                 @db.Decimal(10, 2)
+  status PayoutTransactionStatus @default(PENDING)
 
-  commissionRate    Decimal?              @db.Decimal(5, 2)
-  attributedRevenue Decimal?              @db.Decimal(12, 2)
+  commissionRate    Decimal? @db.Decimal(5, 2)
+  attributedRevenue Decimal? @db.Decimal(12, 2)
 
   @@index([payoutAccountId])
 }
 
 // ================ AI TRUST & AUTHENTICITY ================
 model AuthenticityAudit {
-  id          String   @id @default(cuid())
-  creatorId   String
-  creator     CreatorProfile @relation("CreatorAuthenticityAudits", fields: [creatorId], references: [id], onDelete: Cascade)
+  id        String         @id @default(cuid())
+  creatorId String
+  creator   CreatorProfile @relation("CreatorAuthenticityAudits", fields: [creatorId], references: [id], onDelete: Cascade)
 
-  score       Decimal  @db.Decimal(5, 2)
-  auditedAt   DateTime @default(now())
+  score     Decimal  @db.Decimal(5, 2)
+  auditedAt DateTime @default(now())
 
   @@index([creatorId])
   @@index([score])
@@ -448,35 +448,43 @@ model AuthenticityAudit {
 
 // ================ SUPPORT & COMPLIANCE ================
 model CampaignInvite {
-  id             String        @id @default(cuid())
-  campaignId     String
-  campaign       Campaign      @relation("CampaignInvites", fields: [campaignId], references: [id], onDelete: Cascade)
-  creatorId      String
-  creator        CreatorProfile @relation("CreatorInvites", fields: [creatorId], references: [id], onDelete: Cascade)
+  id         String         @id @default(cuid())
+  campaignId String
+  campaign   Campaign       @relation("CampaignInvites", fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId  String
+  creator    CreatorProfile @relation("CreatorInvites", fields: [creatorId], references: [id], onDelete: Cascade)
 
-  status          InviteStatus  @default(PENDING)
+  status InviteStatus @default(PENDING)
 
   @@index([campaignId])
   @@index([creatorId])
 }
 
 model SocialAccount {
-  id           String        @id @default(cuid())
-  creatorId    String
-  creator      CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  platform     SocialPlatform
-  username     String?
+  id        String         @id @default(cuid())
+  creatorId String
+  creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform  SocialPlatform
+  username  String?
 
   @@unique([creatorId, platform])
   @@index([creatorId])
 }
 
 model SupportTicket {
-  id          String        @id @default(cuid())
-  subject      String
-  description  String      @db.Text
-  status       TicketStatus @default(OPEN)
-  priority     TicketPriority @default(MEDIUM)
+  id          String         @id @default(cuid())
+  subject     String
+  description String         @db.Text
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
 
   @@index([status])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }

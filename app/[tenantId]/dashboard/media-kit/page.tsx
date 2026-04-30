@@ -380,7 +380,7 @@ export default async function MediaKitPage({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <DetailRow label="Location" value={creatorProfile.location || 'Not specified'} />
                 <DetailRow label="Languages" value={(creatorProfile.languages as string[])?.join(', ') || 'Not specified'} />
-                <DetailRow label="Rate per Post" value={creatorProfile.ratePerPost ? `₹${creatorProfile.ratePerPost.toLocaleString('en-IN')}` : 'Not specified'} />
+                <DetailRow label="Rate per Post" value={creatorProfile.ratePerPost ? `Rs.${creatorProfile.ratePerPost.toLocaleString('en-IN')}` : 'Not specified'} />
               </div>
             </CardContent>
           </Card>

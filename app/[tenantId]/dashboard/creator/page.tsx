@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp, Wallet, Plus, BarChart3 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
-import CreatorGrowthChart from '@/components/dashboard/charts';
+import { CreatorGrowthChart } from '@/components/dashboard/charts';
 
 export const metadata: Metadata = {
   title: 'Creator Dashboard | AM Creator Analytics',
@@ -16,17 +16,17 @@ export default async function CreatorDashboardPage({
 }) {
   const { tenantId } = await params;
 
-  // Fetch real data - separate calls, no include to avoid Turbopack parsing issues
+  // Fetch real data - simplified calls to avoid parsing errors
   const campaigns = await prisma.campaign.findMany({
-    where: { tenantId, status: 'ACTIVE' },
+    where: { tenantId: tenantId, status: 'ACTIVE' },
   });
 
   const contracts = await prisma.contract.findMany({
-    where: { campaignCreator: { creator: { user: { tenantId } } },
+    where: { campaignCreator: { creator: { user: { tenantId: tenantId } } } },
   });
 
   const creatorProfile = await prisma.creatorProfile.findFirst({
-    where: { user: { tenantId } },
+    where: { user: { tenantId: tenantId } },
   });
 
   const activeCampaigns = campaigns.length;
@@ -127,7 +127,7 @@ export default async function CreatorDashboardPage({
         },
       }}>
         <KPICard title="Active Campaigns" value={activeCampaigns.toString()} change="+2" icon={<BarChart3 size={20} />} accentColor="#1a1a2e" />
-        <KPICard title="Total Earnings" value={`₹${(totalEarnings / 100000).toFixed(1)}L`} change="+18%" icon={<Wallet size={20} />} accentColor="#92400e" />
+        <KPICard title="Total Earnings" value={`Rs.${(totalEarnings / 100000).toFixed(1)}L`} change="+18%" icon={<Wallet size={20} />} accentColor="#92400e" />
         <KPICard title="Profile Views" value={`${(profileViews / 1000).toFixed(1)}K`} change="+24%" icon={<Users size={20} />} accentColor="#16a34a" />
         <KPICard title="Conversion Rate" value={`${conversionRate}%`} change="+0.6%" icon={<TrendingUp size={20} />} accentColor="#2563eb" />
       </div>

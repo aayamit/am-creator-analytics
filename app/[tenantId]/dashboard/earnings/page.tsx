@@ -11,7 +11,7 @@ export default function EarningsPage({
       date: '2026-04-28',
       campaign: 'Summer Collection Launch',
       creator: 'Priya Sharma',
-      amount: '₹45,000',
+      amount: 'Rs.45,000',
       status: 'Completed',
     },
     {
@@ -19,7 +19,7 @@ export default function EarningsPage({
       date: '2026-04-25',
       campaign: 'Tech Reviews Q2',
       creator: 'Arjun Kapoor',
-      amount: '₹32,500',
+      amount: 'Rs.32,500',
       status: 'Completed',
     },
     {
@@ -27,7 +27,7 @@ export default function EarningsPage({
       date: '2026-04-22',
       campaign: 'Fitness Challenge',
       creator: 'Tech Reviews',
-      amount: '₹75,000',
+      amount: 'Rs.75,000',
       status: 'Pending',
     },
   ];
@@ -87,10 +87,10 @@ export default function EarningsPage({
         gap: '16px',
         marginBottom: '32px',
       }}>
-        <KPICard title="Total Earnings" value="₹15.2L" change="+18%" icon={<Wallet size={20} />} accentColor="#1a1a2e" />
-        <KPICard title="Pending" value="₹3.2L" change="+5%" icon={<DollarSign size={20} />} accentColor="#92400e" />
-        <KPICard title="This Month" value="₹4.8L" change="+22%" icon={<TrendingUp size={20} />} accentColor="#16a34a" />
-        <KPICard title="Avg per Campaign" value="₹1.3L" change="+8%" icon={<DollarSign size={20} />} accentColor="#2563eb" />
+        <KPICard title="Total Earnings" value="Rs.15.2L" change="+18%" icon={<Wallet size={20} />} accentColor="#1a1a2e" />
+        <KPICard title="Pending" value="Rs.3.2L" change="+5%" icon={<DollarSign size={20} />} accentColor="#92400e" />
+        <KPICard title="This Month" value="Rs.4.8L" change="+22%" icon={<TrendingUp size={20} />} accentColor="#16a34a" />
+        <KPICard title="Avg per Campaign" value="Rs.1.3L" change="+8%" icon={<DollarSign size={20} />} accentColor="#2563eb" />
       </div>
 
       {/* Transactions Table */}

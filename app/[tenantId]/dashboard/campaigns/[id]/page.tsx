@@ -196,7 +196,7 @@ export default async function CampaignDetailPage({
         },
       }}>
         <StatCard title="Creators" value={campaign._count.creators.toString()} color="#1a1a2e" />
-        <StatCard title="Budget" value={`₹${(campaign.budget || 0).toLocaleString('en-IN')}`} color="#92400e" />
+        <StatCard title="Budget" value={`Rs.${(campaign.budget || 0).toLocaleString('en-IN')}`} color="#92400e" />
         <StatCard title="Start Date" value={new Date(campaign.startDate).toLocaleDateString('en-IN')} color="#16a34a" />
         <StatCard title="End Date" value={new Date(campaign.endDate).toLocaleDateString('en-IN')} color="#2563eb" />
       </div>

@@ -1,6 +1,6 @@
 /**
  * Marketing Landing Page
- * Showcase AM Creator Analytics to potential users
+ * Server Component - no "use client" needed
  * Bloomberg × McKinsey design aesthetics
  */
 
@@ -10,11 +10,11 @@ import { Button } from '@/components/ui/button';
 import { 
   BarChart3, Users, TrendingUp, Shield, Download, CheckCircle, Star, ArrowRight, Menu, X 
 } from 'lucide-react';
-import { useState } from 'react';
+import NavMenu from './nav-menu'; // Client Component for interactive nav
 
 export const metadata: Metadata = {
   title: 'AM Creator Analytics - Creator Economy Platform',
-  description: 'Manage creators, campaigns, and payouts with ₹80K-2L/month savings using open-source tools.',
+  description: 'Manage creators, campaigns, and payouts with savings using open-source tools.',
 };
 
 const features = [
@@ -74,7 +74,7 @@ const testimonials = [
 const pricingPlans = [
   {
     name: 'Starter',
-    price: '₹0',
+    price: '0',
     period: 'forever',
     features: ['5 Creators', '2 Campaigns', 'Basic Analytics', 'Email Support'],
     cta: 'Get Started',
@@ -82,7 +82,7 @@ const pricingPlans = [
   },
   {
     name: 'Professional',
-    price: '₹299',
+    price: '299',
     period: '/month',
     features: ['50 Creators', '20 Campaigns', 'Advanced Analytics', 'Priority Support', 'Media Kit'],
     cta: 'Start Free Trial',
@@ -90,7 +90,7 @@ const pricingPlans = [
   },
   {
     name: 'Elite',
-    price: '₹999',
+    price: '999',
     period: '/month',
     features: ['Unlimited Creators', 'Unlimited Campaigns', 'Predictive ROI', 'Phone Support', 'Custom Branding'],
     cta: 'Contact Sales',
@@ -99,47 +99,10 @@ const pricingPlans = [
 ];
 
 export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <div style={{ backgroundColor: '#F8F7F4', minHeight: '100vh' }}>
-      {/* Navigation */}
-      <nav style={{
-        backgroundColor: '#1a1a2e',
-        padding: '16px 32px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-      }}>
-        <div style={{ fontSize: '24px', fontWeight: 700, color: '#F8F7F4', letterSpacing: '-0.02em' }}>
-          AM Creator
-        </div>
-
-        {/* Desktop Nav */}
-        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }} className="desktop-nav">
-          <Link href="#features" style={{ color: '#F8F7F4', textDecoration: 'none', fontSize: '14px' }}>Features</Link>
-          <Link href="#pricing" style={{ color: '#F8F7F4', textDecoration: 'none', fontSize: '14px' }}>Pricing</Link>
-          <Link href="#testimonials" style={{ color: '#F8F7F4', textDecoration: 'none', fontSize: '14px' }}>Testimonials</Link>
-          <Link href="/login">
-            <Button variant="outline" style={{ borderColor: '#F8F7F4', color: '#F8F7F4' }}>Login</Button>
-          </Link>
-          <Link href="/signup">
-            <Button style={{ backgroundColor: '#92400e', color: '#F8F7F4' }}>Sign Up Free</Button>
-          </Link>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          style={{ display: 'none', background: 'none', border: 'none', color: '#F8F7F4', cursor: 'pointer' }}
-          className="mobile-menu-btn"
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </nav>
+      {/* Navigation - Client Component */}
+      <NavMenu />
 
       {/* Hero Section */}
       <section style={{
@@ -168,7 +131,7 @@ export default function LandingPage() {
           margin: '0 auto 32px',
           lineHeight: 1.6,
         }}>
-          Manage creators, campaigns, and payouts with <strong>₹80K-2L/month savings</strong> using our open-source stack.
+          Manage creators, campaigns, and payouts with <strong>savings</strong> using our open-source stack.
         </p>
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/signup">
@@ -241,7 +204,7 @@ export default function LandingPage() {
           opacity: 0.8,
           marginBottom: '48px',
         }}>
-          No hidden fees. Save ₹80K-2L/month with our open-source stack.
+          No hidden fees. Save with our open-source stack.
         </p>
         <div style={{
           display: 'grid',
@@ -408,31 +371,6 @@ export default function LandingPage() {
               Get Started Free <ArrowRight size={20} style={{ marginLeft: '8px' }} />
             </Button>
           </Link>
-          <Button 
-            size="lg" 
-            variant="outline"
-            style={{
-              borderColor: '#1a1a2e',
-              color: '#1a1a2e',
-              fontSize: '18px',
-              padding: '16px 48px',
-            }}
-            onClick={() => {
-              fetch('/api/export/pitch-deck', { method: 'POST' })
-                .then(res => res.blob())
-                .then(blob => {
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'AM-Creator-Analytics-Pitch-Deck.pptx';
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                });
-            }}
-          >
-            <Download size={20} style={{ marginRight: '8px' }} />
-            Export Pitch Deck
-          </Button>
         </div>
       </section>
 

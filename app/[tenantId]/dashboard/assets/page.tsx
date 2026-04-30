@@ -1,7 +1,7 @@
 /**
  * Assets Page - File Manager
  * Browse, upload, and manage files (images, videos, PDFs)
- * Powered by MinIO (saves ₹10K/month vs Cloudinary)
+ * Powered by MinIO (saves Rs.10K/month vs Cloudinary)
  */
 
 import { Metadata } from 'next';
@@ -89,7 +89,7 @@ export default async function AssetsPage({
           Assets
         </h1>
         <p style={{ color: '#92400e', opacity: 0.8 }}>
-          Manage your files, images, and videos (stored on MinIO — saves ₹10K/month)
+          Manage your files, images, and videos (stored on MinIO — saves Rs.10K/month)
         </p>
       </div>
 

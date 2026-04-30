@@ -221,7 +221,7 @@ export default async function BrandCRMPage({
               margin: 0,
             }}>
               Connect your CRM (HubSpot, Pipedrive, Salesforce) via Nango self-hosted.
-              This saves ₹40K–1.6L/month vs Merge.dev.
+              This saves Rs.40K–1.6L/month vs Merge.dev.
             </p>
             <div style={{
               display: 'flex',

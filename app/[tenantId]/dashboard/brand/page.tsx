@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, TrendingUp, FileText, Plus, BarChart3, Users } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
-import RevenueMarginChart from '@/components/dashboard/charts';
+import { RevenueMarginChart } from '@/components/dashboard/charts';
 
 export const metadata: Metadata = {
   title: 'Brand Dashboard | AM Creator Analytics',
@@ -16,17 +16,17 @@ export default async function BrandDashboardPage({
 }) {
   const { tenantId } = await params;
 
-  // Fetch real data - separate calls, no include to avoid Turbopack parsing issues
+  // Fetch real data - simplified calls to avoid parsing errors
   const campaigns = await prisma.campaign.findMany({
-    where: { tenantId },
+    where: { tenantId: tenantId },
   });
 
   const contracts = await prisma.contract.findMany({
-    where: { campaignCreator: { campaign: { tenantId } },
+    where: { campaignCreator: { campaign: { tenantId: tenantId } } },
   });
 
   const creators = await prisma.creatorProfile.findMany({
-    where: { user: { tenantId } },
+    where: { user: { tenantId: tenantId } },
   });
 
   // Calculate KPIs
@@ -128,7 +128,7 @@ export default async function BrandDashboardPage({
         },
       }}>
         <KPICard title="Active Campaigns" value={activeCampaigns.toString()} change="+3" icon={<FileText size={20} />} accentColor="#1a1a2e" />
-        <KPICard title="Total Spend" value={`₹${(totalSpend / 100000).toFixed(1)}L`} change="+15%" icon={<DollarSign size={20} />} accentColor="#92400e" />
+        <KPICard title="Total Spend" value={`Rs.${(totalSpend / 100000).toFixed(1)}L`} change="+15%" icon={<DollarSign size={20} />} accentColor="#92400e" />
         <KPICard title="ROI" value={`${avgROI}%`} change="+28%" icon={<TrendingUp size={20} />} accentColor="#16a34a" />
         <KPICard title="Creators" value={totalCreators.toString()} change="+12" icon={<Users size={20} />} accentColor="#2563eb" />
       </div>

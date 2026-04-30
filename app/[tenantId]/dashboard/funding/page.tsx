@@ -25,18 +25,18 @@ export default async function BrandFundingPage({
     {
       id: '1',
       round: 'Seed',
-      amount: 5000000, // ₹50L
+      amount: 5000000, // Rs.50L
       date: '2025-01-15',
       leadInvestor: 'Sequoia Capital',
-      valuation: 25000000, // ₹2.5Cr
+      valuation: 25000000, // Rs.2.5Cr
     },
     {
       id: '2',
       round: 'Series A',
-      amount: 20000000, // ₹2Cr
+      amount: 20000000, // Rs.2Cr
       date: '2025-06-20',
       leadInvestor: 'Accel',
-      valuation: 100000000, // ₹10Cr
+      valuation: 100000000, // Rs.10Cr
     },
   ];
 
@@ -118,8 +118,8 @@ export default async function BrandFundingPage({
           gap: '16px',
         },
       }}>
-        <StatCard title="Total Raised" value={`₹${(totalRaised / 10000000).toFixed(1)}Cr`} color="#1a1a2e" icon={<DollarSign size={20} />} />
-        <StatCard title="Current Valuation" value={`₹${(currentValuation / 10000000).toFixed(1)}Cr`} color="#92400e" icon={<BarChart3 size={20} />} />
+        <StatCard title="Total Raised" value={`Rs.${(totalRaised / 10000000).toFixed(1)}Cr`} color="#1a1a2e" icon={<DollarSign size={20} />} />
+        <StatCard title="Current Valuation" value={`Rs.${(currentValuation / 10000000).toFixed(1)}Cr`} color="#92400e" icon={<BarChart3 size={20} />} />
         <StatCard title="Rounds" value={fundingRounds.length.toString()} color="#16a34a" icon={<TrendingUp size={20} />} />
       </div>
 
@@ -174,7 +174,7 @@ export default async function BrandFundingPage({
                         fontSize: '14px',
                         fontWeight: 500,
                       }}>
-                        ₹{(round.amount / 10000000).toFixed(1)}Cr
+                        Rs.{(round.amount / 10000000).toFixed(1)}Cr
                       </span>
                     </td>
                     <td style={tdStyle}>
@@ -182,7 +182,7 @@ export default async function BrandFundingPage({
                         color: '#92400e',
                         fontSize: '14px',
                       }}>
-                        ₹{(round.valuation / 10000000).toFixed(1)}Cr
+                        Rs.{(round.valuation / 10000000).toFixed(1)}Cr
                       </span>
                     </td>
                     <td style={tdStyle}>

@@ -318,7 +318,7 @@ export default async function ContractsPage({
                             fontSize: '14px',
                             fontWeight: 500,
                           }}>
-                            ₹{(contract.amount || 0).toLocaleString('en-IN')}
+                            Rs.{(contract.amount || 0).toLocaleString('en-IN')}
                           </span>
                         </td>
                         <td style={tdStyle}>

@@ -176,8 +176,8 @@ export default async function CreatorPayoutsPage({
           gap: '16px',
         },
       }}>
-        <StatCard title="Total Earnings" value={`₹${totalEarnings.toLocaleString('en-IN')}`} color="#1a1a2e" icon={<Wallet size={20} />} />
-        <StatCard title="Pending" value={`₹${pendingAmount.toLocaleString('en-IN')}`} color="#92400e" icon={<Clock size={20} />} />
+        <StatCard title="Total Earnings" value={`Rs.${totalEarnings.toLocaleString('en-IN')}`} color="#1a1a2e" icon={<Wallet size={20} />} />
+        <StatCard title="Pending" value={`Rs.${pendingAmount.toLocaleString('en-IN')}`} color="#92400e" icon={<Clock size={20} />} />
         <StatCard title="Payouts" value={payouts.length.toString()} color="#16a34a" icon={<CheckCircle size={20} />} />
       </div>
 
@@ -290,7 +290,7 @@ export default async function CreatorPayoutsPage({
                             fontSize: '14px',
                             fontWeight: 500,
                           }}>
-                            ₹{payout.amount.toLocaleString('en-IN')}
+                            Rs.{payout.amount.toLocaleString('en-IN')}
                           </span>
                         </td>
                         <td style={tdStyle}>

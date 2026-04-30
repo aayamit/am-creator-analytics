@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, Users, BarChart3, FileText, Settings, LogOut, TrendingUp, Link2, Bell, Contact, Wallet, Shield, Search } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, FileText, Settings, LogOut, TrendingUp, Link2, Bell, Contact, Wallet, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NotificationBell from '@/components/notifications/notification-bell';
-import SearchBar from '@/components/search/search-bar';
 import { useSession } from 'next-auth/react';
 
 interface DashboardSidebarProps {
@@ -89,13 +88,6 @@ export default function DashboardSidebar({ role, tenantId, tenantName, tenantTyp
               {tenantType}
             </p>
           )}
-        </div>
-      )}
-
-      {/* Search Bar */}
-      {session?.user?.id && (
-        <div style={{ marginBottom: '16px', padding: '0 8px' }}>
-          <SearchBar tenantId={tenantId} />
         </div>
       )}
 

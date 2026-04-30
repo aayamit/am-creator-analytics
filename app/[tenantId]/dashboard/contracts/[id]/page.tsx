@@ -205,7 +205,7 @@ export default async function ContractDetailPage({
               }}>
                 <DetailRow label="Contract ID" value={contract.id} />
                 <DetailRow label="Status" value={contract.status} isStatus />
-                <DetailRow label="Amount" value={`₹${(contract.amount || 0).toLocaleString('en-IN')}`} />
+                <DetailRow label="Amount" value={`Rs.${(contract.amount || 0).toLocaleString('en-IN')}`} />
                 <DetailRow label="Signed Date" value={contract.signedAt ? new Date(contract.signedAt).toLocaleDateString('en-IN') : 'Not signed yet'} />
                 <DetailRow label="Expiry Date" value={contract.expiresAt ? new Date(contract.expiresAt).toLocaleDateString('en-IN') : 'No expiry'} />
                 <DetailRow label="OpenSign ID" value={contract.openSignTemplateId || 'N/A'} />
@@ -342,7 +342,7 @@ export default async function ContractDetailPage({
                   margin: 0,
                   lineHeight: '1.5',
                 }}>
-                  This creator has &lt;50K followers. They are eligible for a ₹1,500 signing bonus upon contract signing.
+                  This creator has &lt;50K followers. They are eligible for a Rs.1,500 signing bonus upon contract signing.
                 </p>
               </CardContent>
             </Card>

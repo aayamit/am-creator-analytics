@@ -180,7 +180,7 @@ export default async function NewCampaignPage({
             }}>
               <div>
                 <label style={labelStyle}>
-                  Budget (₹)
+                  Budget (Rs.)
                 </label>
                 <input
                   name="budget"

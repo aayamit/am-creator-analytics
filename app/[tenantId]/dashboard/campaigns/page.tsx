@@ -313,7 +313,7 @@ export default async function CampaignsPage({
                             fontSize: '14px',
                             fontWeight: 500,
                           }}>
-                            ₹{(campaign.budget || 0).toLocaleString('en-IN')}
+                            Rs.{(campaign.budget || 0).toLocaleString('en-IN')}
                           </span>
                         </td>
                         <td style={tdStyle}>
