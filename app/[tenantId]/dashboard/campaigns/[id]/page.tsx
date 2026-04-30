@@ -9,6 +9,7 @@ import { ArrowLeft, Plus, Edit, Trash2, Send, BarChart3 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import AIRecommendations from '@/components/ai/creator-recommendations';
+import ROISimulator from '@/components/campaigns/roi-simulator';
 
 export const metadata: Metadata = {
   title: 'Campaign Details | AM Creator Analytics',
@@ -200,6 +201,14 @@ export default async function CampaignDetailPage({
         <StatCard title="Budget" value={`Rs.${(campaign.budget || 0).toLocaleString('en-IN')}`} color="#92400e" />
         <StatCard title="Start Date" value={new Date(campaign.startDate).toLocaleDateString('en-IN')} color="#16a34a" />
         <StatCard title="End Date" value={new Date(campaign.endDate).toLocaleDateString('en-IN')} color="#2563eb" />
+      </div>
+
+      {/* ROI Simulator */}
+      <div style={{ marginBottom: '24px' }}>
+        <ROISimulator
+          campaignId={campaign.id}
+          initialBudget={campaign.budget || 50000}
+        />
       </div>
 
       {/* Creators List */}
