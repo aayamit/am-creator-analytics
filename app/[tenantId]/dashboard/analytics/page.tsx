@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, TrendingUp, DollarSign, Download } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { RevenueMarginChart } from '@/components/dashboard/charts';
+import CohortTable from '@/components/analytics/cohort-table';
+import LTVCalculator from '@/components/analytics/ltv-calculator';
 
 export default async function AnalyticsPage({
   params,
@@ -258,6 +260,35 @@ export default async function AnalyticsPage({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Advanced Analytics Section */}
+      <div style={{ marginTop: '32px' }}>
+        <h2 style={{
+          fontSize: '24px',
+          fontWeight: 600,
+          color: '#1a1a2e',
+          marginBottom: '16px',
+        }}>
+          Advanced Analytics
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+          gap: '24px',
+        }}>
+          <CohortTable />
+          <LTVCalculator />
+        </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+          gap: '24px',
+          marginTop: '24px',
+        }}>
+          <ChurnRiskChart />
+          <GeographicHeatmap />
+        </div>
       </div>
     </div>
   );
