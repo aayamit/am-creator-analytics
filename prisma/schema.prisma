@@ -270,6 +270,7 @@ model CreatorProfile {
   campaignInvites     CampaignInvite[]     @relation("CreatorInvites")
   authenticityAudits  AuthenticityAudit[]  @relation("CreatorAuthenticityAudits")
   CreatorVerification CreatorVerification?
+  PaymentMethod       PaymentMethod[]
 
   @@index([userId])
   @@index([tenantId])
@@ -529,4 +530,30 @@ enum VerificationStatus {
   IN_REVIEW
   APPROVED
   REJECTED
+}
+
+model PaymentMethod {
+  id        String         @id @default(cuid())
+  creatorId String
+  creator   CreatorProfile @relation(fields: [creatorId], references: [id])
+
+  type          PaymentType
+  upiId         String? // For UPI
+  bankName      String?
+  accountNumber String? // Encrypted
+  ifscCode      String?
+
+  isDefault Boolean @default(false)
+  verified  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payment_methods")
+}
+
+enum PaymentType {
+  UPI
+  BANK_TRANSFER
+  RAZORPAY
 }
