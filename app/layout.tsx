@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import type { Viewport } from 'next';
+import WebVitalsReporter from '@/components/WebVitalsReporter';
 
 export const metadata: Metadata = {
   title: 'AM Creator Analytics',
@@ -37,6 +38,7 @@ export default function RootLayout({
             'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         }}
       >
+        <WebVitalsReporter />
         {children}
       </body>
     </html>
