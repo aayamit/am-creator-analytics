@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus, Edit, Trash2, Send, BarChart3 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import AIRecommendations from '@/components/ai/creator-recommendations';
 
 export const metadata: Metadata = {
   title: 'Campaign Details | AM Creator Analytics',
