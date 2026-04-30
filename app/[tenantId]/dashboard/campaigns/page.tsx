@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Filter, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import ExportButtons from '@/components/reports/export-buttons';
 
 export const metadata: Metadata = {
   title: 'Campaigns | AM Creator Analytics',
@@ -117,6 +118,11 @@ export default async function CampaignsPage({
         >
           <Plus size={16} /> New Campaign
         </Link>
+      </div>
+
+      {/* Export Buttons */}
+      <div style={{ marginBottom: '24px' }}>
+        <ExportButtons tenantId={tenantId} reportType="campaigns" />
       </div>
 
       {/* Stats Cards */}
