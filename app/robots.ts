@@ -1,25 +1,31 @@
-import { MetadataRoute } from "next";
+/**
+ * Robots.txt Generator
+ * Tells search engines which pages to crawl
+ */
+
+import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://amcreator.com';
+
   return {
     rules: [
       {
-        userAgent: "*",
-        allow: ["/", "/about", "/features", "/pricing", "/contact", "/blog"],
+        userAgent: '*',
+        allow: '/',
         disallow: [
-          "/dashboard",
-          "/api",
-          "/auth",
-          "/notifications",
-          "/settings",
+          '/api/',
+          '/dashboard/',
+          '/_next/',
+          '/private/',
         ],
       },
       {
-        userAgent: "Googlebot",
-        allow: ["/"],
-        disallow: ["/dashboard", "/api", "/auth"],
+        userAgent: 'Googlebot',
+        allow: '/',
+        disallow: ['/api/', '/dashboard/'],
       },
     ],
-    sitemap: "https://amcreatoranalytics.com/sitemap.xml",
+    sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

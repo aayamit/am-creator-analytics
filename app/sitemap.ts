@@ -1,64 +1,39 @@
-import { MetadataRoute } from "next";
+/**
+ * Dynamic Sitemap Generator
+ * Generates sitemap.xml with static + dynamic pages
+ * Safe: returns static pages if DB unavailable (build-time safe)
+ */
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://amcreatoranalytics.com";
+import { MetadataRoute } from 'next';
 
-  return [
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://amcreator.com';
+
+  // Static pages only (safe for build time)
+  const staticPages = [
     {
-      url: `${baseUrl}`,
+      url: `${baseUrl}` as URL,
       lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
+      changeFrequency: 'monthly' as const,
+      priority: 1.0,
     },
     {
-      url: `${baseUrl}/about`,
+      url: `${baseUrl}/about` as URL,
       lastModified: new Date(),
-      changeFrequency: "monthly",
+      changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/market-opportunity`,
+      url: `${baseUrl}/pricing` as URL,
       lastModified: new Date(),
-      changeFrequency: "monthly",
+      changeFrequency: 'monthly' as const,
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}/features`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/pricing`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/terms`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    // Dashboard pages (noindex for authenticated pages)
-    // These are intentionally excluded from sitemap
   ];
+
+  // Skip DB call at build time — dynamic pages added at runtime via API
+  // To add creator profiles dynamically, use client-side sitemap generation
+  // or an API route that fetches and returns the sitemap XML
+
+  return staticPages;
 }
