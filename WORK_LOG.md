@@ -49,6 +49,44 @@ Successfully tested all OpenSign integrations for AM Creator Analytics.
 
 ---
 
+## 2026-05-01 - UI Unification & Server Restart
+
+### Summary
+Fixed signup page to match login page exactly (Bloomberg McKinsey executive style), fixed Docker Compose Nango image, restarted all services, verified OpenSign integration.
+
+### Completed Tasks
+- [x] Fix signup page UI to match login page (grid background, gradient orb, no hover effects)
+- [x] Remove all hover effects from signup page (role selector, buttons)
+- [x] Fix docker-compose.yml Nango image (nangohq/nango-server:latest)
+- [x] Add Nango environment variables (DB, Redis config)
+- [x] Kill all running servers (Docker containers, Next.js)
+- [x] Restart all services: PostgreSQL, MongoDB, OpenSign, Nango, Next.js
+- [x] Verify OpenSign API key (MASTER_KEY: XnAadwKxxByMr)
+- [x] Test OpenSign contract creation (new contract: GB18uoAYuZ)
+- [x] Verify webhook endpoint (/api/webhooks/opensign) returns {success:true}
+- [x] Build successful after signup page fixes
+
+### Files Modified
+- `app/(auth)/signup/page.tsx` - Rewrote to match login page UI exactly
+- `docker-compose.yml` - Fixed Nango image, added environment variables
+
+### Test Results
+| Test Case | Result |
+|-----------|--------|
+| Signup page matches login page UI | ✅ (grid background, orb, no hovers) |
+| Build after UI fixes | ✅ (npm run build passes) |
+| OpenSign contract creation | ✅ (GB18uoAYuZ) |
+| Webhook endpoint | ✅ ({success:true}) |
+| All Docker services started | ✅ (Postgres, Mongo, OpenSign, Nango) |
+| Next.js dev server | ✅ (running on port 3000) |
+
+### Environment Notes
+- OpenSign APP_ID: `opensign`
+- OpenSign MASTER_KEY: `XnAadwKxxByMr`
+- Signing bonus: ₹1,500 for creators with <50k followers
+
+---
+
 ## 2026-05-01 - Project Cleanup (Previous Session)
 
 ### Summary
