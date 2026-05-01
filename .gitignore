@@ -67,3 +67,6 @@ docker-compose.override.yml
 
 # os
 Thumbs.db
+.env.prod
+.env.local
+*.tar.gz
