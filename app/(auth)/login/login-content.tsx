@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { BarChart3, Building2, User, CheckCircle, Mail, AlertCircle, AlertTriangle } from "lucide-react";
+import { BarChart3, Building2, User, CheckCircle, Mail, AlertCircle } from "lucide-react";
 
 export default function LoginContent() {
   const router = useRouter();
@@ -26,7 +26,6 @@ export default function LoginContent() {
       setRole(roleParam);
     }
 
-    // Check for verification messages
     if (searchParams.get("verified") === "true") {
       setSuccessMessage("Email verified successfully! You can now sign in.");
     }
@@ -34,7 +33,6 @@ export default function LoginContent() {
       setSuccessMessage("Account created! Please check your email to verify your account.");
     }
 
-    // Check for errors
     const errorParam = searchParams.get("error");
     if (errorParam) {
       switch (errorParam) {
@@ -119,95 +117,100 @@ export default function LoginContent() {
           pointerEvents: 'none'
         }}
       />
-      
-      {/* Subtle gradient orb */}
+
+      {/* Subtle gradient orb - Instagram-inspired */}
       <div 
         style={{
           position: 'absolute',
-          top: '15%',
-          right: '10%',
-          width: '350px',
-          height: '350px',
-          background: 'radial-gradient(circle, rgba(146,64,14,0.06) 0%, transparent 70%)',
+          top: '10%',
+          right: '5%',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(146,64,14,0.08) 0%, rgba(26,26,46,0.03) 50%, transparent 70%)',
           pointerEvents: 'none',
-          filter: 'blur(50px)'
+          filter: 'blur(60px)'
         }}
       />
 
-      {/* Login Form Container */}
+      {/* Main Container */}
       <div className="relative z-10 flex flex-col justify-center items-center min-h-screen px-6">
-        {/* Logo */}
+        {/* Logo - Facebook/Instagram inspired clean layout */}
         <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center space-x-2">
-            <BarChart3 className="h-8 w-8 text-accent" />
-            <span className="text-2xl font-bold text-foreground">
-              AM Creator Analytics
-            </span>
+          <Link href="/" className="inline-flex items-center space-x-3">
+            <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(146,64,14,0.1)' }}>
+              <BarChart3 className="h-8 w-8 text-accent" />
+            </div>
+            <div>
+              <span className="text-2xl font-bold text-foreground block" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                AM Creator
+              </span>
+              <span className="text-sm text-muted-foreground">Analytics</span>
+            </div>
           </Link>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-3" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
             Sign in to your {role === "BRAND" ? "Brand" : "Creator"} account
           </p>
         </div>
 
         {/* Success Message */}
         {successMessage && (
-          <Alert className="w-full max-w-sm mb-6 border-green-200 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
-              {successMessage}
-            </AlertDescription>
-          </Alert>
+          <div className="w-full max-w-sm mb-6 p-4 border border-green-200 bg-green-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <p className="text-sm text-green-800">{successMessage}</p>
+            </div>
+          </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <Alert variant="destructive" className="w-full max-w-sm mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <div className="w-full max-w-sm mb-6 p-4 border border-red-200 bg-red-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          </div>
         )}
 
-        {/* Role Selector */}
+        {/* Role Selector - NO HOVER EFFECTS */}
         <div className="w-full max-w-sm mb-6">
           <div className="grid grid-cols-2 gap-3">
-            <Button
+            <button
               type="button"
-              variant={role === "CREATOR" ? "default" : "outline"}
-              className={`h-12 flex-col gap-1 font-semibold
-                ${role === "CREATOR" 
-                  ? "bg-accent text-accent-foreground" 
-                  : "border-border text-foreground hover:border-accent/50"
-                }`}
               onClick={() => setRole("CREATOR")}
+              className={`p-4 rounded-lg border-2 transition-none
+                ${role === "CREATOR" 
+                  ? "border-accent bg-accent/5" 
+                  : "border-border bg-white"
+                }`}
             >
-              <User className={`h-5 w-5 ${role === "CREATOR" ? "text-accent-foreground" : "text-muted-foreground"}`} />
-              <span className={role === "CREATOR" ? "text-accent-foreground" : "text-muted-foreground"}>
+              <User className={`h-6 w-6 mx-auto mb-2 ${role === "CREATOR" ? "text-accent" : "text-muted-foreground"}`} />
+              <span className={`text-sm font-medium ${role === "CREATOR" ? "text-foreground" : "text-muted-foreground"}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                 Creator
               </span>
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant={role === "BRAND" ? "default" : "outline"}
-              className={`h-12 flex-col gap-1 font-semibold
-                ${role === "BRAND" 
-                  ? "bg-primary text-primary-foreground" 
-                  : "border-border text-foreground hover:border-accent/50"
-                }`}
               onClick={() => setRole("BRAND")}
+              className={`p-4 rounded-lg border-2 transition-none
+                ${role === "BRAND" 
+                  ? "border-primary bg-primary/5" 
+                  : "border-border bg-white"
+                }`}
             >
-              <Building2 className={`h-5 w-5 ${role === "BRAND" ? "text-primary-foreground" : "text-muted-foreground"}`} />
-              <span className={role === "BRAND" ? "text-primary-foreground" : "text-muted-foreground"}>
+              <Building2 className={`h-6 w-6 mx-auto mb-2 ${role === "BRAND" ? "text-primary" : "text-muted-foreground"}`} />
+              <span className={`text-sm font-medium ${role === "BRAND" ? "text-foreground" : "text-muted-foreground"}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                 Brand
               </span>
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* Login Form */}
+        {/* Login Form - Facebook-inspired clean design */}
         <div className="w-full max-w-sm">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -215,10 +218,12 @@ export default function LoginContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-12 border-2 focus:border-accent"
+                style={{ fontFamily: 'JetBrains Mono, monospace' }}
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -226,33 +231,37 @@ export default function LoginContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="h-12 border-2 focus:border-accent"
+                style={{ fontFamily: 'JetBrains Mono, monospace' }}
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-accent text-accent-foreground font-semibold"
+              className="w-full h-12 bg-accent text-accent-foreground font-semibold rounded-lg"
+              style={{ fontFamily: 'JetBrains Mono, monospace' }}
               disabled={loading}
             >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
-          {/* Resend Verification */}
+          {/* Resend Verification - NO HOVER */}
           <div className="mt-4 text-center">
             <button
               type="button"
               onClick={handleResendVerification}
-              className="text-sm text-muted-foreground hover:text-accent"
+              className="text-sm text-muted-foreground"
+              style={{ fontFamily: 'JetBrains Mono, monospace' }}
             >
               <Mail className="h-4 w-4 inline mr-1" />
               Resend verification email
             </button>
           </div>
 
-          <p className="text-center text-sm text-muted-foreground mt-6">
+          <p className="text-center text-sm text-muted-foreground mt-6" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-accent hover:underline">
+            <Link href="/signup" className="text-accent font-medium">
               Sign up
             </Link>
           </p>

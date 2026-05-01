@@ -86,79 +86,89 @@ export default function SignupPage() {
         }}
       />
 
-      {/* Subtle gradient orb */}
+      {/* Subtle gradient orb - Instagram-inspired */}
       <div 
         style={{
           position: 'absolute',
-          top: '15%',
-          right: '10%',
-          width: '350px',
-          height: '350px',
-          background: 'radial-gradient(circle, rgba(146,64,14,0.06) 0%, transparent 70%)',
+          top: '10%',
+          right: '5%',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(146,64,14,0.08) 0%, rgba(26,26,46,0.03) 50%, transparent 70%)',
           pointerEvents: 'none',
-          filter: 'blur(50px)'
+          filter: 'blur(60px)'
         }}
       />
 
       {/* Main Container */}
       <div className="relative z-10 flex flex-col justify-center items-center min-h-screen px-6">
-        {/* Logo */}
+        {/* Logo - Facebook/Instagram inspired clean layout */}
         <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center space-x-2">
-            <BarChart3 className="h-8 w-8 text-accent" />
-            <span className="text-2xl font-bold text-foreground">
-              AM Creator Analytics
-            </span>
+          <Link href="/" className="inline-flex items-center space-x-3">
+            <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(146,64,14,0.1)' }}>
+              <BarChart3 className="h-8 w-8 text-accent" />
+            </div>
+            <div>
+              <span className="text-2xl font-bold text-foreground block" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                AM Creator
+              </span>
+              <span className="text-sm text-muted-foreground">Analytics</span>
+            </div>
           </Link>
-          <p className="text-muted-foreground mt-2">Create your account</p>
+          <p className="text-muted-foreground mt-3" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+            Create your account
+          </p>
         </div>
 
         {/* Error Message */}
         {error && (
           <div className="w-full max-w-sm mb-6 p-4 border border-red-200 bg-red-50 rounded-lg">
-            <p className="text-sm text-red-600 text-center">{error}</p>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 text-red-600">⚠</div>
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
           </div>
         )}
 
-        {/* Role Selector */}
+        {/* Role Selector - NO HOVER EFFECTS */}
         <div className="w-full max-w-sm mb-6">
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setRole("CREATOR")}
-              className={`p-4 rounded-lg border-2
+              className={`p-4 rounded-lg border-2 transition-none
                 ${role === "CREATOR" 
                   ? "border-accent bg-accent/5" 
-                  : "border-border"
+                  : "border-border bg-white"
                 }`}
             >
               <User className={`h-6 w-6 mx-auto mb-2 ${role === "CREATOR" ? "text-accent" : "text-muted-foreground"}`} />
-              <span className={`text-sm font-medium ${role === "CREATOR" ? "text-foreground" : "text-muted-foreground"}`}>
+              <span className={`text-sm font-medium ${role === "CREATOR" ? "text-foreground" : "text-muted-foreground"}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                 Creator
               </span>
             </button>
             <button
               type="button"
               onClick={() => setRole("BRAND")}
-              className={`p-4 rounded-lg border-2
+              className={`p-4 rounded-lg border-2 transition-none
                 ${role === "BRAND" 
                   ? "border-primary bg-primary/5" 
-                  : "border-border"
+                  : "border-border bg-white"
                 }`}
             >
               <Building2 className={`h-6 w-6 mx-auto mb-2 ${role === "BRAND" ? "text-primary" : "text-muted-foreground"}`} />
-              <span className={`text-sm font-medium ${role === "BRAND" ? "text-foreground" : "text-muted-foreground"}`}>
+              <span className={`text-sm font-medium ${role === "BRAND" ? "text-foreground" : "text-muted-foreground"}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                 Brand
               </span>
             </button>
           </div>
         </div>
 
-        {/* Signup Form */}
+        {/* Signup Form - Facebook-inspired clean design */}
         <div className="w-full max-w-sm">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name" className="text-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Name</Label>
               <Input
                 id="name"
                 type="text"
@@ -166,10 +176,12 @@ export default function SignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                className="h-12 border-2 focus:border-accent"
+                style={{ fontFamily: 'JetBrains Mono, monospace' }}
               />
             </div>
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -177,10 +189,12 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-12 border-2 focus:border-accent"
+                style={{ fontFamily: 'JetBrains Mono, monospace' }}
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -189,10 +203,12 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
+                className="h-12 border-2 focus:border-accent"
+                style={{ fontFamily: 'JetBrains Mono, monospace' }}
               />
             </div>
 
-            {/* Terms & Privacy */}
+            {/* Terms & Privacy - NO HOVER */}
             <div className="space-y-3 pt-2">
               <div className="flex items-start space-x-2">
                 <Checkbox
@@ -200,9 +216,9 @@ export default function SignupPage() {
                   checked={termsAccepted}
                   onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                 />
-                <Label htmlFor="terms" className="text-sm font-normal leading-relaxed">
+                <Label htmlFor="terms" className="text-sm font-normal leading-relaxed" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                   I agree to the{" "}
-                  <Link href="/terms" className="text-accent">
+                  <Link href="/terms" className="text-accent font-medium">
                     Terms of Service
                   </Link>
                 </Label>
@@ -213,9 +229,9 @@ export default function SignupPage() {
                   checked={privacyAccepted}
                   onCheckedChange={(checked) => setPrivacyAccepted(checked as boolean)}
                 />
-                <Label htmlFor="privacy" className="text-sm font-normal leading-relaxed">
+                <Label htmlFor="privacy" className="text-sm font-normal leading-relaxed" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                   I agree to the{" "}
-                  <Link href="/privacy" className="text-accent">
+                  <Link href="/privacy" className="text-accent font-medium">
                     Privacy Policy
                   </Link>
                 </Label>
@@ -224,16 +240,17 @@ export default function SignupPage() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-accent text-accent-foreground font-semibold"
+              className="w-full h-12 bg-accent text-accent-foreground font-semibold rounded-lg"
+              style={{ fontFamily: 'JetBrains Mono, monospace' }}
               disabled={loading || !termsAccepted || !privacyAccepted}
             >
               {loading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground mt-6">
+          <p className="text-center text-sm text-muted-foreground mt-6" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
             Already have an account?{" "}
-            <Link href="/login" className="text-accent">
+            <Link href="/login" className="text-accent font-medium">
               Sign in
             </Link>
           </p>
