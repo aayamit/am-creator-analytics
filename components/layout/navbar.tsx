@@ -1,120 +1,233 @@
+/**
+ * NavBar Component — Bloomberg × McKinsey Design
+ * Unified navigation for landing page + non-dashboard pages
+ * Cream #F8F7F4, Dark Navy #1a1a2e, Accent #92400e
+ */
+
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { BarChart3, TrendingUp, LogOut, Settings, Bell } from "lucide-react";
-import { useSession, signOut } from "next-auth/react";
-import NotificationBell from "@/components/notifications/notification-bell";
+import { useState } from "react";
+import { Menu, X, TrendingUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function Navbar() {
-  const { data: session, status } = useSession();
-  const isLoading = status === "loading";
-  const isAuthenticated = status === "authenticated";
+export default function NavBar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/#features", label: "Features" },
+    { href: "/#problem", label: "Problem" },
+    { href: "/#solution", label: "Solution" },
+    { href: "/#social-proof", label: "Proof" },
+    { href: "/pricing", label: "Pricing" },
+  ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-6 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2 group">
-          <BarChart3 className="h-6 w-6 text-accent" />
-          <span className="text-lg font-semibold tracking-tight text-foreground font-heading">
-            AM Creator Analytics
-          </span>
+    <motion.nav
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 1000,
+        backgroundColor: "#F8F7F4",
+        borderBottom: "1px solid #e5e7eb",
+        padding: "16px 32px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backdropFilter: "blur(10px)",
+        backgroundColor: "rgba(248, 247, 244, 0.95)",
+      }}
+    >
+      {/* Logo */}
+      <Link
+        href="/"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          textDecoration: "none",
+          color: "#1a1a2e",
+        }}
+      >
+        <TrendingUp size={24} color="#92400e" />
+        <span
+          style={{
+            fontSize: "20px",
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          AM Creator
+        </span>
+      </Link>
+
+      {/* Desktop Nav */}
+      <div
+        style={{
+          display: "flex",
+          gap: "32px",
+          alignItems: "center",
+        }}
+        className="desktop-nav"
+      >
+        {navLinks.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            style={{
+              color: "#1a1a2e",
+              textDecoration: "none",
+              fontSize: "14px",
+              fontWeight: 500,
+              transition: "color 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#92400e")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#1a1a2e")}
+          >
+            {link.label}
+          </Link>
+        ))}
+        <Link href="/signup?role=BRAND">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              backgroundColor: "#1a1a2e",
+              color: "#F8F7F4",
+              padding: "8px 20px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: 600,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            I am a Brand
+          </motion.button>
         </Link>
-
-        {/* Navigation Links - Only show when not authenticated */}
-        {!isAuthenticated && (
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/about" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              About
-            </Link>
-            <Link 
-              href="/market-opportunity" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Market
-            </Link>
-            <Link 
-              href="/features" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Features
-            </Link>
-            <Link 
-              href="/pricing" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link 
-              href="/blog" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Blog
-            </Link>
-            <Link 
-              href="/contact" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Contact
-            </Link>
-          </nav>
-        )}
-
-        {/* Right Side - CTA or User Menu */}
-        <div className="flex items-center space-x-3">
-          {isLoading ? (
-            <div className="h-10 w-20 bg-muted animate-pulse rounded" />
-          ) : isAuthenticated ? (
-            <>
-              {/* Notification Bell */}
-              <NotificationBell />
-              
-              {/* User Menu */}
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-              >
-                <Link href={session?.user?.role === "BRAND" ? "/brands/settings" : "/creators/settings/payouts"}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Link>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => signOut({ callbackUrl: "/" })}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button 
-                variant="outline"
-                asChild
-                className="font-medium hover:border-accent/50 hover:text-accent transition-all duration-200"
-              >
-                <Link href="/login?role=BRAND">Brand Login</Link>
-              </Button>
-              <Button 
-                asChild
-                className="font-medium bg-white text-foreground hover:bg-white/90 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-              >
-                <Link href="/login?role=CREATOR">
-                  Creator Login
-                </Link>
-              </Button>
-            </>
-          )}
-        </div>
+        <Link href="/signup?role=CREATOR">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              backgroundColor: "#92400e",
+              color: "#F8F7F4",
+              padding: "8px 20px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: 600,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            I am a Creator
+          </motion.button>
+        </Link>
       </div>
-    </header>
+
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        style={{
+          display: "none",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: "4px",
+        }}
+        className="mobile-menu-btn"
+      >
+        {mobileMenuOpen ? <X size={24} color="#1a1a2e" /> : <Menu size={24} color="#1a1a2e" />}
+      </button>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              backgroundColor: "#F8F7F4",
+              borderBottom: "1px solid #e5e7eb",
+              padding: "16px 32px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+            }}
+          >
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                style={{
+                  color: "#1a1a2e",
+                  textDecoration: "none",
+                  fontSize: "16px",
+                  fontWeight: 500,
+                }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link href="/signup?role=BRAND" onClick={() => setMobileMenuOpen(false)}>
+              <button
+                style={{
+                  backgroundColor: "#1a1a2e",
+                  color: "#F8F7F4",
+                  padding: "12px 20px",
+                  borderRadius: "6px",
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                  width: "100%",
+                }}
+              >
+                I am a Brand
+              </button>
+            </Link>
+            <Link href="/signup?role=CREATOR" onClick={() => setMobileMenuOpen(false)}>
+              <button
+                style={{
+                  backgroundColor: "#92400e",
+                  color: "#F8F7F4",
+                  padding: "12px 20px",
+                  borderRadius: "6px",
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                  width: "100%",
+                }}
+              >
+                I am a Creator
+              </button>
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Styles */}
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-nav {
+            display: none !important;
+          }
+          .mobile-menu-btn {
+            display: block !important;
+          }
+        }
+      `}</style>
+    </motion.nav>
   );
 }

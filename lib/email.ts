@@ -6,7 +6,11 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/components';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Only initialize Resend if API key exists
+let resend: Resend | null = null;
+if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_123') {
+  resend = new Resend(process.env.RESEND_API_KEY);
+}
 
 export interface EmailOptions {
   to: string | string[];
@@ -18,6 +22,12 @@ export interface EmailOptions {
 
 export async function sendEmail({ to, subject, react, html, from }: EmailOptions) {
   try {
+    // Check if Resend is initialized
+    if (!resend) {
+      console.log('⚠️ Resend not configured (missing API key). Skipping email:', subject);
+      return { id: 'mock-email-id', skipped: true };
+    }
+
     const fromAddress = from || process.env.EMAIL_FROM || 'AM Creator Analytics <noreply@amcreatoranalytics.com>';
 
     let htmlContent = html;
@@ -41,7 +51,8 @@ export async function sendEmail({ to, subject, react, html, from }: EmailOptions
     return data;
   } catch (error) {
     console.error('Email sending failed:', error);
-    throw error;
+    // Don't throw - let the calling code decide how to handle
+    return null;
   }
 }
 

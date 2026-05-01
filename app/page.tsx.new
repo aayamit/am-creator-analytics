@@ -1,0 +1,607 @@
+/**
+ * Landing Page — HIGH-CONVERTING SaaS Sales Page
+ * Bloomberg × McKinsey Design
+ * Focus: Benefits, Flows, Social Proof, Conversion
+ */
+
+"use client";
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { 
+  TrendingUp, DollarSign, BarChart3, Users, Shield, Zap, ChevronRight, 
+  CheckCircle2, Play, Pause, Star, ArrowRight, Globe, Clock, Target
+} from "lucide-react";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.12 } },
+};
+
+const scaleIn = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
+const brandFlow = [
+  { step: "1", title: "Define ICP", desc: "Set budget, niche, audience demographics", icon: Target },
+  { step: "2", title: "Search & Filter", desc: "Premium search with 8.7% engagement filters", icon: Users },
+  { step: "3", title: "Send Contracts", desc: "OpenSign e-signature, save ₹50K/year", icon: Shield },
+  { step: "4", title: "Track ROI", desc: "Full-funnel attribution, $8.20 per $1 spent", icon: BarChart3 },
+];
+
+const creatorFlow = [
+  { step: "1", title: "Connect Platforms", desc: "OAuth YouTube, LinkedIn, Instagram", icon: Globe },
+  { step: "2", title: "Build Media Kit", desc: "Live API-driven kit, no PDF obsolescence", icon: Star },
+  { step: "3", title: "Pitch Brands", desc: "3-step wizard, get discovered", icon: TrendingUp },
+  { step: "4", title: "Get Paid", desc: "Cashfree payouts, GST invoices, ₹1,500 bonus", icon: DollarSign },
+];
+
+const benefits = [
+  {
+    metric: "$1,200 → $720",
+    label: "CAC Reduction",
+    desc: "Cut Customer Acquisition Cost by 40% with verified B2B creators",
+    icon: DollarSign,
+  },
+  {
+    metric: "134 → 56 days",
+    label: "Sales Cycle",
+    desc: "Shorten 134-day cycles by 58% with full-funnel tracking",
+    icon: Clock,
+  },
+  {
+    metric: "90% → 8.7%",
+    label: "Engagement Rate",
+    desc: "Micro-influencers deliver 8.7% vs 0.9% macro-influencers",
+    icon: TrendingUp,
+  },
+  {
+    metric: "₹32L/year",
+    label: "Cost Savings",
+    desc: "Open-source stack vs SaaS: Save ₹32L/year in licensing",
+    icon: Shield,
+  },
+];
+
+const comparisons = [
+  { feature: "Attribution Tracking", us: "✅ Full-funnel", competitors: "❌ Last-click only", statusQuo: "❌ None" },
+  { feature: "Contract Management", us: "✅ OpenSign (Free)", competitors: "❌ DocuSign ($50K/yr)", statusQuo: "❌ Manual PDFs" },
+  { feature: "Media Kits", us: "✅ Live API-driven", competitors: "❌ Static PDFs", statusQuo: "❌ Email attachments" },
+  { feature: "Payouts", us: "✅ Cashfree + GST", competitors: "❌ Manual bank transfers", statusQuo: "❌ Cheques/delays" },
+  { feature: "Data Freshness", us: "✅ Real-time sync", competitors: "❌ Weekly exports", statusQuo: "❌ Stale PDFs" },
+];
+
+export default function HomePage() {
+  const [activeFlow, setActiveFlow] = useState<"brand" | "creator">("brand");
+  const [roiViews, setRoiViews] = useState(1247);
+
+  return (
+    <div style={{ backgroundColor: "#F8F7F4", color: "#1a1a2e", fontFamily: "'Inter', -apple-system, sans-serif" }}>
+      
+      {/* ========== HERO SECTION ========== */}
+      <motion.section
+        initial="hidden" animate="visible" variants={fadeInUp}
+        style={{ 
+          background: "linear-gradient(180deg, #F8F7F4 0%, #ffffff 100%)",
+          padding: "160px 24px 100px", 
+          textAlign: "center",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Live ROI Ticker */}
+        <motion.div 
+          variants={fadeInUp}
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "13px",
+            backgroundColor: "#1a1a2e",
+            color: "#F8F7F4",
+            padding: "10px 24px",
+            borderRadius: "20px",
+            display: "inline-flex",
+            gap: "20px",
+            marginBottom: "40px",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            boxShadow: "0 4px 20px rgba(26,26,46,0.2)",
+          }}
+        >
+          <span><span style={{ color: "#9ca3af" }}>B2B SaaS CAC:</span> <span style={{ color: "#F8F7F4", fontWeight: 700 }}>$1,200</span></span>
+          <span style={{ color: "#9ca3af" }}>|</span>
+          <span><span style={{ color: "#9ca3af" }}>Sales Cycle:</span> <span style={{ color: "#F8F7F4", fontWeight: 700 }}>134 days</span></span>
+          <span style={{ color: "#9ca3af" }}>|</span>
+          <span><span style={{ color: "#9ca3af" }}>ROI:</span> <span style={{ color: "#92400e", fontWeight: 700 }}>$8.20/$1</span></span>
+          <span style={{ color: "#9ca3af" }}>|</span>
+          <span><span style={{ color: "#9ca3af" }}>Market:</span> <span style={{ color: "#F8F7F4", fontWeight: 700 }}>$4.1B</span></span>
+        </motion.div>
+
+        <motion.h1 
+          variants={fadeInUp}
+          style={{ 
+            fontSize: "clamp(48px, 6vw, 80px)", 
+            fontWeight: 800, 
+            letterSpacing: "-0.03em", 
+            lineHeight: 1.1, 
+            marginBottom: "24px",
+            maxWidth: "900px",
+            margin: "0 auto 24px",
+          }}
+        >
+          Influence, <span style={{ color: "#92400e" }}>Quantified.</span>
+          <br />
+          Pipeline, <span style={{ color: "#92400e" }}>Verified.</span>
+        </motion.h1>
+
+        <motion.p 
+          variants={fadeInUp}
+          style={{ 
+            fontSize: "20px", 
+            lineHeight: 1.6, 
+            maxWidth: "700px", 
+            margin: "0 auto 40px", 
+            color: "#4b5563",
+          }}
+        >
+          Lower your B2B SaaS Customer Acquisition Cost (CAC) through API-verified knowledge creators. 
+          We track full-funnel attribution — <strong style={{ color: "#1a1a2e" }}>from the first impression to closed-won revenue.</strong>
+        </motion.p>
+
+        <motion.div variants={fadeInUp} style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
+          <Link href="/signup?role=BRAND" style={{ textDecoration: "none" }}>
+            <motion.button 
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              style={{ 
+                backgroundColor: "#1a1a2e", 
+                color: "#F8F7F4", 
+                padding: "16px 36px", 
+                borderRadius: "10px", 
+                fontSize: "18px", 
+                fontWeight: 600, 
+                border: "none", 
+                cursor: "pointer",
+                display: "flex", 
+                alignItems: "center", 
+                gap: "8px",
+                boxShadow: "0 8px 30px rgba(26,26,46,0.25)",
+              }}
+            >
+              I am a Brand (Find ROI) <ChevronRight size={20} />
+            </motion.button>
+          </Link>
+          <Link href="/signup?role=CREATOR" style={{ textDecoration: "none" }}>
+            <motion.button 
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              style={{ 
+                backgroundColor: "#92400e", 
+                color: "#F8F7F4", 
+                padding: "16px 36px", 
+                borderRadius: "10px", 
+                fontSize: "18px", 
+                fontWeight: 600, 
+                border: "none", 
+                cursor: "pointer",
+                display: "flex", 
+                alignItems: "center", 
+                gap: "8px",
+                boxShadow: "0 8px 30px rgba(146,64,14,0.25)",
+              }}
+            >
+              I am a Creator (Prove Value) <ChevronRight size={20} />
+            </motion.button>
+          </Link>
+        </motion.div>
+
+        {/* Trust indicators */}
+        <motion.div 
+          variants={fadeInUp}
+          style={{ 
+            marginTop: "60px", 
+            display: "flex", 
+            gap: "40px", 
+            justifyContent: "center", 
+            flexWrap: "wrap",
+            fontSize: "14px",
+            color: "#6b7280",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <CheckCircle2 size={16} color="#10b981" />
+            <span>SOC2 Type II Certified</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <CheckCircle2 size={16} color="#10b981" />
+            <span>DPDP Act 2023 Compliant</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <CheckCircle2 size={16} color="#10b981" />
+            <span>₹32L/year saved vs SaaS</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <CheckCircle2 size={16} color="#10b981" />
+            <span>Open-source infrastructure</span>
+          </div>
+        </motion.div>
+      </motion.section>
+
+      {/* ========== HOW IT WORKS (FLOW) ========== */}
+      <motion.section
+        initial="hidden" whileInView="visible" viewport={{ once: true }}
+        variants={fadeInUp}
+        style={{ padding: "100px 24px", maxWidth: "1200px", margin: "0 auto" }}
+      >
+        <motion.h2 variants={fadeInUp} style={{ fontSize: "48px", fontWeight: 700, textAlign: "center", marginBottom: "16px", letterSpacing: "-0.02em" }}>
+          How It <span style={{ color: "#92400e" }}>Works</span>
+        </motion.h2>
+        <motion.p variants={fadeInUp} style={{ fontSize: "18px", lineHeight: 1.6, textAlign: "center", maxWidth: "600px", margin: "0 auto 60px", color: "#4b5563" }}>
+          Two streamlined flows. One unified platform. Zero vanity metrics.
+        </motion.p>
+
+        {/* Toggle */}
+        <motion.div variants={fadeInUp} style={{ display: "flex", justifyContent: "center", marginBottom: "48px" }}>
+          <div style={{ 
+            backgroundColor: "#ffffff", 
+            borderRadius: "10px", 
+            padding: "4px", 
+            display: "flex", 
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}>
+            <button
+              onClick={() => setActiveFlow("brand")}
+              style={{
+                padding: "12px 32px",
+                borderRadius: "8px",
+                border: "none",
+                fontSize: "16px",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.3s",
+                backgroundColor: activeFlow === "brand" ? "#1a1a2e" : "transparent",
+                color: activeFlow === "brand" ? "#F8F7F4" : "#4b5563",
+              }}
+            >
+              For Brands
+            </button>
+            <button
+              onClick={() => setActiveFlow("creator")}
+              style={{
+                padding: "12px 32px",
+                borderRadius: "8px",
+                border: "none",
+                fontSize: "16px",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.3s",
+                backgroundColor: activeFlow === "creator" ? "#92400e" : "transparent",
+                color: activeFlow === "creator" ? "#F8F7F4" : "#4b5563",
+              }}
+            >
+              For Creators
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Flow Steps */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeFlow}
+            initial={{ opacity: 0, x: activeFlow === "brand" ? -20 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: activeFlow === "brand" ? 20 : -20 }}
+            transition={{ duration: 0.4 }}
+            style={{ 
+              display: "grid", 
+              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", 
+              gap: "24px",
+            }}
+          >
+            {(activeFlow === "brand" ? brandFlow : creatorFlow).map((step, index) => (
+              <motion.div
+                key={step.step}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                style={{
+                  backgroundColor: "#ffffff",
+                  padding: "40px 32px",
+                  borderRadius: "16px",
+                  borderLeft: `4px solid ${activeFlow === "brand" ? "#1a1a2e" : "#92400e"}`,
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                  position: "relative",
+                }}
+              >
+                <div style={{
+                  position: "absolute",
+                  top: "20px",
+                  right: "20px",
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "36px",
+                  fontWeight: 800,
+                  color: activeFlow === "brand" ? "#1a1a2e" : "#92400e",
+                  opacity: 0.1,
+                }}>
+                  {step.step}
+                </div>
+                <step.icon 
+                  size={32} 
+                  color={activeFlow === "brand" ? "#1a1a2e" : "#92400e"} 
+                  style={{ marginBottom: "20px" }} 
+                />
+                <h3 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "12px", color: "#1a1a2e" }}>
+                  {step.title}
+                </h3>
+                <p style={{ fontSize: "15px", lineHeight: 1.7, color: "#4b5563", margin: 0 }}>
+                  {step.desc}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </motion.section>
+
+      {/* ========== BENEFITS (NOT FEATURES) ========== */}
+      <motion.section
+        initial="hidden" whileInView="visible" viewport={{ once: true }}
+        variants={fadeInUp}
+        style={{ backgroundColor: "#1a1a2e", color: "#F8F7F4", padding: "100px 24px" }}
+      >
+        <motion.h2 variants={fadeInUp} style={{ fontSize: "48px", fontWeight: 700, textAlign: "center", marginBottom: "16px", letterSpacing: "-0.02em" }}>
+          The <span style={{ color: "#92400e" }}>B2B</span> Bottom Line
+        </motion.h2>
+        <motion.p variants={fadeInUp} style={{ fontSize: "18px", lineHeight: 1.6, textAlign: "center", maxWidth: "600px", margin: "0 auto 60px", color: "#9ca3af" }}>
+          These aren't just features. They're business outcomes that impact your P&L.
+        </motion.p>
+
+        <motion.div
+          variants={staggerContainer}
+          style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", 
+            gap: "32px",
+            maxWidth: "1200px",
+            margin: "0 auto",
+          }}
+        >
+          {benefits.map((benefit, index) => (
+            <motion.div
+              key={index} variants={scaleIn}
+              style={{
+                backgroundColor: "rgba(248,247,244,0.05)",
+                padding: "40px 32px",
+                borderRadius: "16px",
+                borderLeft: "4px solid #92400e",
+              }}
+            >
+              <benefit.icon size={28} color="#92400e" style={{ marginBottom: "16px" }} />
+              <div style={{ 
+                fontFamily: "'JetBrains Mono', monospace", 
+                fontSize: "32px", 
+                fontWeight: 800, 
+                color: "#F8F7F4", 
+                marginBottom: "8px",
+              }}>
+                {benefit.metric}
+              </div>
+              <div style={{ fontSize: "18px", fontWeight: 600, color: "#F8F7F4", marginBottom: "12px" }}>
+                {benefit.label}
+              </div>
+              <p style={{ fontSize: "14px", lineHeight: 1.7, color: "#9ca3af", margin: 0 }}>
+                {benefit.desc}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </motion.section>
+
+      {/* ========== COMPARISON TABLE ========== */}
+      <motion.section
+        initial="hidden" whileInView="visible" viewport={{ once: true }}
+        variants={fadeInUp}
+        style={{ padding: "100px 24px", maxWidth: "1000px", margin: "0 auto" }}
+      >
+        <motion.h2 variants={fadeInUp} style={{ fontSize: "48px", fontWeight: 700, textAlign: "center", marginBottom: "16px", letterSpacing: "-0.02em" }}>
+          Why Choose <span style={{ color: "#92400e" }}>Us?</span>
+        </motion.h2>
+        <motion.p variants={fadeInUp} style={{ fontSize: "18px", lineHeight: 1.6, textAlign: "center", maxWidth: "600px", margin: "0 auto 60px", color: "#4b5563" }}>
+          Stop overpaying for SaaS tools that don't deliver B2B results. See how we compare.
+        </motion.p>
+
+        <motion.div variants={fadeInUp} style={{ overflowX: "auto" }}>
+          <table style={{ 
+            width: "100%", 
+            borderCollapse: "collapse", 
+            backgroundColor: "#ffffff", 
+            borderRadius: "12px", 
+            overflow: "hidden",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+          }}>
+            <thead>
+              <tr style={{ backgroundColor: "#1a1a2e", color: "#F8F7F4" }}>
+                <th style={{ padding: "20px", textAlign: "left", fontSize: "16px", fontWeight: 600 }}>Feature</th>
+                <th style={{ padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: 600, color: "#92400e" }}>AM Creator</th>
+                <th style={{ padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: 600 }}>Competitors</th>
+                <th style={{ padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: 600 }}>Status Quo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparisons.map((row, index) => (
+                <tr key={index} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                  <td style={{ padding: "16px 20px", fontSize: "15px", fontWeight: 600, color: "#1a1a2e" }}>{row.feature}</td>
+                  <td style={{ padding: "16px 20px", textAlign: "center", fontSize: "14px", color: "#10b981" }}>{row.us}</td>
+                  <td style={{ padding: "16px 20px", textAlign: "center", fontSize: "14px", color: "#ef4444" }}>{row.competitors}</td>
+                  <td style={{ padding: "16px 20px", textAlign: "center", fontSize: "14px", color: "#ef4444" }}>{row.statusQuo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </motion.div>
+
+        <motion.div variants={fadeInUp} style={{ textAlign: "center", marginTop: "40px" }}>
+          <p style={{ fontSize: "16px", color: "#4b5563", marginBottom: "24px" }}>
+            <strong style={{ color: "#1a1a2e" }}>Cost Comparison:</strong> Competitors charge ₹50K/year for DocuSign + ₹2L/year for analytics. We're ₹299/month.
+          </p>
+          <Link href="/pricing" style={{ textDecoration: "none" }}>
+            <motion.button
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              style={{ 
+                backgroundColor: "#92400e", 
+                color: "#F8F7F4", 
+                padding: "16px 36px", 
+                borderRadius: "10px", 
+                fontSize: "18px", 
+                fontWeight: 600, 
+                border: "none", 
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              See Pricing <ArrowRight size={20} />
+            </motion.button>
+          </Link>
+        </motion.div>
+      </motion.section>
+
+      {/* ========== SOCIAL PROOF PREVIEW ========== */}
+      <motion.section
+        initial="hidden" whileInView="visible" viewport={{ once: true }}
+        variants={fadeInUp}
+        style={{ backgroundColor: "#F8F7F4", padding: "100px 24px", textAlign: "center" }}
+      >
+        <motion.h2 variants={fadeInUp} style={{ fontSize: "48px", fontWeight: 700, marginBottom: "16px", letterSpacing: "-0.02em" }}>
+          Trusted by <span style={{ color: "#92400e" }}>B2B</span> Leaders
+        </motion.h2>
+        <motion.p variants={fadeInUp} style={{ fontSize: "18px", lineHeight: 1.6, maxWidth: "600px", margin: "0 auto 60px", color: "#4b5563" }}>
+          Join 500+ B2B brands and creators who've quantified their influence.
+        </motion.p>
+
+        <motion.div variants={fadeInUp} style={{ 
+          display: "flex", 
+          gap: "32px", 
+          justifyContent: "center", 
+          flexWrap: "wrap",
+          marginBottom: "40px",
+        }}>
+          {[
+            { metric: "$4.1B", label: "B2B Influencer Market" },
+            { metric: "58%", label: "Faster Sales Cycles" },
+            { metric: "$8.20", label: "ROI per Dollar" },
+            { metric: "8.7%", label: "B2B Engagement Rate" },
+          ].map((stat, index) => (
+            <div key={index} style={{ 
+              backgroundColor: "#ffffff", 
+              padding: "32px", 
+              borderRadius: "12px", 
+              minWidth: "200px",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+            }}>
+              <div style={{ 
+                fontFamily: "'JetBrains Mono', monospace", 
+                fontSize: "36px", 
+                fontWeight: 800, 
+                color: "#1a1a2e", 
+                marginBottom: "8px",
+              }}>
+                {stat.metric}
+              </div>
+              <div style={{ fontSize: "14px", color: "#92400e", fontWeight: 600 }}>{stat.label}</div>
+            </div>
+          ))}
+        </motion.div>
+
+        <Link href="/social-proof" style={{ textDecoration: "none" }}>
+          <motion.button
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            style={{ 
+              backgroundColor: "#1a1a2e", 
+              color: "#F8F7F4", 
+              padding: "14px 32px", 
+              borderRadius: "10px", 
+              fontSize: "16px", 
+              fontWeight: 600, 
+              border: "none", 
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            See Case Studies <ArrowRight size={18} />
+          </motion.button>
+        </Link>
+      </motion.section>
+
+      {/* ========== FINAL CTA ========== */}
+      <motion.section
+        initial="hidden" whileInView="visible" viewport={{ once: true }}
+        variants={fadeInUp}
+        style={{ 
+          background: "linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%)", 
+          color: "#F8F7F4", 
+          padding: "100px 24px", 
+          textAlign: "center",
+        }}
+      >
+        <motion.h2 variants={fadeInUp} style={{ fontSize: "48px", fontWeight: 700, marginBottom: "20px", letterSpacing: "-0.02em" }}>
+          Ready to <span style={{ color: "#92400e" }}>Quantify</span> Your Influence?
+        </motion.h2>
+        <motion.p variants={fadeInUp} style={{ fontSize: "20px", lineHeight: 1.6, maxWidth: "700px", margin: "0 auto 40px", color: "#9ca3af" }}>
+          Join the B2B influencer revolution. Stop measuring vanity metrics. Start tracking real business outcomes.
+        </motion.p>
+        <motion.div variants={fadeInUp} style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
+          <Link href="/signup?role=BRAND" style={{ textDecoration: "none" }}>
+            <motion.button 
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              style={{ 
+                backgroundColor: "#F8F7F4", 
+                color: "#1a1a2e", 
+                padding: "16px 36px", 
+                borderRadius: "10px", 
+                fontSize: "18px", 
+                fontWeight: 600, 
+                border: "none", 
+                cursor: "pointer",
+                display: "flex", 
+                alignItems: "center", 
+                gap: "8px",
+              }}
+            >
+              Start Brand Trial <ChevronRight size={20} />
+            </motion.button>
+          </Link>
+          <Link href="/signup?role=CREATOR" style={{ textDecoration: "none" }}>
+            <motion.button 
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              style={{ 
+                backgroundColor: "#92400e", 
+                color: "#F8F7F4", 
+                padding: "16px 36px", 
+                borderRadius: "10px", 
+                fontSize: "18px", 
+                fontWeight: 600, 
+                border: "none", 
+                cursor: "pointer",
+                display: "flex", 
+                alignItems: "center", 
+                gap: "8px",
+              }}
+            >
+              Create Creator Account <ChevronRight size={20} />
+            </motion.button>
+          </Link>
+        </motion.div>
+        <motion.p variants={fadeInUp} style={{ fontSize: "14px", color: "#9ca3af", marginTop: "24px", marginBottom: 0 }}>
+          No credit card required. Free 14-day trial. Cancel anytime.
+        </motion.p>
+      </motion.section>
+    </div>
+  );
+}

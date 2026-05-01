@@ -1,22 +1,14 @@
-import { Metadata } from 'next';
-import type { Viewport } from 'next';
-import WebVitalsReporter from '@/components/WebVitalsReporter';
+import type { Metadata } from 'next';
+import './globals.css';
+import NavBar from '@/components/NavBar';
+import Footer from '@/components/Footer';
+import ScrollToTop from '@/components/ScrollToTop';
 
 export const metadata: Metadata = {
   title: 'AM Creator Analytics',
-  description: 'Enterprise multi-tenant creator analytics platform',
+  description: 'Stop measuring vanity metrics. Start tracking real B2B business outcomes with India\'s first full-funnel influencer attribution platform.',
 };
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#F8F7F4',
-};
-
-/**
- * Bloomberg × McKinsey Design System
- * Applied globally via CSS variables
- */
 export default function RootLayout({
   children,
 }: {
@@ -24,22 +16,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body
-        style={{
-          backgroundColor: '#F8F7F4',
-          color: '#1a1a2e',
-          fontFamily:
-            'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        }}
-      >
-        <WebVitalsReporter />
-        {children}
+      <body style={{ margin: 0, fontFamily: "'Inter', -apple-system, sans-serif", backgroundColor: '#F8F7F4', color: '#1a1a2e' }}>
+        <NavBar />
+        <main style={{ minHeight: 'calc(100vh - 200px)' }}>
+          {children}
+        </main>
+        <Footer />
+        <ScrollToTop />
       </body>
     </html>
   );

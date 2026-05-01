@@ -3,6 +3,52 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F8F7F4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(26,26,46,0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(26,26,46,0.4);
+}
+
+/* Hover effects for NavBar and Footer */
+.nav-link:hover {
+  color: #1a1a2e !important;
+}
+
+.nav-link-ghost:hover {
+  background-color: rgba(26,26,46,0.05) !important;
+}
+
+.nav-btn-primary:hover {
+  background-color: #2d2d4e !important;
+  box-shadow: 0 6px 20px rgba(26,26,46,0.3) !important;
+}
+
+.footer-link:hover {
+  color: #F8F7F4 !important;
+}
+
+.site-footer a:hover {
+  color: #F8F7F4 !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

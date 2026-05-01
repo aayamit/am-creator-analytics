@@ -1,0 +1,23 @@
+import { withAuth } from "next-auth/middleware"
+
+// Temporarily DISABLE auth for demo
+// Remove this comment and uncomment below when ready for production
+
+export default function middleware() {
+  // For demo: allow all requests
+  return Response.next();
+}
+
+// Production middleware (enable when demo is done):
+// export default withAuth({
+//   callbacks: {
+//     authorized: ({ token }) => !!token,
+//   },
+// });
+
+export const config = {
+  matcher: [
+    "/:tenantId/dashboard/:path*",
+    "/api/demo-login",
+  ],
+}

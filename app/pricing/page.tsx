@@ -1,366 +1,298 @@
-import type { Metadata } from "next";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check, X, HelpCircle } from "lucide-react";
-import JsonLd from "@/components/seo/json-ld";
+/**
+ * Pricing Page — Bloomberg × McKinsey Design
+ * Hybrid pricing: Base Subscription + Usage/Outcome Tiers
+ */
 
-export const metadata: Metadata = {
-  title: "Pricing | AM Creator Analytics",
-  description:
-    "Transparent pricing for brands and creators. Free tier available. Scale your creator marketing with premium analytics and authentic partnership tools.",
-  openGraph: {
-    title: "Pricing - AM Creator Analytics",
-    description: "Transparent pricing for brands and creators. Free tier available.",
-  },
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { CheckCircle, ChevronRight, Star } from "lucide-react";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
 };
 
-const brandPlans = [
-  {
-    name: "Starter",
-    description: "For brands testing the waters",
-    price: "$0",
-    period: "forever",
-    features: [
-      { name: "Up to 5 creator discoveries", included: true },
-      { name: "Basic audience demographics", included: true },
-      { name: "1 active campaign", included: true },
-      { name: "Email support", included: true },
-      { name: "Advanced fraud detection", included: false },
-      { name: "API access", included: false },
-      { name: "Dedicated account manager", included: false },
-    ],
-    cta: "Start Free",
-    href: "/api/auth/signin?role=brand",
-    featured: false,
-  },
-  {
-    name: "Professional",
-    description: "For growing brand teams",
-    price: "$299",
-    period: "per month",
-    features: [
-      { name: "Unlimited creator discoveries", included: true },
-      { name: "Deep audience demographics", included: true },
-      { name: "Up to 10 active campaigns", included: true },
-      { name: "Priority support", included: true },
-      { name: "Advanced fraud detection", included: true },
-      { name: "API access", included: true },
-      { name: "Dedicated account manager", included: false },
-    ],
-    cta: "Start Free Trial",
-    href: "/api/auth/signin?role=brand",
-    featured: true,
-  },
-  {
-    name: "Enterprise",
-    description: "For large-scale operations",
-    price: "Custom",
-    period: "tailored pricing",
-    features: [
-      { name: "Unlimited everything", included: true },
-      { name: "Custom audience insights", included: true },
-      { name: "Unlimited campaigns", included: true },
-      { name: "24/7 phone support", included: true },
-      { name: "White-glove onboarding", included: true },
-      { name: "Full API + webhooks", included: true },
-      { name: "Dedicated account manager", included: true },
-    ],
-    cta: "Contact Sales",
-    href: "/contact?type=enterprise",
-    featured: false,
-  },
-];
+const scaleIn = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } },
+};
 
-const creatorPlans = [
-  {
-    name: "Creator Free",
-    description: "Showcase your value",
-    price: "$0",
-    period: "forever",
-    features: [
-      { name: "1 dynamic media kit", included: true },
-      { name: "Basic analytics dashboard", included: true },
-      { name: "Up to 3 social accounts", included: true },
-      { name: "Community support", included: true },
-      { name: "Pricing calculator", included: false },
-      { name: "Brand discovery visibility", included: false },
-      { name: "Priority verification", included: false },
-    ],
-    cta: "Create Free Account",
-    href: "/api/auth/signin?role=creator",
-    featured: false,
-  },
+const pricingTiers = [
   {
     name: "Creator Pro",
-    description: "Maximize your partnerships",
-    price: "$29",
-    period: "per month",
+    price: "₹29",
+    period: "/month",
+    description: "For rising creators ready to prove value",
     features: [
-      { name: "Unlimited media kits", included: true },
-      { name: "Advanced analytics + benchmarks", included: true },
-      { name: "Unlimited social accounts", included: true },
-      { name: "Priority support", included: true },
-      { name: "Pricing calculator", included: true },
-      { name: "Brand discovery visibility", included: true },
-      { name: "Priority verification", included: false },
+      "API-Driven Media Kit",
+      "Pitch to Brands (3-step wizard)",
+      "₹1,500 Signing Bonus (50K+ followers)",
+      "GST-Ready Invoices",
+      "Basic Analytics Dashboard",
     ],
-    cta: "Start Free Trial",
-    href: "/api/auth/signin?role=creator",
-    featured: true,
+    cta: "Prove Value",
+    highlight: false,
+    savings: null,
+  },
+  {
+    name: "Brand Professional",
+    price: "₹299",
+    period: "/month",
+    description: "For brands running B2B influencer campaigns",
+    features: [
+      "Premium Creator Search (Filters + Animations)",
+      "Full-Funnel CRM Sync (Salesforce/HubSpot)",
+      "Contract Management (OpenSign)",
+      "AI Authenticity Layer",
+      "Pitch Inbox + Management",
+      "Advanced ROI Analytics",
+    ],
+    cta: "Find ROI",
+    highlight: true,
+    savings: "Save ₹50K/year vs DocuSign",
   },
   {
     name: "Creator Elite",
-    description: "For top-tier creators",
-    price: "$99",
-    period: "per month",
+    price: "₹99",
+    period: "/month",
+    description: "For top creators commanding premium rates",
     features: [
-      { name: "Everything in Pro", included: true },
-      { name: "Custom branding on media kits", included: true },
-      { name: "Direct brand introductions", included: true },
-      { name: "1:1 strategy session", included: true },
-      { name: "Early access to features", included: true },
-      { name: "Revenue share opportunities", included: true },
-      { name: "Priority verification badge", included: true },
+      "Everything in Pro +",
+      "Priority Brand Discovery",
+      "Custom Media Kit Design",
+      "Dedicated Account Manager",
+      "White-Label Reports",
     ],
-    cta: "Go Elite",
-    href: "/api/auth/signin?role=creator",
-    featured: false,
+    cta: "Command Premium",
+    highlight: false,
+    savings: "8.7% engagement rate",
   },
 ];
 
-const pricingSchema = {
-  "@context": "https://schema.org",
-  "@type": "OfferCatalog",
-  name: "AM Creator Analytics Pricing",
-  itemListElement: [
-    {
-      "@type": "Offer",
-      name: "Starter Plan",
-      price: "0",
-      priceCurrency: "USD",
-      description: "Free tier for brands testing the platform",
-    },
-    {
-      "@type": "Offer",
-      name: "Professional Plan",
-      price: "299",
-      priceCurrency: "USD",
-      description: "Professional tier for growing brand teams",
-    },
-    {
-      "@type": "Offer",
-      name: "Creator Free Plan",
-      price: "0",
-      priceCurrency: "USD",
-      description: "Free tier for creators to showcase value",
-    },
-    {
-      "@type": "Offer",
-      name: "Creator Pro Plan",
-      price: "29",
-      priceCurrency: "USD",
-      description: "Pro tier for creators maximizing partnerships",
-    },
-  ],
-};
-
-function PricingCard({ plan }: { plan: any }) {
-  return (
-    <Card
-      className={`p-8 relative ${
-        plan.featured
-          ? "border-accent bg-accent/5 overflow-visible"
-          : "bg-card border-border/50"
-      }`}
-    >
-      {plan.featured && (
-        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground">
-          Most Popular
-        </Badge>
-      )}
-      <div className="text-center mb-8">
-        <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
-        <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
-        <div className="text-4xl font-bold text-foreground font-mono">
-          {plan.price}
-          {plan.period !== "forever" && plan.period !== "tailored pricing" && (
-            <span className="text-base font-normal text-muted-foreground">
-              /mo
-            </span>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground mt-1">{plan.period}</p>
-      </div>
-
-      <ul className="space-y-3 mb-8">
-        {plan.features.map((feature: any, index: number) => (
-          <li key={index} className="flex items-start space-x-3">
-            {feature.included ? (
-              <Check className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-            ) : (
-              <X className="h-5 w-5 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
-            )}
-            <span
-              className={`text-sm ${
-                feature.included
-                  ? "text-foreground"
-                  : "text-muted-foreground/50 line-through"
-              }`}
-            >
-              {feature.name}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      <Button
-        asChild
-        className={`w-full ${
-          plan.featured
-            ? "bg-accent text-accent-foreground hover:bg-accent/90"
-            : ""
-        }`}
-        variant={plan.featured ? "default" : "outline"}
-      >
-        <a href={plan.href}>{plan.cta}</a>
-      </Button>
-    </Card>
-  );
-}
+const faqItems = [
+  {
+    q: "What is the signing bonus?",
+    a: "Creators with 50K+ followers get ₹1,500 automatically when they sign their first contract through our platform.",
+  },
+  {
+    q: "Can I switch plans anytime?",
+    a: "Yes, you can upgrade or downgrade anytime. Usage-based pricing applies to Brand Professional plan.",
+  },
+  {
+    q: "Is OpenSign really free?",
+    a: "Yes! We self-host OpenSign, saving you ₹50K/year compared to DocuSign. No per-document fees.",
+  },
+  {
+    q: "What payment methods do you support?",
+    a: "We support UPI, bank transfers, and all major credit cards via Cashfree. GST invoices included.",
+  },
+];
 
 export default function PricingPage() {
+  const [annual, setAnnual] = useState(false);
+
   return (
-    <main className="min-h-screen bg-background">
-      <JsonLd data={pricingSchema} />
+    <div style={{ backgroundColor: "#F8F7F4", color: "#1a1a2e", fontFamily: "'Inter', -apple-system, sans-serif", minHeight: "100vh" }}>
+      
+      {/* Hero */}
+      <motion.section
+        initial="hidden" animate="visible" variants={fadeInUp}
+        style={{ padding: "140px 24px 100px", textAlign: "center", maxWidth: "900px", margin: "0 auto" }}
+      >
+        <motion.h1 variants={fadeInUp} style={{ fontSize: "64px", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: "20px" }}>
+          Simple, <span style={{ color: "#92400e" }}>Transparent</span> Pricing
+        </motion.h1>
+        <motion.p variants={fadeInUp} style={{ fontSize: "20px", lineHeight: 1.6, maxWidth: "600px", margin: "0 auto 40px", color: "#4b5563" }}>
+          Hybrid model: Base Subscription + Usage/Outcome Tiers. Save ₹32L/year with open-source tools.
+        </motion.p>
 
-      {/* Hero Section */}
-      <section className="border-b border-border">
-        <div className="container mx-auto px-6 lg:px-8 py-24 md:py-32">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground font-heading mb-6">
-              Transparent Pricing for Every Scale
-            </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              No hidden fees, no vanity traps. Choose the plan that fits your
-              goals — from testing the waters to enterprise-scale operations.
-            </p>
-          </div>
-        </div>
-      </section>
+        {/* Toggle */}
+        <motion.div variants={fadeInUp} style={{ display: "flex", alignItems: "center", gap: "16px", justifyContent: "center", marginBottom: "32px" }}>
+          <span style={{ fontSize: "14px", color: annual ? "#4b5563" : "#1a1a2e", fontWeight: annual ? 400 : 600 }}>Monthly</span>
+          <button
+            onClick={() => setAnnual(!annual)}
+            style={{
+              width: "60px", height: "32px", borderRadius: "16px",
+              backgroundColor: annual ? "#92400e" : "#e5e7eb",
+              border: "none", cursor: "pointer", position: "relative",
+              transition: "background-color 0.3s",
+            }}
+          >
+            <div style={{
+              width: "28px", height: "28px", borderRadius: "50%",
+              backgroundColor: "#ffffff", position: "absolute",
+              top: "2px", left: annual ? "30px" : "2px",
+              transition: "left 0.3s", boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            }} />
+          </button>
+          <span style={{ fontSize: "14px", color: annual ? "#1a1a2e" : "#4b5563", fontWeight: annual ? 600 : 400 }}>
+            Annual <span style={{ color: "#92400e", fontSize: "12px" }}>Save 20%</span>
+          </span>
+        </motion.div>
+      </motion.section>
 
-      {/* Brand Plans */}
-      <section className="py-24 md:py-32">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-foreground font-heading text-center mb-4">
-              For Brands
-            </h2>
-            <p className="text-lg text-muted-foreground text-center mb-16">
-              Discover authentic creators and track real campaign ROI
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {brandPlans.map((plan, index) => (
-                <PricingCard key={index} plan={plan} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Creator Plans */}
-      <section className="border-t border-border bg-muted/30 py-24 md:py-32">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-foreground font-heading text-center mb-4">
-              For Creators
-            </h2>
-            <p className="text-lg text-muted-foreground text-center mb-16">
-              Showcase your true value with dynamic media kits
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {creatorPlans.map((plan, index) => (
-                <PricingCard key={index} plan={plan} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="border-t border-border py-24 md:py-32">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-foreground font-heading text-center mb-16">
-              Frequently Asked Questions
-            </h2>
-            <div className="space-y-8">
-              {[
-                {
-                  question: "Can I switch plans anytime?",
-                  answer:
-                    "Yes, you can upgrade or downgrade your plan at any time. Changes take effect at the start of the next billing cycle.",
-                },
-                {
-                  question: "What payment methods do you accept?",
-                  answer:
-                    "We accept all major credit cards, PayPal, and wire transfers for Enterprise plans.",
-                },
-                {
-                  question: "Is there a free trial for paid plans?",
-                  answer:
-                    "Yes, all paid plans come with a 14-day free trial. No credit card required to start.",
-                },
-                {
-                  question: "How does the fraud detection work?",
-                  answer:
-                    "Our proprietary algorithm analyzes follower patterns, engagement quality, and audience authenticity to flag suspicious activity.",
-                },
-              ].map((faq, index) => (
-                <div key={index} className="border-b border-border pb-8 last:border-0">
-                  <h3 className="text-lg font-semibold text-foreground mb-3 flex items-start space-x-2">
-                    <HelpCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-                    <span>{faq.question}</span>
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed ml-7">
-                    {faq.answer}
-                  </p>
+      {/* Pricing Cards */}
+      <motion.section
+        initial="hidden" whileInView="visible" viewport={{ once: true }}
+        variants={fadeInUp}
+        style={{ padding: "0 24px 100px", maxWidth: "1200px", margin: "0 auto" }}
+      >
+        <motion.div
+          variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "32px" }}
+        >
+          {pricingTiers.map((tier, index) => (
+            <motion.div
+              key={index} variants={scaleIn}
+              style={{
+                backgroundColor: tier.highlight ? "#1a1a2e" : "#ffffff",
+                color: tier.highlight ? "#F8F7F4" : "#1a1a2e",
+                padding: "44px 32px", borderRadius: "16px",
+                boxShadow: tier.highlight
+                  ? "0 20px 60px rgba(26,26,46,0.3)"
+                  : "0 4px 16px rgba(0,0,0,0.08)",
+                border: tier.highlight ? "2px solid #92400e" : "1px solid #e5e7eb",
+                position: "relative", overflow: "hidden",
+              }}
+            >
+              {tier.highlight && (
+                <div style={{
+                  position: "absolute", top: "16px", right: "-30px",
+                  backgroundColor: "#92400e", color: "#F8F7F4",
+                  padding: "4px 40px", fontSize: "12px", fontWeight: 600,
+                  transform: "rotate(45deg)", display: "flex", alignItems: "center", gap: "4px",
+                }}>
+                  <Star size={14} /> POPULAR
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+              )}
 
-      {/* CTA Section */}
-      <section className="border-t border-border bg-muted/30 py-24 md:py-32">
-        <div className="container mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-foreground font-heading mb-6">
-            Ready to Move Beyond Vanity Metrics?
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-            Join the brands and creators who've transformed their strategy with
-            data-driven insights.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-accent text-accent-foreground hover:bg-accent/90 font-medium px-8 h-12 text-base"
+              <h3 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>{tier.name}</h3>
+              <p style={{
+                fontSize: "14px", lineHeight: 1.6,
+                color: tier.highlight ? "#9ca3af" : "#6b7280",
+                marginBottom: "24px",
+              }}>
+                {tier.description}
+              </p>
+
+              <div style={{ marginBottom: "24px" }}>
+                <span style={{ fontSize: "48px", fontWeight: 800 }}>
+                  {annual ? `₹${Math.round(parseInt(tier.price.replace('₹', '')) * 12 * 0.8)}` : tier.price}
+                </span>
+                <span style={{ fontSize: "16px", color: tier.highlight ? "#9ca3af" : "#6b7280" }}>
+                  {annual ? "/year" : tier.period}
+                </span>
+              </div>
+
+              {tier.savings && (
+                <div style={{
+                  backgroundColor: tier.highlight ? "rgba(248,247,244,0.1)" : "#F8F7F4",
+                  padding: "8px 12px", borderRadius: "6px", marginBottom: "24px",
+                  fontSize: "13px", color: tier.highlight ? "#92400e" : "#92400e",
+                  fontWeight: 600,
+                }}>
+                  {tier.savings}
+                </div>
+              )}
+
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", textAlign: "left" }}>
+                {tier.features.map((feature, i) => (
+                  <li key={i} style={{
+                    display: "flex", alignItems: "flex-start", gap: "8px",
+                    marginBottom: "12px", fontSize: "14px", lineHeight: 1.6,
+                  }}>
+                    <CheckCircle size={16} color={tier.highlight ? "#92400e" : "#10b981"} style={{ flexShrink: 0, marginTop: "2px" }} />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/signup" style={{ textDecoration: "none" }}>
+                <motion.button
+                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  style={{
+                    width: "100%", padding: "14px", borderRadius: "8px",
+                    border: "none", fontSize: "16px", fontWeight: 600,
+                    cursor: "pointer",
+                    backgroundColor: tier.highlight ? "#92400e" : "#1a1a2e",
+                    color: "#F8F7F4",
+                  }}
+                >
+                  {tier.cta} <ChevronRight size={18} />
+                </motion.button>
+              </Link>
+            </motion.div>
+          ))}
+        </motion.div>
+      </motion.section>
+
+      {/* FAQ */}
+      <motion.section
+        initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+        style={{ backgroundColor: "#1a1a2e", color: "#F8F7F4", padding: "100px 24px", textAlign: "center" }}
+      >
+        <motion.h2 variants={fadeInUp} style={{ fontSize: "40px", fontWeight: 700, marginBottom: "16px", letterSpacing: "-0.02em" }}>
+          Frequently Asked <span style={{ color: "#92400e" }}>Questions</span>
+        </motion.h2>
+        <motion.div variants={fadeInUp} style={{ maxWidth: "800px", margin: "0 auto", textAlign: "left" }}>
+          {faqItems.map((item, index) => (
+            <motion.div
+              key={index} variants={fadeInUp}
+              style={{
+                backgroundColor: "rgba(248,247,244,0.05)", padding: "24px",
+                borderRadius: "12px", marginBottom: "16px", borderLeft: "4px solid #92400e",
+              }}
             >
-              <a href="/api/auth/signin?role=brand">Start Brand Trial</a>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="font-medium px-8 h-12 text-base border-2"
+              <h4 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "8px", color: "#F8F7F4" }}>{item.q}</h4>
+              <p style={{ fontSize: "14px", lineHeight: 1.6, color: "#9ca3af", margin: 0 }}>{item.a}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </motion.section>
+
+      {/* CTA */}
+      <motion.section
+        initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+        style={{ padding: "100px 24px", textAlign: "center", maxWidth: "800px", margin: "0 auto" }}
+      >
+        <h2 style={{ fontSize: "40px", fontWeight: 700, marginBottom: "16px", color: "#1a1a2e", letterSpacing: "-0.02em" }}>
+          Ready to <span style={{ color: "#92400e" }}>quantify</span> your influence?
+        </h2>
+        <p style={{ fontSize: "16px", lineHeight: 1.6, color: "#4b5563", marginBottom: "32px" }}>
+          Join the B2B influencer revolution. Influence, Quantified. Pipeline, Verified.
+        </p>
+        <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
+          <Link href="/signup?role=BRAND" style={{ textDecoration: "none" }}>
+            <motion.button
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              style={{
+                backgroundColor: "#1a1a2e", color: "#F8F7F4",
+                padding: "14px 32px", borderRadius: "8px",
+                fontSize: "16px", fontWeight: 600, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: "8px",
+              }}
             >
-              <a href="/api/auth/signin?role=creator">Create Creator Account</a>
-            </Button>
-          </div>
+              I am a Brand (Find ROI) <ChevronRight size={18} />
+            </motion.button>
+          </Link>
+          <Link href="/signup?role=CREATOR" style={{ textDecoration: "none" }}>
+            <motion.button
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              style={{
+                backgroundColor: "#92400e", color: "#F8F7F4",
+                padding: "14px 32px", borderRadius: "8px",
+                fontSize: "16px", fontWeight: 600, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: "8px",
+              }}
+            >
+              I am a Creator (Prove Value) <ChevronRight size={18} />
+            </motion.button>
+          </Link>
         </div>
-      </section>
-    </main>
+      </motion.section>
+    </div>
   );
 }

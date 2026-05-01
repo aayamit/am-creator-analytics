@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, Users, BarChart3, FileText, Settings, LogOut, TrendingUp, Link2, Bell, Contact, Wallet, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, FileText, Settings, LogOut, TrendingUp, Link2, Bell, Contact, Wallet, Shield, Send, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NotificationBell from '@/components/notifications/notification-bell';
 import { useSession } from 'next-auth/react';
@@ -23,6 +23,7 @@ export default function DashboardSidebar({ role, tenantId, tenantName, tenantTyp
     { href: `${basePath}/dashboard/analytics`, label: 'Analytics', icon: BarChart3 },
     { href: `${basePath}/dashboard/media-kit`, label: 'Media Kit', icon: FileText },
     { href: `${basePath}/dashboard/connections`, label: 'Connections', icon: Link2 },
+    { href: `${basePath}/dashboard/pitch`, label: 'Pitch to Brand', icon: Send },
     { href: `${basePath}/dashboard/payouts`, label: 'Payouts', icon: Wallet },
     { href: `${basePath}/dashboard/notifications`, label: 'Notifications', icon: Bell },
   ];
@@ -33,6 +34,7 @@ export default function DashboardSidebar({ role, tenantId, tenantName, tenantTyp
     { href: `${basePath}/dashboard/analytics`, label: 'Analytics', icon: BarChart3 },
     { href: `${basePath}/dashboard/creators`, label: 'Discover', icon: Users },
     { href: `${basePath}/dashboard/crm`, label: 'CRM', icon: Contact },
+    { href: `${basePath}/dashboard/pitches`, label: 'Pitch Inbox', icon: Inbox },
     { href: `${basePath}/dashboard/funding`, label: 'Funding', icon: Wallet },
     { href: `${basePath}/dashboard/notifications`, label: 'Notifications', icon: Bell },
     { href: `${basePath}/dashboard/settings`, label: 'Settings', icon: Settings },
