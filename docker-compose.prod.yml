@@ -1,0 +1,94 @@
+services:
+  # =================== AM Creator Analytics (Next.js) ===================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: am-creator-app
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # =================== PostgreSQL ===================
+  postgres:
+    image: postgres:16-alpine
+    container_name: am-creator-postgres
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # =================== OpenSign Client ===================
+  opensign-client:
+    image: opensign/opensign:main
+    container_name: opensign-client
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    ports:
+      - "127.0.0.1:3001:3000"
+    networks:
+      - app-network
+
+  # =================== MongoDB (for OpenSign) ===================
+  mongo:
+    image: mongo:latest
+    container_name: opensign-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: opensign
+      MONGO_INITDB_ROOT_PASSWORD: opensign123
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "127.0.0.1:27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # =================== Nginx Reverse Proxy ===================
+  nginx:
+    image: nginx:alpine
+    container_name: am-creator-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - app
+      - opensign-client
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mongo_data:
