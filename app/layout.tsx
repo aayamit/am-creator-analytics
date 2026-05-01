@@ -3,6 +3,7 @@ import './globals.css';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
+import AuthProviders from '@/components/providers';
 
 export const metadata: Metadata = {
   title: 'AM Creator Analytics',
@@ -17,12 +18,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body style={{ margin: 0, fontFamily: "'Inter', -apple-system, sans-serif", backgroundColor: '#F8F7F4', color: '#1a1a2e' }}>
-        <NavBar />
-        <main style={{ minHeight: 'calc(100vh - 200px)' }}>
-          {children}
-        </main>
-        <Footer />
-        <ScrollToTop />
+        <AuthProviders>
+          <NavBar />
+          <main style={{ minHeight: 'calc(100vh - 200px)' }}>
+            {children}
+          </main>
+          <Footer />
+          <ScrollToTop />
+        </AuthProviders>
       </body>
     </html>
   );

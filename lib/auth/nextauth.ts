@@ -85,20 +85,30 @@ export const authOptions: NextAuthOptions = {
         role: { label: "Role", type: "text" },
       },
       async authorize(credentials) {
-        // TEMPORARY: Always return a test user for demo
+        // TEMPORARY: Return a test user for demo with selected role
         console.log("=== AUTHORIZE CALLED - SIMPLIFIED ===");
         console.log("Email:", credentials?.email);
+        console.log("Role:", credentials?.role);
         
         if (!credentials?.email) {
           return null;
         }
 
-        // Return test user (bypass database for demo)
+        // Map role to UserRole
+        const roleMap: Record<string, string> = {
+          "BRAND": "BRAND",
+          "CREATOR": "CREATOR", 
+          "ADMIN": "ADMIN"
+        };
+        
+        const selectedRole = roleMap[credentials.role as string] || "CREATOR";
+        
+        // Return test user with correct role
         return {
-          id: "test-user-id-123",
+          id: `test-${selectedRole.toLowerCase()}-id`,
           email: credentials.email as string,
-          name: "Demo User",
-          role: "ADMIN" as UserRole,
+          name: `Demo ${selectedRole}`,
+          role: selectedRole as UserRole,
         };
       },
     }),
