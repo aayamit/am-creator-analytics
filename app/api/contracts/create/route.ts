@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { createDocument, sendDocument } from '@/lib/opensign';
 
 const prisma = new PrismaClient();
@@ -79,8 +79,7 @@ export async function POST(request: NextRequest) {
         data: {
           campaignId,
           creatorId,
-          status: 'ACTIVE',
-          revenueSharePercent: 10, // Default
+          rate: new Prisma.Decimal(amount || 0),
         },
       });
     }
