@@ -2,6 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
+import InstagramProvider from "next-auth/providers/instagram";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient, UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -77,6 +78,24 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
+    InstagramProvider({
+      clientId: process.env.INSTAGRAM_CLIENT_ID!,
+      clientSecret: process.env.INSTAGRAM_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "user_profile user_media",
+        },
+      },
+      profile(profile) {
+        return {
+          id: profile.id,
+          name: profile.username,
+          email: profile.email || `${profile.username}@instagram.com`,
+          image: profile.profile_picture,
+          role: "CREATOR" as UserRole,
+        };
+      },
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -116,7 +135,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       // If OAuth sign in, check if user exists and has proper role
-      if (account?.provider === "google" || account?.provider === "linkedin") {
+      if (account?.provider === "google" || account?.provider === "linkedin" || account?.provider === "instagram") {
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email! },
           include: { creatorProfile: true },
@@ -132,7 +151,39 @@ export const authOptions: NextAuthOptions = {
           });
         }
 
-        // Store social account connection
+        // Store social account connection for Instagram
+        if (account.provider === "instagram" && existingUser?.creatorProfile) {
+          await prisma.socialAccount.upsert({
+            where: {
+              creatorId_platform: {
+                creatorId: existingUser.creatorProfile.id,
+                platform: "INSTAGRAM",
+              },
+            },
+            update: {
+              accessToken: account.access_token!,
+              refreshToken: account.refresh_token,
+              expiresAt: account.expires_at
+                ? new Date(account.expires_at * 1000)
+                : undefined,
+              platformId: (profile as any)?.id || "",
+              username: user.name?.split("@")[0] || "",
+            },
+            create: {
+              creatorId: existingUser.creatorProfile.id,
+              platform: "INSTAGRAM",
+              platformId: (profile as any)?.id || "",
+              accessToken: account.access_token!,
+              refreshToken: account.refresh_token,
+              expiresAt: account.expires_at
+                ? new Date(account.expires_at * 1000)
+                : undefined,
+              username: user.name?.split("@")[0] || "",
+            },
+          });
+        }
+
+        // Store social account connection for Google/YouTube
         if (account.provider === "google" && existingUser?.creatorProfile) {
           await prisma.socialAccount.upsert({
             where: {

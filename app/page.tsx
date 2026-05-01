@@ -141,6 +141,38 @@ export default function Home() {
         animate="visible"
         variants={fadeInUp}
       >
+        {/* Bloomberg-style grid background */}
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: `
+              linear-gradient(rgba(26,26,46,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(26,26,46,0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px',
+            pointerEvents: 'none',
+            zIndex: 0
+          }}
+        />
+        
+        {/* Subtle radial gradient orb */}
+        <div 
+          style={{
+            position: 'absolute',
+            top: '10%',
+            right: '5%',
+            width: '400px',
+            height: '400px',
+            background: 'radial-gradient(circle, rgba(146,64,14,0.06) 0%, transparent 70%)',
+            pointerEvents: 'none',
+            filter: 'blur(60px)',
+            zIndex: 0
+          }}
+        />
         <motion.h1 
           className="font-heading"
           style={{
@@ -177,20 +209,17 @@ export default function Home() {
         >
           <a href="/signup?role=BRAND" style={{ textDecoration: 'none' }}>
             <button 
-              className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap font-semibold transition-all outline-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 active:scale-[0.98] h-12 px-6 py-3 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+              className="inline-flex items-center gap-2 font-semibold h-12 px-8 text-base"
               style={{
                 backgroundColor: '#1a1a2e',
                 color: '#F8F7F4',
                 padding: '16px 36px',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 fontSize: '18px',
                 fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 8px 30px rgba(26,26,46,0.25)'
+                fontFamily: "'Inter', sans-serif"
               }}
             >
               I am a Brand (Find ROI) <ChevronRight size={20} />
@@ -198,20 +227,17 @@ export default function Home() {
           </a>
           <a href="/signup?role=CREATOR" style={{ textDecoration: 'none' }}>
             <button 
-              className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap font-semibold transition-all outline-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 active:scale-[0.98] h-12 px-6 py-3 text-base bg-accent text-accent-foreground hover:bg-accent/90"
+              className="inline-flex items-center gap-2 font-semibold h-12 px-8 text-base"
               style={{
                 backgroundColor: '#92400e',
                 color: '#F8F7F4',
                 padding: '16px 36px',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 fontSize: '18px',
                 fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 8px 30px rgba(146,64,14,0.25)'
+                fontFamily: "'Inter', sans-serif"
               }}
             >
               I am a Creator (Prove Value) <ChevronRight size={20} />
@@ -219,9 +245,9 @@ export default function Home() {
           </a>
         </motion.div>
 
-        {/* ROI Ticker */}
+        {/* ROI Ticker - Bloomberg-style data row */}
         <motion.div 
-          className="mt-16 max-w-4xl mx-auto"
+          className="mt-16 max-w-4xl mx-auto border-y border-border/10 py-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 0.8 }}
@@ -333,15 +359,14 @@ export default function Home() {
           {solutions.map((solution, index) => (
             <motion.div
               key={index}
-              className={`${solution.bgColor} p-8 rounded-2xl ${solution.borderColor} border-l-4 shadow-lg cursor-pointer`}
+              className={`border-y border-border/10 p-8 ${solution.borderColor} border-l-4 cursor-pointer`}
               style={{ 
                 padding: '32px',
-                borderRadius: '16px',
                 borderLeft: `4px solid ${solution.borderColor.includes('primary') ? '#1a1a2e' : '#92400e'}`,
-                boxShadow: '0 4px 16px rgba(0,0,0,0.08)'
+                borderTop: '1px solid rgba(26,26,46,0.1)',
+                borderBottom: '1px solid rgba(26,26,46,0.1)'
               }}
               variants={scaleIn}
-              whileHover={{ scale: 1.01 }}
               onClick={() => toggleStep(index)}
             >
               <div className="flex items-start gap-5">
@@ -454,11 +479,9 @@ export default function Home() {
           ].map((item, index) => (
             <motion.div
               key={index}
-              className="bg-card/5 p-10 rounded-2xl border-l-4 border-accent"
+              className="border-y border-border/10 p-10 border-l-4 border-accent"
               style={{ 
-                backgroundColor: 'rgba(248,247,244,0.05)',
                 padding: '40px 32px',
-                borderRadius: '16px',
                 borderLeft: '4px solid #92400e'
               }}
               variants={scaleIn}
@@ -521,19 +544,17 @@ export default function Home() {
         >
           <a href="/signup?role=BRAND" style={{ textDecoration: 'none' }}>
             <button 
-              className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap font-semibold transition-all outline-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 active:scale-[0.98] h-12 px-6 py-3 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+              className="inline-flex items-center gap-2 font-semibold h-12 px-8 text-base"
               style={{
                 backgroundColor: '#1a1a2e',
                 color: '#F8F7F4',
                 padding: '16px 36px',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 fontSize: '18px',
                 fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
+                fontFamily: "'Inter', sans-serif"
               }}
             >
               Start Brand Trial <ArrowRight size={20} />
@@ -541,19 +562,17 @@ export default function Home() {
           </a>
           <a href="/signup?role=CREATOR" style={{ textDecoration: 'none' }}>
             <button 
-              className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap font-semibold transition-all outline-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4 active:scale-[0.98] h-12 px-6 py-3 text-base bg-accent text-accent-foreground hover:bg-accent/90"
+              className="inline-flex items-center gap-2 font-semibold h-12 px-8 text-base"
               style={{
                 backgroundColor: '#92400e',
                 color: '#F8F7F4',
                 padding: '16px 36px',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 fontSize: '18px',
                 fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
+                fontFamily: "'Inter', sans-serif"
               }}
             >
               Create Creator Account <ArrowRight size={20} />

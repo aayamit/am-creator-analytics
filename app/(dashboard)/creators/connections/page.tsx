@@ -5,7 +5,7 @@ import { signIn, signOut, getSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Link2, Unlink, Video, Globe } from "lucide-react";
+import { CheckCircle, Link2, Unlink, Video, Globe, Instagram } from "lucide-react";
 
 interface SocialAccount {
   platform: string;
@@ -26,6 +26,13 @@ export default function ConnectionsPage() {
     },
     {
       platform: "LINKEDIN",
+      platformId: "",
+      username: "",
+      profileUrl: "",
+      connected: false,
+    },
+    {
+      platform: "INSTAGRAM",
       platformId: "",
       username: "",
       profileUrl: "",
@@ -70,6 +77,8 @@ export default function ConnectionsPage() {
       signIn("google", { callbackUrl: "/creators/connections" });
     } else if (platform === "LINKEDIN") {
       signIn("linkedin", { callbackUrl: "/creators/connections" });
+    } else if (platform === "INSTAGRAM") {
+      signIn("instagram", { callbackUrl: "/creators/connections" });
     }
   };
 
@@ -209,6 +218,61 @@ export default function ConnectionsPage() {
                 >
                   <Link2 className="h-4 w-4 mr-2" />
                   Connect LinkedIn
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Instagram */}
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center space-x-2">
+                <Instagram className="h-5 w-5 text-pink-600" />
+                <span>Instagram</span>
+              </CardTitle>
+              {accounts[2].connected ? (
+                <Badge className="bg-green-100 text-green-800">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Connected
+                </Badge>
+              ) : (
+                <Badge variant="outline">Not Connected</Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {accounts[2].connected ? (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Profile</p>
+                  <p className="font-medium text-foreground">
+                    {accounts[2].username || "Connected"}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={() => handleDisconnect("INSTAGRAM")}
+                >
+                  <Unlink className="h-4 w-4 mr-2" />
+                  Disconnect
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Connect your Instagram account to import follower
+                  count, engagement rate, and media analytics.
+                </p>
+                <Button
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                  onClick={() => handleConnect("INSTAGRAM")}
+                >
+                  <Link2 className="h-4 w-4 mr-2" />
+                  Connect Instagram
                 </Button>
               </div>
             )}
