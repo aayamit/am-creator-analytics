@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:demo1234@localhost:5432/am_creator_analytics?schema=public"
+  url      = env("DATABASE_URL")
 }
 
 model Account {
@@ -214,13 +214,32 @@ model Session {
 }
 
 model SocialAccount {
-  id             String         @id
-  creatorId      String
-  platform       SocialPlatform
-  username       String?
+  id                String         @id @default(cuid())
+  creatorId         String
+  platform          SocialPlatform
+  accountId         String?        // Instagram username, YouTube channel ID, LinkedIn profile ID
+  accessToken       String?        // OAuth access token
+  refreshToken      String?        // OAuth refresh token (YouTube)
+  tokenExpiresAt    DateTime?      // Token expiration time
+  isConnected       Boolean        @default(false)
+  username          String?
+  firstName         String?        // LinkedIn
+  lastName          String?        // LinkedIn
+  email             String?        // LinkedIn
+  profileId         String?        // LinkedIn profile ID
+  channelId         String?        // YouTube channel ID
+  subscriberCount   Int            @default(0)
+  videoCount        Int            @default(0)
+  viewCount         Int            @default(0)
+  mediaCount        Int            @default(0)
+  accountType       String?        // Instagram account type
+  profilePictureUrl String?
+  connectedAt       DateTime?
+  updatedAt         DateTime       @updatedAt
+
   CreatorProfile CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
-  @@unique([creatorId, platform])
+  @@unique([creatorId, platform, accountId])
   @@index([creatorId])
 }
 

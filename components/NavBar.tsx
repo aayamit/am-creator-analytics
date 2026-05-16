@@ -1,11 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 export default function NavBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const logoSrc = theme === 'dark' ? '/assets/white_logo.png' : '/assets/black_logo.png';
 
   const navLinks = [
     { label: 'Features', href: '/features' },
@@ -19,8 +23,8 @@ export default function NavBar() {
     <nav 
       className="sticky top-0 z-50"
       style={{
-        backgroundColor: '#F8F7F4',
-        borderBottom: '1px solid rgba(26,26,46,0.1)',
+        backgroundColor: 'var(--background)',
+        borderBottom: '1px solid var(--border)',
         padding: '16px 24px',
         boxShadow: '0 2px 20px rgba(0,0,0,0.05)'
       }}
@@ -28,33 +32,14 @@ export default function NavBar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div 
-            style={{
-              width: '32px',
-              height: '32px',
-              backgroundColor: '#1a1a2e',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#F8F7F4',
-              fontWeight: 800,
-              fontSize: '14px'
-            }}
-          >
-            AM
+          <div style={{ width: 160, height: 40, position: 'relative' }}>
+            <Image
+              src={logoSrc}
+              alt="AM Creator Analytics Logo"
+              fill
+              style={{ objectFit: 'contain' }}
+            />
           </div>
-          <span 
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              fontSize: '18px',
-              fontWeight: 700,
-              color: '#1a1a2e',
-              letterSpacing: '-0.02em'
-            }}
-          >
-            AM Creator Analytics
-          </span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -85,7 +70,7 @@ export default function NavBar() {
             className="nav-link-ghost"
             style={{
               textDecoration: 'none',
-              color: '#1a1a2e',
+              color: 'var(--foreground)',
               fontSize: '14px',
               fontWeight: 600,
               padding: '8px 16px',
@@ -99,8 +84,8 @@ export default function NavBar() {
             <button
               className="nav-btn-primary"
               style={{
-                backgroundColor: '#1a1a2e',
-                color: '#F8F7F4',
+                backgroundColor: 'var(--primary)',
+                color: 'var(--primary-foreground)',
                 padding: '10px 24px',
                 borderRadius: '8px',
                 fontSize: '14px',
@@ -115,6 +100,22 @@ export default function NavBar() {
               Start Free Trial
             </button>
           </Link>
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            style={{
+              backgroundColor: 'transparent',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              padding: '8px',
+              cursor: 'pointer',
+              color: 'var(--foreground)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
         </div>
 
         {/* Mobile Menu Button */}
@@ -126,7 +127,7 @@ export default function NavBar() {
             border: 'none',
             cursor: 'pointer',
             padding: '8px',
-            color: '#1a1a2e'
+            color: 'var(--foreground)'
           }}
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -140,7 +141,7 @@ export default function NavBar() {
           style={{
             marginTop: '16px',
             padding: '16px',
-            backgroundColor: '#ffffff',
+            backgroundColor: 'var(--background)',
             borderRadius: '12px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
           }}
@@ -152,7 +153,7 @@ export default function NavBar() {
               style={{
                 display: 'block',
                 textDecoration: 'none',
-                color: '#4b5563',
+                color: 'var(--muted-foreground)',
                 fontSize: '16px',
                 fontWeight: 500,
                 padding: '12px 16px',
@@ -164,13 +165,13 @@ export default function NavBar() {
               {link.label}
             </Link>
           ))}
-          <div style={{ height: '1px', backgroundColor: '#e5e7eb', margin: '16px 0' }} />
+          <div style={{ height: '1px', backgroundColor: 'var(--border)', margin: '16px 0' }} />
           <Link
             href="/login"
             style={{
               display: 'block',
               textDecoration: 'none',
-              color: '#1a1a2e',
+              color: 'var(--foreground)',
               fontSize: '16px',
               fontWeight: 600,
               padding: '12px 16px',
@@ -188,8 +189,8 @@ export default function NavBar() {
             <button
               style={{
                 width: '100%',
-                backgroundColor: '#1a1a2e',
-                color: '#F8F7F4',
+                backgroundColor: 'var(--primary)',
+                color: 'var(--primary-foreground)',
                 padding: '14px 24px',
                 borderRadius: '8px',
                 fontSize: '16px',

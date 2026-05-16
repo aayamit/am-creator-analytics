@@ -15,16 +15,16 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: #F8F7F4;
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(26,26,46,0.2);
+  background: color-mix(in srgb, var(--foreground) 20%, transparent);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(26,26,46,0.4);
+  background: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
 /* Hover effects for NavBar and Footer */
@@ -256,4 +256,18 @@ html {
   main {
     @apply animate-in fade-in duration-500;
   }
+}
+
+/* Marquee animation for integrations bar */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
 }

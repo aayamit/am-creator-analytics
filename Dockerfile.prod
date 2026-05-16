@@ -1,7 +1,11 @@
 # =================== Build Stage ===================
-FROM node:20-alpine AS builder
+# Use Debian-based image for better Prisma compatibility on ARM64
+FROM node:20-slim AS builder
 
 WORKDIR /app
+
+# Install OpenSSL for Prisma
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files
 COPY package.json package-lock.json ./
@@ -15,13 +19,21 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
+# Set dummy env vars for build (API routes won't fail)
+ENV STRIPE_SECRET_KEY="sk_test_dummy"
+ENV STRIPE_WEBHOOK_SECRET="whsec_dummy"
+ENV NANGO_SECRET_KEY="dummy_nango_key"
+
 # Build the Next.js app
 RUN npm run build
 
 # =================== Production Stage ===================
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 
 WORKDIR /app
+
+# Install OpenSSL for Prisma
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Set NODE_ENV
 ENV NODE_ENV=production
@@ -34,7 +46,8 @@ COPY --from=builder /app/node_modules/ ./node_modules/
 COPY --from=builder /app/prisma/ ./prisma/
 COPY --from=builder /app/next.config.ts ./next.config.ts
 
-# Generate Prisma client in production
+# Generate Prisma client with OpenSSL 3.x support
+ENV PRISMA_OPENSSL_VERSION=3.0.x
 RUN npx prisma generate
 
 # Expose port 3000

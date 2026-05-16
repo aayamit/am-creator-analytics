@@ -51,6 +51,8 @@ yarn-debug.log*
 
 # docker
 docker-compose.override.yml
+docker-compose.prod.local-env.yml
+volumes/
 
 # ide
 .vscode/*
@@ -69,4 +71,5 @@ docker-compose.override.yml
 Thumbs.db
 .env.prod
 .env.local
+.env.backup
 *.tar.gz

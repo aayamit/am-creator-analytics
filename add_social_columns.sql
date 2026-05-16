@@ -1,0 +1,25 @@
+
+-- Add new columns to SocialAccount table
+ALTER TABLE "SocialAccount" 
+ADD COLUMN IF NOT EXISTS "accountId" TEXT,
+ADD COLUMN IF NOT EXISTS "accessToken" TEXT,
+ADD COLUMN IF NOT EXISTS "refreshToken" TEXT,
+ADD COLUMN IF NOT EXISTS "tokenExpiresAt" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS "isConnected" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "firstName" TEXT,
+ADD COLUMN IF NOT EXISTS "lastName" TEXT,
+ADD COLUMN IF NOT EXISTS "email" TEXT,
+ADD COLUMN IF NOT EXISTS "profileId" TEXT,
+ADD COLUMN IF NOT EXISTS "channelId" TEXT,
+ADD COLUMN IF NOT EXISTS "subscriberCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN IF NOT EXISTS "videoCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN IF NOT EXISTS "viewCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN IF NOT EXISTS "mediaCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN IF NOT EXISTS "accountType" TEXT,
+ADD COLUMN IF NOT EXISTS "profilePictureUrl" TEXT,
+ADD COLUMN IF NOT EXISTS "connectedAt" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3);
+
+-- Add unique constraint if not exists
+ALTER TABLE "SocialAccount" DROP CONSTRAINT IF EXISTS "SocialAccount_creatorId_platform_accountId_key";
+ALTER TABLE "SocialAccount" ADD CONSTRAINT "SocialAccount_creatorId_platform_accountId_key" UNIQUE ("creatorId", "platform", "accountId");

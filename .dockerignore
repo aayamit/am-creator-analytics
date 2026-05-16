@@ -1,6 +1,7 @@
 node_modules
 .next
 .git
+.env
 .env.local
 .env.*
 !.env.example
@@ -13,3 +14,4 @@ coverage
 .nyc_output
 test
 tests
+volumes

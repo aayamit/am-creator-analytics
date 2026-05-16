@@ -24,7 +24,7 @@ services:
     env_file:
       - .env.prod
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - /Volumes/DA/am-creator-analytics/volumes/postgres:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
     healthcheck:
@@ -33,7 +33,9 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - app-network
+      app-network:
+        aliases:
+          - nango-db
 
   # =================== OpenSign Client ===================
   opensign-client:
@@ -56,7 +58,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: opensign
       MONGO_INITDB_ROOT_PASSWORD: opensign123
     volumes:
-      - mongo_data:/data/db
+      - /Volumes/DA/am-creator-analytics/volumes/mongo:/data/db
     ports:
       - "127.0.0.1:27017:27017"
     healthcheck:
@@ -68,6 +70,54 @@ services:
       - app-network
 
   # =================== Nginx Reverse Proxy ===================
+  # =================== Redis (for Nango) ===================
+  redis:
+    image: redis:alpine
+    container_name: am-creator-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - /Volumes/DA/am-creator-analytics/volumes/redis:/data
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      app-network:
+        aliases:
+          - nango-redis
+
+  # =================== Nango (OAuth Integration) ===================
+  nango:
+    image: nangohq/nango-server:hosted
+    platform: linux/amd64
+    container_name: am-creator-nango
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3005:3000"   # Nango API (listening on 3000 inside)
+      - "127.0.0.1:3006:3006"   # Nango UI (listening on 3006 inside)
+    env_file:
+      - .env.prod
+    environment:
+      NANGO_ENVIRONMENT: production
+      NANGO_DB_HOST: postgres
+      NANGO_DB_PORT: 5432
+      NANGO_DB_USER: nango
+      NANGO_DB_PASSWORD: nango
+      NANGO_DB_NAME: nango
+      NANGO_REDIS_HOST: nango-redis
+      NANGO_REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
   nginx:
     image: nginx:alpine
     container_name: am-creator-nginx
@@ -88,7 +138,3 @@ services:
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  postgres_data:
-  mongo_data:
