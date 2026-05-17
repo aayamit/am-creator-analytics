@@ -1,219 +1,137 @@
 'use client';
 
-import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import Link from 'next/link';
+import { Menu, Moon, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useState } from 'react';
+
+const navLinks = [
+  { label: 'Product', href: '/marketing#modules' },
+  { label: 'How It Works', href: '/marketing#workflow' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Creators', href: '/for-creators' },
+  { label: 'About', href: '/about' },
+];
 
 export default function NavBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
-  const logoSrc = resolvedTheme === 'dark' ? '/assets/white_logo.png' : '/assets/black_logo.png';
+  const logoSrc =
+    resolvedTheme === 'dark' ? '/assets/white_logo.png' : '/assets/black_logo.png';
 
-  const navLinks = [
-    { label: 'Features', href: '/features' },
-    { label: 'How It Works', href: '/how-it-works' },
-    { label: 'Pricing', href: '/pricing' },
-    { label: 'Case Studies', href: '/case-studies' },
-    { label: 'About', href: '/about' },
-  ];
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
-    <nav 
-      className="sticky top-0 z-50"
+    <nav
+      className="sticky top-0 z-50 border-b border-border backdrop-blur"
       style={{
-        backgroundColor: 'var(--background)',
-        borderBottom: '1px solid var(--border)',
-        padding: '16px 24px',
-        boxShadow: '0 2px 20px rgba(0,0,0,0.05)'
+        backgroundColor: 'color-mix(in srgb, var(--background) 92%, transparent)',
       }}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Logo */}
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
         <Link
           href="/"
           aria-label="AM Creator Analytics home"
-          style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+          className="flex items-center no-underline hover:no-underline"
         >
-          <div
-            className="relative h-9 w-[148px] overflow-hidden sm:h-10 sm:w-[178px] lg:h-11 lg:w-[208px]"
-          >
+          <div className="relative h-9 w-[156px] overflow-hidden sm:h-10 sm:w-[188px] lg:h-11 lg:w-[220px]">
             <Image
               src={logoSrc}
               alt="AM Creator Analytics Logo"
               fill
               priority
-              sizes="(max-width: 640px) 148px, (max-width: 1024px) 178px, 208px"
-              style={{
-                objectFit: 'cover',
-                objectPosition: 'center',
-              }}
+              sizes="(max-width: 640px) 156px, (max-width: 1024px) 188px, 220px"
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
             />
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden items-center gap-7 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="nav-link"
-              style={{
-                textDecoration: 'none',
-                color: 'var(--muted-foreground)',
-                fontSize: '14px',
-                fontWeight: 500,
-                transition: 'color 0.2s',
-                fontFamily: "'Inter', sans-serif"
-              }}
+              className="nav-link text-sm font-medium text-muted-foreground no-underline transition hover:no-underline"
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        {/* Desktop CTAs */}
-        <div className="hidden md:flex items-center gap-4">
-          <Link 
+        <div className="hidden items-center gap-3 md:flex">
+          <Link
             href="/login"
-            className="nav-link-ghost"
-            style={{
-              textDecoration: 'none',
-              color: 'var(--foreground)',
-              fontSize: '14px',
-              fontWeight: 600,
-              padding: '8px 16px',
-              borderRadius: '8px',
-              transition: 'all 0.2s'
-            }}
+            className="nav-link-ghost rounded-lg px-4 py-2 text-sm font-semibold text-foreground no-underline transition hover:no-underline"
           >
             Login
           </Link>
-          <Link href="/signup" style={{ textDecoration: 'none' }}>
-            <button
-              className="nav-btn-primary"
-              style={{
-                backgroundColor: 'var(--primary)',
-                color: 'var(--primary-foreground)',
-                padding: '10px 24px',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: "'Inter', sans-serif",
-                boxShadow: '0 4px 12px rgba(26,26,46,0.2)',
-                transition: 'all 0.2s'
-              }}
-            >
-              Start Free Trial
-            </button>
+          <Link
+            href="/contact"
+            className="nav-btn-primary rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground no-underline shadow-sm transition hover:no-underline"
+          >
+            Book a Demo
           </Link>
           <button
-            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-            style={{
-              backgroundColor: 'transparent',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              padding: '8px',
-              cursor: 'pointer',
-              color: 'var(--foreground)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
+            aria-label="Toggle theme"
+            onClick={toggleTheme}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background text-foreground"
           >
-            {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            {resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          className="md:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          style={{
-            backgroundColor: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '8px',
-            color: 'var(--foreground)'
-          }}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            aria-label="Toggle theme"
+            onClick={toggleTheme}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background text-foreground"
+          >
+            {resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background text-foreground"
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div 
-          className="md:hidden"
-          style={{
-            marginTop: '16px',
-            padding: '16px',
-            backgroundColor: 'var(--background)',
-            borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-          }}
-        >
-          {navLinks.map((link) => (
+        <div className="border-t border-border bg-background md:hidden">
+          <div className="mx-auto flex max-w-7xl flex-col gap-1 px-6 py-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-4 py-3 text-base font-medium text-foreground no-underline transition hover:bg-muted hover:no-underline"
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            <div className="my-2 border-t border-border" />
+
             <Link
-              key={link.href}
-              href={link.href}
-              style={{
-                display: 'block',
-                textDecoration: 'none',
-                color: 'var(--muted-foreground)',
-                fontSize: '16px',
-                fontWeight: 500,
-                padding: '12px 16px',
-                borderRadius: '8px',
-                transition: 'all 0.2s'
-              }}
+              href="/login"
               onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg px-4 py-3 text-base font-semibold text-foreground no-underline transition hover:bg-muted hover:no-underline"
             >
-              {link.label}
+              Login
             </Link>
-          ))}
-          <div style={{ height: '1px', backgroundColor: 'var(--border)', margin: '16px 0' }} />
-          <Link
-            href="/login"
-            style={{
-              display: 'block',
-              textDecoration: 'none',
-              color: 'var(--foreground)',
-              fontSize: '16px',
-              fontWeight: 600,
-              padding: '12px 16px',
-              borderRadius: '8px'
-            }}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Login
-          </Link>
-          <Link
-            href="/signup"
-            style={{ textDecoration: 'none', display: 'block', marginTop: '8px' }}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <button
-              style={{
-                width: '100%',
-                backgroundColor: 'var(--primary)',
-                color: 'var(--primary-foreground)',
-                padding: '14px 24px',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: "'Inter', sans-serif"
-              }}
+            <Link
+              href="/contact"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mt-1 rounded-lg bg-primary px-4 py-3 text-center text-base font-semibold text-primary-foreground no-underline shadow-sm transition hover:no-underline"
             >
-              Start Free Trial
-            </button>
-          </Link>
+              Book a Demo
+            </Link>
+          </div>
         </div>
       )}
     </nav>

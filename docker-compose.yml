@@ -1,51 +1,88 @@
-version: '3.8'
+name: am_creator_analytics_dev
 
 services:
-  db:
+  postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: am_creator_analytics
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      APP_DB_NAME: ${APP_DB_NAME:-am_creator_analytics}
+      APP_DB_USER: ${APP_DB_USER:-am_creator_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-change-me-app-db-password}
+      NANGO_DB_NAME: ${NANGO_DB_NAME:-nango}
+      NANGO_DB_USER: ${NANGO_DB_USER:-nango}
+      NANGO_DB_PASSWORD: ${NANGO_DB_PASSWORD:-change-me-nango-db-password}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - am_creator_dev_network
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - am_creator_dev_network
 
   nango:
     image: nangohq/nango-server:hosted
-    platform: linux/amd64  # Required: image only supports amd64
+    platform: linux/amd64
     restart: unless-stopped
     ports:
-      - "3003:3003"   # Nango server
-      - "3004:3004"   # Nango UI
+      - "3005:3000"
+      - "3006:3006"
     environment:
-      - NANGO_DB_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/nango?schema=public
-      - NANGO_SECRET_KEY=${NANGO_SECRET_KEY:-nango-secret-key-change-in-prod}
-      - NANGO_ENCRYPTION_KEY=${NANGO_ENCRYPTION_KEY:-nango-encryption-key-change-in-prod}
-      - NANGO_ADMIN_KEY=${NANGO_ADMIN_KEY:-nango-admin-key-change-in-prod}
-      - NANGO_CALLBACK_URL=http://localhost:3003/oauth/callback
-      - NANGO_FRONTEND_URL=http://localhost:3004
-      - NANGO_SERVER_URL=http://localhost:3003
+      NANGO_ENVIRONMENT: ${NANGO_ENVIRONMENT:-development}
+      NANGO_DB_HOST: postgres
+      NANGO_DB_PORT: 5432
+      NANGO_DB_USER: ${NANGO_DB_USER:-nango}
+      NANGO_DB_PASSWORD: ${NANGO_DB_PASSWORD:-change-me-nango-db-password}
+      NANGO_DB_NAME: ${NANGO_DB_NAME:-nango}
+      NANGO_REDIS_HOST: redis
+      NANGO_REDIS_PORT: 6379
+      NANGO_SECRET_KEY: ${NANGO_SECRET_KEY:-nango-secret-key-change-in-dev}
+      NANGO_ENCRYPTION_KEY: ${NANGO_ENCRYPTION_KEY:-nango-encryption-key-change-in-dev}
+      NANGO_ADMIN_KEY: ${NANGO_ADMIN_KEY:-nango-admin-key-change-in-dev}
+      NANGO_CALLBACK_URL: ${NANGO_CALLBACK_URL:-http://localhost:3005/oauth/callback}
+      NANGO_SERVER_URL: ${NANGO_SERVER_URL:-http://localhost:3005}
+      NANGO_PUBLIC_KEY: ${NANGO_PUBLIC_KEY:-}
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
-    volumes:
-      - nango_data:/tmp/nango
+      redis:
+        condition: service_healthy
+    networks:
+      - am_creator_dev_network
 
-  # MinIO - Self-hosted S3-compatible storage (saves ₹10K/month vs Cloudinary)
   minio:
     image: minio/minio:latest
     restart: unless-stopped
     ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console
+      - "9000:9000"
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -57,15 +94,16 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    networks:
+      - am_creator_dev_network
 
-  # MeiliSearch - Self-hosted search (saves ₹15K/month vs Algolia)
   meilisearch:
     image: getmeili/meilisearch:latest
     restart: unless-stopped
     ports:
       - "7700:7700"
     environment:
-      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-my-master-key-change-in-prod}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-my-master-key-change-in-dev}
     volumes:
       - meili_data:/meili_data
     healthcheck:
@@ -73,25 +111,16 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Redis - Self-hosted caching (saves ₹10K/month vs Redis Cloud)
-  redis:
-    image: redis:alpine
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+    networks:
+      - am_creator_dev_network
 
 volumes:
   postgres_data:
-  nango_data:
+  redis_data:
   minio_data:
   meili_data:
-  redis_data:
+
+networks:
+  am_creator_dev_network:
+    name: am_creator_dev_network
+    driver: bridge

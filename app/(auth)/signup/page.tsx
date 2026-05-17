@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { AlertCircle, Building2, User } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { AlertCircle, Building2, Instagram, User } from "lucide-react";
 
 import BrandMark from "@/components/BrandMark";
 import { useToast } from "@/components/ui/use-toast";
@@ -12,8 +13,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function SignupPage() {
+function SignupContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +25,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +67,25 @@ export default function SignupPage() {
       router.push("/login?verification=sent");
     } catch {
       setError("An error occurred");
+      setLoading(false);
+    }
+  };
+
+  const handleInstagramSignup = async () => {
+    if (!termsAccepted || !privacyAccepted) {
+      setError("You must accept the Terms of Service and Privacy Policy");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await signIn("instagram", {
+        callbackUrl: callbackUrl || "/creators",
+      });
+    } catch {
+      setError("Instagram sign-up could not be started.");
       setLoading(false);
     }
   };
@@ -220,6 +242,24 @@ export default function SignupPage() {
               </div>
             </div>
 
+            {role === "CREATOR" && (
+              <div className="space-y-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-12 w-full rounded-xl border-border bg-background/80 text-sm font-semibold"
+                  disabled={loading || !termsAccepted || !privacyAccepted}
+                  onClick={handleInstagramSignup}
+                >
+                  <Instagram className="mr-2 h-4 w-4" />
+                  Continue with Instagram
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  Create your creator account with an Instagram Creator or Business account after accepting the terms.
+                </p>
+              </div>
+            )}
+
             <Button
               type="submit"
               className="h-12 w-full rounded-xl text-sm font-semibold"
@@ -241,5 +281,21 @@ export default function SignupPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export const dynamic = "force-dynamic";
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      }
+    >
+      <SignupContent />
+    </Suspense>
   );
 }

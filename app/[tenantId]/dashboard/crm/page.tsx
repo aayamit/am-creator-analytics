@@ -260,7 +260,7 @@ export default async function BrandCRMPage({
               </span>
             </div>
             <a
-              href="http://localhost:3003" // Nango dashboard
+              href={process.env.NEXT_PUBLIC_NANGO_UI_URL || process.env.NEXT_PUBLIC_NANGO_BASE_URL || "http://localhost:3006"} // Nango dashboard
               target="_blank"
               rel="noopener noreferrer"
               style={{

@@ -5,10 +5,18 @@
 
 import Redis from 'ioredis';
 
+const defaultRedisUrl =
+  process.env.NODE_ENV === 'production'
+    ? 'redis://redis:6379'
+    : 'redis://localhost:6379';
+
+const redisUrl =
+  process.env.REDIS_URL ||
+  `redis://${process.env.REDIS_HOST || (process.env.NODE_ENV === 'production' ? 'redis' : 'localhost')}:${process.env.REDIS_PORT || '6379'}` ||
+  defaultRedisUrl;
+
 // Create Redis client
-export const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
+export const redis = new Redis(redisUrl, {
   maxRetriesPerRequest: 3,
   lazyConnect: true, // Don't connect immediately
 });

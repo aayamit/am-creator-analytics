@@ -5,6 +5,30 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+function buildProfileUrl(
+  platform: string,
+  username?: string | null,
+  accountId?: string | null
+) {
+  if (!username && !accountId) {
+    return null;
+  }
+
+  if (platform === "INSTAGRAM" && username) {
+    return `https://www.instagram.com/${username}/`;
+  }
+
+  if (platform === "LINKEDIN" && (username || accountId)) {
+    return `https://www.linkedin.com/in/${username || accountId}/`;
+  }
+
+  if (platform === "YOUTUBE" && (username || accountId)) {
+    return `https://www.youtube.com/${username ? `@${username}` : `channel/${accountId}`}`;
+  }
+
+  return null;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -58,7 +82,11 @@ export async function GET(
       socialAccounts: creator.socialAccounts.map((account) => ({
         platform: account.platform,
         username: account.username,
-        profileUrl: account.profileUrl,
+        profileUrl: buildProfileUrl(
+          account.platform,
+          account.username,
+          account.accountId
+        ),
         latestMetrics: account.metrics.slice(0, 10).map((m) => ({
           type: m.type,
           value: m.value.toNumber(),

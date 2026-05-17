@@ -1,366 +1,513 @@
-'use client';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight, BarChart3, CheckCircle2 } from "lucide-react";
 
-import Link from 'next/link';
-import { useState } from 'react';
-import ROICalculator from '@/components/ROICalculator';
+export const metadata: Metadata = {
+  title: "Performance-Led Creator Campaigns | AM Creator Analytics",
+  description:
+    "Run creator campaigns like a performance channel with one workflow for discovery, contracts, attribution, payouts, and reusable UGC.",
+};
+
+const painPoints = [
+  "Creator discovery tools give profiles, not replies.",
+  "Agencies hide creator rates, markups, and performance data.",
+  "Campaigns run across WhatsApp, Excel, Drive, PDFs, and payment screenshots.",
+  "Brands still measure reach when they need revenue, CAC, ROAS, and reusable UGC.",
+  "Contracts, disclosures, payout records, and usage rights are usually managed too late.",
+];
+
+const workflowSteps = [
+  {
+    step: "01",
+    title: "Discover",
+    description:
+      "Find creators by niche, city, language, audience, platform, and content style.",
+  },
+  {
+    step: "02",
+    title: "Shortlist",
+    description: "Build campaign-ready creator lists for each brief.",
+  },
+  {
+    step: "03",
+    title: "Pitch",
+    description: "Send structured invites and follow-ups.",
+  },
+  {
+    step: "04",
+    title: "Contract",
+    description:
+      "Lock deliverables, timelines, disclosures, fees, and usage rights.",
+  },
+  {
+    step: "05",
+    title: "Ship Product",
+    description: "Track seeding and dispatch status.",
+  },
+  {
+    step: "06",
+    title: "Approve Content",
+    description: "Manage drafts, revisions, captions, and final approvals.",
+  },
+  {
+    step: "07",
+    title: "Track Sales",
+    description:
+      "Use links, promo codes, orders, CAC, ROAS, and revenue per creator.",
+  },
+  {
+    step: "08",
+    title: "Pay",
+    description: "Track invoices, payout status, GST/TDS-ready records.",
+  },
+  {
+    step: "09",
+    title: "Reuse UGC",
+    description:
+      "Store approved creator assets with usage rights and expiry windows.",
+  },
+];
+
+const modules = [
+  {
+    eyebrow: "Creator Discovery & Verification",
+    title: "Find creator-brand fit with more than follower count.",
+    description:
+      "Filter creators by category, audience, location, language, platform, engagement quality, and brand fit.",
+  },
+  {
+    eyebrow: "Campaign CRM",
+    title: "Run every creator relationship inside one campaign pipeline.",
+    description:
+      "Manage each creator from shortlisted to live campaign without losing context across spreadsheets, chats, and PDFs.",
+  },
+  {
+    eyebrow: "Contracts & Usage Rights",
+    title: "Lock terms before content goes live.",
+    description:
+      "Generate creator agreements with deliverables, payment terms, exclusivity, disclosure rules, and UGC usage rights.",
+  },
+  {
+    eyebrow: "Attribution & ROI",
+    title: "Measure revenue, not just reach.",
+    description:
+      "Track sales through links, codes, cart events, purchases, creator revenue, CAC, and ROAS.",
+  },
+  {
+    eyebrow: "Payout & Compliance Workspace",
+    title: "Keep payment ops and compliance in one place.",
+    description:
+      "Manage invoices, payout status, GST/TDS-ready records, and payment proof without a separate finance trail.",
+  },
+  {
+    eyebrow: "UGC Vault",
+    title: "Turn approved creator content into a reusable asset library.",
+    description:
+      "Store creator videos, captions, thumbnails, approvals, and usage-rights expiry dates for paid media reuse.",
+  },
+];
+
+const whyNow = [
+  "Creator commerce is becoming performance-led.",
+  "Regional and micro-creators are becoming more important.",
+  "Brands need transparency around rates, deliverables, usage rights, and ROI.",
+  "Compliance and disclosure expectations are increasing.",
+  "UGC is becoming a reusable paid media asset, not just a one-time post.",
+];
+
+const foundingPartnerBenefits = [
+  "Early access to creator discovery and campaign CRM",
+  "Pilot campaign support",
+  "Input into product roadmap",
+  "Preferential founding partner pricing",
+  "Opportunity to shape attribution, WhatsApp, contracts, and payout workflows",
+];
+
+function PrimaryLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#92400e] px-5 py-3 text-sm font-semibold text-white no-underline shadow-sm transition hover:bg-[#7c360c] hover:no-underline"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function SecondaryLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white no-underline transition hover:bg-white/10 hover:no-underline"
+    >
+      {children}
+    </Link>
+  );
+}
 
 export default function MarketingPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
-
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-      {/* SECTION 1: HERO */}
-      <section className="relative overflow-hidden bg-slate-900 text-white py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Typography */}
-          <div className="space-y-8">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-600/20 text-blue-400 text-sm font-medium">
-              The Next Evolution of Influencer Marketing in India 🇮🇳
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-              Stop Paying Agency Markups. <br />
-              <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                Scale Your Creator ROI In-House.
+    <main className="bg-background text-foreground">
+      <section className="border-b border-white/10 bg-[#101827] text-white">
+        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-28">
+          <div className="max-w-3xl">
+            <div className="mb-6 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-300/90">
+              <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1">
+                India&apos;s creator campaign operating system
               </span>
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                Founding brand access open
+              </span>
+            </div>
+
+            <h1 className="mb-6 max-w-4xl text-5xl font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Run creator campaigns like a performance channel.
             </h1>
-            <p className="text-lg text-slate-300 max-w-xl">
-              We don't just scrape social media. Access an exclusive network of 15,000+ actively onboarded, verified Indian creators through a powerful SaaS platform. Discover talent, negotiate contracts, track e-commerce sales, and process payouts—all in one place, with zero middlemen.
+
+            <p className="max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
+              Discover verified Indian creators, manage briefs, contracts,
+              content approvals, sales attribution, UGC rights, WhatsApp
+              updates, and payouts from one platform.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/api/auth/signin?callbackUrl=/dashboard"
-                className="px-8 py-4 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:opacity-90 transition-opacity text-center"
-              >
-                Start Your 14-Day Free Trial
-              </Link>
-              <Link
-                href="/roi-calculator"
-                className="px-8 py-4 rounded-full border border-slate-600 text-white font-semibold hover:bg-slate-800 transition-colors text-center"
-              >
-                Calculate Your ROI
-              </Link>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <PrimaryLink href="/contact">
+                Book a Demo
+                <ArrowRight className="h-4 w-4" />
+              </PrimaryLink>
+              <SecondaryLink href="#founding-partners">
+                Join as Founding Partner
+              </SecondaryLink>
             </div>
-            <div className="text-sm text-slate-400">
-              Trusted by 50+ modern Indian brands to scale their performance marketing.
+
+            <p className="mt-5 max-w-2xl text-sm leading-6 text-slate-400">
+              Built for D2C brands, agencies, and growth teams that want
+              measurable creator ROI without agency dependency.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-white/10 bg-white/95 p-6 text-slate-900 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Campaign Control Room
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+                  One workflow from brief to payout
+                </h2>
+              </div>
+              <div className="rounded-lg bg-slate-950 px-3 py-2 text-right text-white">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                  Focus
+                </p>
+                <p className="mt-1 flex items-center gap-2 text-sm font-semibold">
+                  <BarChart3 className="h-4 w-4 text-amber-400" />
+                  Measurable creator ROI
+                </p>
+              </div>
             </div>
-            {/* Placeholder brand logos */}
-            <div className="flex flex-wrap gap-6 items-center opacity-70">
-              {['Beauty Brand', 'Tech Startup', 'Fashion Label', 'Food Chain'].map((brand) => (
-                <div key={brand} className="px-4 py-2 bg-slate-800 rounded-lg text-sm text-slate-300">
-                  {brand}
+
+            <div className="mt-5 space-y-3">
+              {[
+                "Verified creator profiles and campaign shortlists",
+                "Contracts, deliverables, and usage rights in one workspace",
+                "Attribution, payouts, and reusable UGC tracked together",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-start gap-3 rounded-lg border border-slate-200 px-4 py-3"
+                >
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#92400e]" />
+                  <p className="text-sm leading-6 text-slate-700">{item}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {[
+                { label: "For brands", value: "Pipeline ownership" },
+                { label: "For creators", value: "Professional workflow" },
+                { label: "For finance", value: "Clean payout records" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-lg bg-slate-50 px-4 py-4 ring-1 ring-slate-200"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {item.label}
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-slate-900">
+                    {item.value}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Right: Animated Dashboard Placeholder */}
-          <div className="relative">
-            <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 p-6 shadow-2xl">
-              <div className="text-sm text-slate-400 mb-4">Campaign Dashboard Preview</div>
-              <div className="space-y-3">
-                {['Pending', 'Contract Signed', 'Sales Tracked'].map((status, i) => (
-                  <div key={status} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${i === 0 ? 'bg-yellow-400' : i === 1 ? 'bg-blue-400' : 'bg-green-400'}`} />
-                      <span className="text-sm">{status}</span>
-                    </div>
-                    <div className="text-xs text-slate-500">Creator Profile {i+1}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* SECTION 1.5: INTEGRATIONS BAR */}
-      <section className="py-12 bg-slate-50 dark:bg-slate-800 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-8">
-            Seamlessly integrates with the tools your growth team already uses:
-          </p>
-          <div className="flex gap-8 items-center animate-marquee whitespace-nowrap">
-            {['Shopify', 'WooCommerce', 'Instagram API', 'YouTube', 'Meta Ads', 'WhatsApp Business', 'Razorpay', 'Stripe'].map((integration) => (
-              <div key={integration} className="px-6 py-3 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-sm font-medium text-slate-700 dark:text-slate-200">
-                {integration}
-              </div>
-            ))}
-            {/* Duplicate for infinite scroll effect */}
-            {['Shopify', 'WooCommerce', 'Instagram API', 'YouTube', 'Meta Ads', 'WhatsApp Business', 'Razorpay', 'Stripe'].map((integration) => (
-              <div key={`${integration}-dup`} className="px-6 py-3 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-sm font-medium text-slate-700 dark:text-slate-200">
-                {integration}
+      <section className="border-b border-border bg-background">
+        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+              The pain
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Influencer marketing is growing. Execution is still broken.
+            </h2>
+          </div>
+
+          <div className="mt-10 grid gap-4 lg:grid-cols-2">
+            {painPoints.map((item) => (
+              <div
+                key={item}
+                className="rounded-lg border border-border bg-card px-5 py-5"
+              >
+                <p className="text-base leading-7 text-muted-foreground">{item}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SECTION 2: PROBLEM VS SOLUTION */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-            The Creator Economy is Broken. We Fixed the Supply Chain.
-          </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-300 text-center max-w-3xl mx-auto mb-16">
-            Traditional influencer tools just hand you a database of scraped, outdated profiles. You're still left doing the heavy lifting: hunting for contact info, begging for replies on personal WhatsApp numbers, and chasing down signed PDFs. It's time to upgrade.
-          </p>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Old Way */}
-            <div className="p-8 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-              <h3 className="text-xl font-semibold mb-6 text-slate-500 dark:text-slate-400">The Old Way</h3>
-              <ul className="space-y-4">
-                {[
-                  'Scraped, Dead Data: 60% of emails bounce or get ignored.',
-                  'Agency Taxes: Hidden 20-30% markups on creator fees.',
-                  'Legal Nightmares: Chasing PDFs, messy email threads, and zero content rights protection.',
-                  'Hostage Data: Agencies own the relationships and mask the true performance metrics.',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
-                    <span className="text-red-500 mt-1">❌</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {/* Our Platform */}
-            <div className="p-8 bg-blue-50 dark:bg-slate-800 rounded-2xl border-2 border-blue-200 dark:border-blue-900">
-              <h3 className="text-xl font-semibold mb-6 text-blue-600 dark:text-blue-400">Our Platform</h3>
-              <ul className="space-y-4">
-                {[
-                  'Pre-Onboarded Creators: 100% of our creators are registered and actively seeking brand deals.',
-                  'Zero Middlemen: You own the relationship and pay 0% commission on creator fees.',
-                  'Automated Contracting: Built-in templates, seamless negotiation, and 1-click e-signatures.',
-                  '100% Data Ownership: You own all creator relationships, campaign data, and historical analytics forever.',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
-                    <span className="text-green-500 mt-1">✅</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      <section id="workflow" className="border-b border-border bg-muted/30">
+        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+              The AM workflow
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              One workflow from creator discovery to creator revenue.
+            </h2>
           </div>
-        </div>
-      </section>
 
-      {/* SECTION 3: CREATOR VETTING & NICHES */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            15,000+ Verified Creators. Zero Fake Followers.
-          </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-12">
-            Stop burning budget on bots and engagement pods. Because we actively onboard our creators, every profile in our ecosystem undergoes a strict verification process.
-          </p>
-          <div className="flex flex-wrap justify-center gap-6 mb-12">
+          <div className="mt-6 flex flex-wrap gap-2 text-sm text-muted-foreground">
             {[
-              { icon: '🛡️', title: 'API-Verified Audiences', desc: 'Real demographics from Meta and Google' },
-              { icon: '🎯', title: 'The "Fat Middle"', desc: 'Micro/mid-tier creators across Tier 1-3 India' },
-              { icon: '⚡', title: '90% Response Rate', desc: 'Instant WhatsApp API pings' },
-            ].map((badge) => (
-              <div key={badge.title} className="p-6 bg-white dark:bg-slate-700 rounded-xl shadow-sm max-w-xs">
-                <div className="text-3xl mb-3">{badge.icon}</div>
-                <h4 className="font-semibold mb-2">{badge.title}</h4>
-                <p className="text-sm text-slate-600 dark:text-slate-300">{badge.desc}</p>
+              "Discover",
+              "Shortlist",
+              "Pitch",
+              "Contract",
+              "Ship Product",
+              "Approve Content",
+              "Track Sales",
+              "Pay",
+              "Reuse UGC",
+            ].map((item, index) => (
+              <div
+                key={item}
+                className="rounded-full border border-border bg-background px-3 py-2"
+              >
+                {index < 8 ? `${item} ->` : item}
               </div>
             ))}
           </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            {['💄 Beauty & Skincare', '📱 Tech & Gadgets', '📈 Finfluencers', '👗 Fashion & Apparel', '🎮 Gaming', '🥑 Health & Wellness'].map((niche) => (
-              <span key={niche} className="px-4 py-2 bg-slate-200 dark:bg-slate-600 rounded-full text-sm font-medium">
-                {niche}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* SECTION 4: HOW IT WORKS */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-16">
-            From Onboarding to Your First Live Campaign in Under 48 Hours.
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                step: 1,
-                title: 'Discover & Match (Instantly)',
-                desc: 'Use precision filters to find verified creators based on real engagement rates, audience demographics, and vernacular languages.',
-              },
-              {
-                step: 2,
-                title: 'Negotiate & Collaborate (Seamlessly)',
-                desc: 'Bulk-pitch hundreds of creators instantly. Negotiate deliverables, auto-generate contracts with e-signatures, and approve drafts directly in the CRM.',
-              },
-              {
-                step: 3,
-                title: 'Track & Pay (Automatically)',
-                desc: 'Generate unique affiliate links and promo codes with one click. Watch sales roll in, and execute one-click payouts with GST/TDS compliance.',
-              },
-            ].map((item) => (
-              <div key={item.step} className="p-8 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xl mb-6">
-                  {item.step}
-                </div>
-                <h3 className="text-xl font-semibold mb-4">{item.title}</h3>
-                <p className="text-slate-600 dark:text-slate-300">{item.desc}</p>
+          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {workflowSteps.map((item) => (
+              <div
+                key={item.step}
+                className="rounded-lg border border-border bg-background px-5 py-5"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+                  Step {item.step}
+                </p>
+                <h3 className="mt-3 text-xl font-semibold text-foreground">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  {item.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SECTION 5: CORE FEATURES */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-16">
-            Everything You Need to Turn Creators into a Performance Channel.
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                title: 'The "Active Supply" CRM',
-                desc: 'Bulk-pitch up to 500 creators with a single click. Manage every response from one centralized dashboard.',
-                icon: '📊',
-              },
-              {
-                title: 'Built-in Contracts & E-Signatures',
-                desc: 'Auto-generate legally binding agreements, negotiate terms, and get one-click e-signatures.',
-                icon: '📝',
-              },
-              {
-                title: 'Product Seeding & Barter Logistics',
-                desc: 'Track product dispatch logistics effortlessly. Reduce product wastage by 90% with total visibility.',
-                icon: '📦',
-              },
-              {
-                title: 'E-commerce Revenue Attribution',
-                desc: 'Connect your store and track exactly which creators are driving cart adds, conversions, and revenue.',
-                icon: '🛒',
-              },
-              {
-                title: 'UGC Content Vault',
-                desc: 'Secure usage rights via automated contracts and download high-res creator videos for Meta/Google ads.',
-                icon: '🎥',
-              },
-              {
-                title: 'Compliant & Secure Payouts',
-                desc: 'Handle invoicing, banking details, and 100% of Indian tax compliance (TDS/GST) automatically.',
-                icon: '💸',
-              },
-            ].map((feature) => (
-              <div key={feature.title} className="p-6 bg-white dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600 hover:shadow-md transition-shadow">
-                <div className="text-2xl mb-4">{feature.icon}</div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300">{feature.desc}</p>
+      <section id="modules" className="border-b border-border bg-background">
+        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+              Core product modules
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              The product is designed to own the workflow, not just discovery.
+            </h2>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {modules.map((item) => (
+              <div
+                key={item.eyebrow}
+                className="rounded-lg border border-border bg-card px-5 py-5"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+                  {item.eyebrow}
+                </p>
+                <h3 className="mt-3 text-xl font-semibold text-foreground">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  {item.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SECTION 6: ROI CALCULATOR */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12 text-slate-900 dark:text-white">Why Founders are Ditching Agencies for SaaS</h2>
-          <ROICalculator />
+      <section className="border-b border-white/10 bg-[#111827] text-white">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-300">
+              Why now
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Creator marketing is moving from vanity metrics to measurable
+              commerce.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-300">
+              Brands are shifting from one-off influencer posts to structured
+              creator programs. The next layer of the market needs verified
+              creator data, repeatable workflows, attribution, compliance, and
+              payout infrastructure.
+            </p>
+          </div>
+
+          <div className="grid gap-3">
+            {whyNow.map((item) => (
+              <div
+                key={item}
+                className="rounded-lg border border-white/10 bg-white/5 px-5 py-4"
+              >
+                <p className="text-sm leading-7 text-slate-200">{item}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* SECTION 7: SUCCESS STORY */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-12">Don't Just Take Our Word For It.</h2>
-          <div className="max-w-4xl mx-auto bg-white dark:bg-slate-700 rounded-2xl p-8 shadow-lg">
-            <div className="aspect-video bg-slate-200 dark:bg-slate-600 rounded-xl mb-6 flex items-center justify-center">
-              <div className="text-6xl text-slate-400">▶️</div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">40%</div>
-                <div className="text-sm text-slate-600 dark:text-slate-300">Drop in Customer Acquisition Cost (CAC)</div>
-              </div>
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">3x</div>
-                <div className="text-sm text-slate-600 dark:text-slate-300">Faster Campaign Turnaround Time</div>
-              </div>
-            </div>
-            <blockquote className="text-lg italic text-slate-600 dark:text-slate-300 mb-6">
-              "Before this platform, coordinating with 30 creators meant drowning in WhatsApp chats, chasing signed PDFs, and tracking sales on Excel. Now, we manage 100+ micro-influencers completely in-house, and we can track every single sale back to the creator. It completely transformed our growth engine."
-            </blockquote>
-            <div className="text-sm text-slate-500 dark:text-slate-400">
-              — Founder Name, Founder of Placeholder Fast-Growing D2C Brand
+      <section
+        id="founding-partners"
+        className="border-b border-border bg-background"
+      >
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+              Founding partner access
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Become a founding brand partner.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-muted-foreground">
+              We are onboarding a limited set of early brands, agencies, and
+              D2C teams to shape the platform, run pilot campaigns, and access
+              the founding creator network before public launch.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#92400e] px-5 py-3 text-sm font-semibold text-white no-underline shadow-sm transition hover:bg-[#7c360c] hover:no-underline"
+              >
+                Apply as Founding Partner
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
+
+          <div className="grid gap-3">
+            {foundingPartnerBenefits.map((item) => (
+              <div
+                key={item}
+                className="flex items-start gap-3 rounded-lg border border-border bg-card px-5 py-4"
+              >
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#92400e]" />
+                <p className="text-sm leading-7 text-muted-foreground">{item}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* SECTION 8: FAQS */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-16">Frequently Asked Questions</h2>
-          <div className="space-y-4">
-            {[
-              {
-                q: 'Do you charge a percentage of our campaign spend?',
-                a: 'Absolutely not. We are a pure SaaS platform. You pay a flat monthly or annual subscription fee for the software. What you pay the creators is 100% between you and them.',
-              },
-              {
-                q: 'Are these just macro-influencers, or do you have micro/nano creators?',
-                a: 'Our strength is in the "fat middle." We have deeply integrated with thousands of highly-converting micro and mid-tier creators across India who drive massive ROI for D2C brands.',
-              },
-              {
-                q: "What if I'm already working with an agency or have my own spreadsheet of creators?",
-                a: 'Take advantage of our Agency Switch Guarantee. Our dedicated team will import your current creator roster into the platform for free in under 24 hours.',
-              },
-              {
-                q: 'Is our campaign and customer data secure?',
-                a: '100%. We utilize enterprise-grade encryption and are fully compliant with global GDPR standards and India\'s DPDP Act. You own your data forever.',
-              },
-            ].map((faq, index) => (
-              <div key={index} className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
-                <button
-                  className="w-full p-6 text-left flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  onClick={() => toggleFaq(index)}
+      <section className="border-b border-border bg-muted/30">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 lg:grid-cols-[1fr_0.9fr] lg:px-8">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+              For creators
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Your Instagram is not your media kit.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-muted-foreground">
+              Creators can build a verified profile, showcase audience quality,
+              list rates, receive relevant brand briefs, sign contracts, and
+              track payments in one professional workspace.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/for-creators"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground no-underline transition hover:bg-muted hover:no-underline"
+              >
+                Join as Creator
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+              Creator workspace
+            </p>
+            <div className="mt-5 grid gap-3">
+              {[
+                "Verified creator profile and live media kit",
+                "Relevant briefs instead of cold outreach chaos",
+                "Contract, payout, and usage-rights visibility in one place",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-lg border border-border bg-background px-4 py-4"
                 >
-                  <span className="font-semibold">{faq.q}</span>
-                  <span className="text-slate-500">{openFaq === index ? '−' : '+'}</span>
-                </button>
-                {openFaq === index && (
-                  <div className="p-6 pt-0 text-slate-600 dark:text-slate-300">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
+                  <p className="text-sm leading-7 text-muted-foreground">
+                    {item}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 9: FINAL CTA */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">Stop renting your creator relationships. Start owning them.</h2>
-          <p className="text-lg mb-8 opacity-90">
-            Get access to the software, the active talent pool, and the tracking tools that will 10x your brand's growth.
+      <section className="bg-[#101827] text-white">
+        <div className="mx-auto max-w-4xl px-6 py-20 text-center lg:px-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-300">
+            Final CTA
           </p>
-          <Link
-            href="/signup"
-            className="inline-block px-10 py-5 rounded-full bg-white text-blue-600 font-bold text-lg hover:bg-slate-100 transition-colors mb-4"
-          >
-            Start Your 14-Day Free Trial
-          </Link>
-          <div className="text-sm opacity-80">
-            Run your first campaign on us. Cancel anytime. Custom Enterprise plans available.
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+            Ready to make creator marketing measurable?
+          </h2>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <PrimaryLink href="/contact">
+              Book a Demo
+              <ArrowRight className="h-4 w-4" />
+            </PrimaryLink>
+            <SecondaryLink href="/for-creators#founding-creator-program">
+              Join Founding Creator Network
+            </SecondaryLink>
           </div>
         </div>
       </section>
-
-    </div>
+    </main>
   );
 }

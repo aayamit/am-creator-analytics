@@ -30,12 +30,10 @@ export async function GET(
     }
 
     // Get social account
-    const socialAccount = await prisma.socialAccount.findUnique({
+    const socialAccount = await prisma.socialAccount.findFirst({
       where: {
-        creatorId_platform: {
-          creatorId: creatorProfile.id,
-          platform: platform as any,
-        },
+        creatorId: creatorProfile.id,
+        platform: platform as any,
       },
     });
 

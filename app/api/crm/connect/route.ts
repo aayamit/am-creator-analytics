@@ -3,7 +3,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
 import { prisma } from "@/lib/prisma";
 
-const NANGO_BASE_URL = process.env.NANGO_BASE_URL || "http://localhost:3003";
+const NANGO_BASE_URL =
+  process.env.NANGO_BASE_URL ||
+  process.env.NANGO_SERVER_URL ||
+  (process.env.NODE_ENV === "production" ? "http://nango:3000" : "http://localhost:3005");
 
 /**
  * POST /api/crm/connect

@@ -8,7 +8,8 @@ import { ThemeProvider } from 'next-themes';
 
 export const metadata: Metadata = {
   title: 'AM Creator Analytics',
-  description: 'Stop measuring vanity metrics. Start tracking real B2B business outcomes with India\'s first full-funnel influencer attribution platform.',
+  description:
+    "India's operating system for performance-led creator campaigns. Run creator discovery, campaign CRM, contracts, attribution, payouts, and UGC rights from one platform.",
   manifest: '/site.webmanifest',
   icons: {
     icon: [

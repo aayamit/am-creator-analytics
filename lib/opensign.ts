@@ -4,7 +4,11 @@
  * Docs: Based on OpenSign Parse Server API
  */
 
-const OPENSIGN_SERVER_URL = process.env.OPENSIGN_SERVER_URL || 'http://localhost:8081/app';
+const OPENSIGN_SERVER_URL =
+  process.env.OPENSIGN_SERVER_URL ||
+  (process.env.NODE_ENV === 'production'
+    ? 'http://opensign:3000/app'
+    : 'http://localhost:3001/app');
 const OPENSIGN_APP_ID = process.env.OPENSIGN_APP_ID || 'opensign';
 const OPENSIGN_MASTER_KEY = process.env.OPENSIGN_MASTER_KEY || '';
 const OPENSIGN_SESSION_TOKEN = process.env.OPENSIGN_SESSION_TOKEN || '';
@@ -198,7 +202,11 @@ export async function sendDocument(documentId: string): Promise<{ success: boole
 
   // Build signing URLs for each signer
   // OpenSign signing URL format: {OPENSIGN_URL}/sign/{documentId}?email={signerEmail}
-  const OPENSIGN_URL = process.env.OPENSIGN_URL || 'http://localhost:3001';
+  const OPENSIGN_URL =
+    process.env.OPENSIGN_URL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://opensign.amcreatoranalytics.com'
+      : 'http://localhost:3001');
   const signingUrls: Record<string, string> = {};
 
   if (doc.signers) {

@@ -1,38 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, CheckCircle, Clock3, Mail, MessageSquare, Users } from "lucide-react";
+import JsonLd from "@/components/seo/json-ld";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, Phone, MapPin, Clock, CheckCircle, AlertCircle } from "lucide-react";
-import JsonLd from "@/components/seo/json-ld";
+import { Textarea } from "@/components/ui/textarea";
 
 const contactInfo = [
   {
     icon: Mail,
-    title: "Email Us",
-    details: "hello@amcreatoranalytics.com",
-    subtext: "We'll respond within 24 hours",
+    title: "Email",
+    details: "partnerships@amcreatoranalytics.com",
+    subtext: "Best for demos, founding partner interest, and roadmap conversations.",
   },
   {
-    icon: Phone,
-    title: "Call Us",
-    details: "+1 (555) 123-4567",
-    subtext: "Mon-Fri, 9am-6pm EST",
+    icon: Clock3,
+    title: "Response window",
+    details: "Typically within 1 business day",
+    subtext: "We are still onboarding early users in focused batches.",
   },
   {
-    icon: MapPin,
-    title: "Visit Us",
-    details: "123 Innovation Drive",
-    subtext: "Palo Alto, CA 94301",
+    icon: Users,
+    title: "Who should reach out",
+    details: "Brands, creators, agencies, and D2C teams",
+    subtext: "Especially if you want measurable creator ROI or cleaner operating workflows.",
   },
   {
-    icon: Clock,
-    title: "Business Hours",
-    details: "Monday - Friday",
-    subtext: "9:00 AM - 6:00 PM EST",
+    icon: MessageSquare,
+    title: "Best use",
+    details: "Book a demo or apply for founding access",
+    subtext: "We can also discuss creator onboarding, contracts, payouts, and attribution priorities.",
   },
 ];
 
@@ -40,20 +39,21 @@ const contactPageSchema = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
   name: "Contact AM Creator Analytics",
-  description: "Get in touch with our team for sales, support, or partnerships.",
+  description:
+    "Reach AM Creator Analytics for demos, founding partner access, creator onboarding, and product conversations.",
   mainEntity: {
     "@type": "Organization",
     name: "AM Creator Analytics",
     contactPoint: [
       {
         "@type": "ContactPoint",
-        contactType: "customer support",
-        email: "hello@amcreatoranalytics.com",
+        contactType: "sales",
+        email: "partnerships@amcreatoranalytics.com",
       },
       {
         "@type": "ContactPoint",
-        contactType: "sales",
-        email: "sales@amcreatoranalytics.com",
+        contactType: "partnerships",
+        email: "partnerships@amcreatoranalytics.com",
       },
     ],
   },
@@ -92,13 +92,16 @@ export default function ContactPage() {
       const data = await res.json();
       if (res.ok) {
         setSubmitStatus("success");
-        setSubmitMessage(data.message || "Thank you! We'll respond within 24 hours.");
+        setSubmitMessage(
+          data.message ||
+            "Thanks. We have your note and will get back to you shortly."
+        );
         setFormData({ name: "", email: "", subject: "", type: "", message: "" });
       } else {
         setSubmitStatus("error");
         setSubmitMessage(data.error || "Something went wrong. Please try again.");
       }
-    } catch (error) {
+    } catch {
       setSubmitStatus("error");
       setSubmitMessage("Network error. Please check your connection and try again.");
     } finally {
@@ -107,177 +110,177 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="bg-background text-foreground">
       <JsonLd data={contactPageSchema} />
 
-      {/* Hero Section */}
-      <section className="border-b border-border">
-        <div className="container mx-auto px-6 lg:px-8 py-24 md:py-32">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground font-heading mb-6">
-              Get in Touch
-            </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              Whether you're a brand looking for enterprise solutions or a creator
-              needing support — we're here to help.
-            </p>
+      <section className="border-b border-border bg-background">
+        <div className="mx-auto max-w-5xl px-6 py-20 text-center lg:px-8 lg:py-28">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+            Contact
+          </p>
+          <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground sm:text-6xl">
+            Talk to the team about demos, founding access, or creator onboarding.
+          </h1>
+          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
+            Reach out if you are a brand, creator, agency, or D2C team that
+            wants a more measurable and operationally clean way to run creator
+            campaigns.
+          </p>
+        </div>
+      </section>
+
+      <section className="border-b border-border bg-muted/30">
+        <div className="mx-auto max-w-6xl px-6 py-20 lg:px-8">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {contactInfo.map((info) => (
+              <Card key={info.title} className="rounded-lg border border-border bg-background p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#92400e]/10 text-[#92400e]">
+                    <info.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-foreground">
+                      {info.title}
+                    </h2>
+                    <p className="mt-1 text-sm font-medium text-foreground">
+                      {info.details}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                      {info.subtext}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Contact Info + Form */}
-      <section className="py-24 md:py-32">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Information */}
+      <section className="bg-background">
+        <div className="mx-auto max-w-6xl px-6 py-20 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
             <div>
-              <h2 className="text-2xl font-bold text-foreground font-heading mb-8">
-                Contact Information
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#92400e]">
+                What to include
+              </p>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                The more context you share, the better we can help.
               </h2>
-              <div className="space-y-6">
-                {contactInfo.map((info, index) => (
-                  <Card key={index} className="p-6 border-border/50 bg-card">
-                    <div className="flex items-start space-x-4">
-                      <div className="flex-shrink-0 w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
-                        <info.icon className="h-6 w-6 text-accent" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground mb-1">
-                          {info.title}
-                        </h3>
-                        <p className="text-foreground">{info.details}</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {info.subtext}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
+              <div className="mt-8 grid gap-3">
+                {[
+                  "What kind of team you are: brand, creator, agency, or D2C operator",
+                  "What workflow problem you want to solve first",
+                  "Whether you are exploring early access, a pilot, or founding partner pricing",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-start gap-3 rounded-lg border border-border bg-card px-5 py-4"
+                  >
+                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#92400e]" />
+                    <p className="text-sm leading-7 text-muted-foreground">{item}</p>
+                  </div>
                 ))}
               </div>
             </div>
 
-            {/* Contact Form */}
-            <div>
-              <h2 className="text-2xl font-bold text-foreground font-heading mb-8">
-                Send Us a Message
-              </h2>
-              <Card className="p-8 border-border/50 bg-card">
-                {submitStatus === "success" ? (
-                  <div className="text-center py-8">
-                    <CheckCircle className="h-16 w-16 text-accent mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-foreground mb-2">
-                      Message Sent!
-                    </h3>
-                    <p className="text-muted-foreground">{submitMessage}</p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input
-                          id="name"
-                          name="name"
-                          placeholder="John Smith"
-                          required
-                          value={formData.name}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          placeholder="john@company.com"
-                          required
-                          value={formData.email}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
+            <Card className="rounded-lg border border-border bg-card p-8">
+              {submitStatus === "success" ? (
+                <div className="py-10 text-center">
+                  <CheckCircle className="mx-auto h-14 w-14 text-[#92400e]" />
+                  <h3 className="mt-4 text-2xl font-semibold text-foreground">
+                    Thanks for reaching out.
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    {submitMessage}
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="subject">Subject</Label>
+                      <Label htmlFor="name">Full Name</Label>
                       <Input
-                        id="subject"
-                        name="subject"
-                        placeholder="Enterprise Inquiry"
+                        id="name"
+                        name="name"
+                        placeholder="Amit Kumar"
                         required
-                        value={formData.subject}
+                        value={formData.name}
                         onChange={handleChange}
                       />
                     </div>
-
                     <div className="space-y-2">
-                      <Label htmlFor="type">Inquiry Type</Label>
-                      <select
-                        id="type"
-                        name="type"
-                        className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground"
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="you@company.com"
                         required
-                        value={formData.type}
-                        onChange={handleChange}
-                      >
-                        <option value="">Select a type...</option>
-                        <option value="sales">Sales Inquiry</option>
-                        <option value="support">Creator Support</option>
-                        <option value="partnership">Partnership</option>
-                        <option value="press">Press / Media</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="message">Message</Label>
-                      <Textarea
-                        id="message"
-                        name="message"
-                        placeholder="Tell us how we can help you..."
-                        rows={5}
-                        required
-                        value={formData.message}
+                        value={formData.email}
                         onChange={handleChange}
                       />
                     </div>
+                  </div>
 
-                    {submitStatus === "error" && (
-                      <div className="flex items-center space-x-2 text-destructive">
-                        <AlertCircle className="h-5 w-5" />
-                        <p className="text-sm">{submitMessage}</p>
-                      </div>
-                    )}
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Subject</Label>
+                    <Input
+                      id="subject"
+                      name="subject"
+                      placeholder="Founding partner conversation"
+                      required
+                      value={formData.subject}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-medium"
-                      disabled={isSubmitting}
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Inquiry Type</Label>
+                    <select
+                      id="type"
+                      name="type"
+                      required
+                      value={formData.type}
+                      onChange={handleChange}
+                      className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground"
                     >
-                      {isSubmitting ? "Sending..." : "Send Message"}
-                    </Button>
-                  </form>
-                )}
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
+                      <option value="">Select an option</option>
+                      <option value="brand_demo">Brand demo</option>
+                      <option value="founding_partner">Founding partner</option>
+                      <option value="creator_program">Creator program</option>
+                      <option value="agency_inquiry">Agency inquiry</option>
+                      <option value="support">Support</option>
+                    </select>
+                  </div>
 
-      {/* Map Section (Placeholder) */}
-      <section className="border-t border-border bg-muted/30 py-24 md:py-32">
-        <div className="container mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-2xl font-bold text-foreground font-heading mb-4">
-            Visit Our Office
-          </h2>
-          <p className="text-muted-foreground mb-8">
-            123 Innovation Drive, Palo Alto, CA 94301
-          </p>
-          <div className="bg-card border border-border rounded-lg h-64 flex items-center justify-center">
-            <p className="text-muted-foreground">
-              Map integration coming soon
-            </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Message</Label>
+                    <Textarea
+                      id="message"
+                      name="message"
+                      placeholder="Tell us what you are trying to solve, what stage you are at, and what kind of workflow you need."
+                      rows={6}
+                      required
+                      value={formData.message}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  {submitStatus === "error" ? (
+                    <p className="text-sm text-destructive">{submitMessage}</p>
+                  ) : null}
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#92400e] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#7c360c] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSubmitting ? "Sending..." : "Send message"}
+                    {!isSubmitting ? <ArrowRight className="h-4 w-4" /> : null}
+                  </button>
+                </form>
+              )}
+            </Card>
           </div>
         </div>
       </section>

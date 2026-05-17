@@ -1,5 +1,158 @@
 # AM Creator Analytics - Work Log
 
+## 2026-05-17 - Instagram Creator Login Integration and Dashboard Cleanup
+
+### Summary
+Completed the Instagram Business Login code migration for creator auth, verified that the live site now generates the correct Instagram auth URL with the trimmed `instagram_business_basic` scope, and used the browser flow to isolate the last remaining blocker: the Instagram account credentials currently saved in Chrome are invalid. Also fixed a separate creator dashboard navigation bug in the clean repo where non-tenant routes were rendering `/undefined/dashboard/...` links.
+
+### Completed Tasks
+- [x] Replace the old Instagram Basic Display provider with a custom Instagram Business Login provider in `lib/auth/nextauth.ts`
+- [x] Move creator social-account syncing into NextAuth `events.linkAccount`
+- [x] Generate placeholder email identities for Instagram OAuth users so existing user flows do not break on missing email
+- [x] Update login and signup creator copy to explicitly reference Instagram Creator or Business accounts
+- [x] Fix `/creators/connections` to load social connections from `/api/me`
+- [x] Clean up adjacent creator/social API issues in `/api/me`, `/api/creators/[id]`, and `/api/social-accounts/[platform]`
+- [x] Trim the Instagram auth scope to `instagram_business_basic` for creator onboarding
+- [x] Verify `npm run build` succeeds after the Instagram auth scope cleanup
+- [x] Verify the live Instagram auth URL now contains only `scope=instagram_business_basic`
+- [x] Fix `components/layout/dashboard-sidebar.tsx` so non-tenant creator/brand/admin dashboards no longer build `undefined` links in the clean repo
+- [x] Wire the sidebar sign-out button to real `next-auth` sign-out behavior in the clean repo
+- [x] Update handover and next-session context docs with the Instagram integration state and remaining blocker
+
+### Live Verification
+- Live creator login entry point:
+  - `https://amcreatoranalytics.com/login?role=CREATOR`
+- Verified in Chrome that clicking `Continue with Instagram` now opens Instagram auth with:
+  - `platform_app_id=26571906789138925`
+  - `redirect_uri=https://amcreatoranalytics.com/api/auth/callback/instagram`
+  - `scope=instagram_business_basic`
+- This confirms the live site is no longer using the old Instagram Basic Display flow and is no longer requesting the oversized business scope bundle for creator onboarding.
+
+### Remaining Account-Side Blocker
+- Instagram now recognizes the target account and shows recovery options for:
+  - `amcreatoranalytics`
+- The browser flow currently stops because the password saved in Chrome/LastPass for that Instagram account is invalid.
+- The browser offered these recovery channels:
+  - email: `partnerships@amcreatoranalytics.com`
+  - SMS: `+91 79030 84346`
+- The Facebook shortcut also does not complete auth because the signed-in Facebook/Meta account is not linked to that Instagram account.
+- Result:
+  - app-side integration is working
+  - final end-to-end Instagram account linking still needs valid Instagram credentials or recovery access
+
+### Deployment Notes
+- A host-side deploy helper was used to sync the Instagram auth files into the live repo and rebuild the `app` container.
+- Two overlapping deploy attempts raced with each other and produced a container-name conflict on `am-creator-app`.
+- Even though the final helper run reported a conflict, browser verification showed the live auth URL had already updated to the trimmed `instagram_business_basic` scope, so at least one of the overlapping app refreshes successfully published the Instagram auth change.
+- The later dashboard-sidebar cleanup was made only in the clean writable repo during this session and was **not** re-deployed live from this sandbox.
+
+### Follow-Up Needed
+- [ ] Use the correct Instagram password for `amcreatoranalytics`, or recover the account through the listed email/SMS option, then rerun the creator connection flow
+- [ ] After valid Instagram auth succeeds once, verify `/creators/connections` shows Instagram as connected and inspect `/api/me` response for the synced social account
+- [ ] Re-deploy the latest clean-repo dashboard-sidebar cleanup so non-tenant dashboard links stop rendering `/undefined/...` on the live site
+
+## 2026-05-17 - Docker Standardization and Strategy-Led Website Repositioning
+
+### Summary
+Standardized the committed Docker setup for cloud-ready deployment under one predictable compose project and network, rewrote the public website around the new performance-led positioning, added creator and use-case pages, refreshed shared public chrome, and verified the code path with a successful production build.
+
+### Completed Tasks
+- [x] Audit production compose, dev compose, Dockerfiles, nginx config, Prisma DB wiring, env examples, and relevant service clients
+- [x] Standardize committed production service naming to `app`, `nginx`, `postgres`, `redis`, `mongo`, `opensign`, and `nango`
+- [x] Standardize committed production network name to `am_creator_network`
+- [x] Replace Mac-only committed bind-mount assumptions in prod compose with named volumes
+- [x] Add Postgres init bootstrap for separate app and Nango databases
+- [x] Standardize internal service hostnames so app/nginx/Nango/OpenSign stop depending on stale container names or localhost
+- [x] Update `.env.example`, add `.env.prod.example`, and refresh `.env.prod.template`
+- [x] Validate `docker compose -f docker-compose.prod.yml config`
+- [x] Validate `docker compose -f docker-compose.yml config`
+- [x] Rebuild `app/marketing/page.tsx` around the new strategy-led narrative
+- [x] Add `app/for-creators/page.tsx`
+- [x] Add `app/for-d2c-brands/page.tsx`
+- [x] Add `app/for-agencies/page.tsx`
+- [x] Refresh shared public navigation in `components/NavBar.tsx`
+- [x] Refresh shared public footer in `components/Footer.tsx`
+- [x] Rewrite `app/pricing/page.tsx` for early-access brand and creator positioning
+- [x] Update `app/about/page.tsx` and `app/contact/page.tsx` so the public funnel aligns with the new positioning
+- [x] Update root metadata copy in `app/layout.tsx`
+- [x] Run `npm run build` successfully after the changes
+- [x] Update handover and next-session context docs with Docker/deployment and website changes
+
+### Docker / Deployment Findings
+- Previous production risk: the app container could be launched from a different compose project/network than the live Postgres and nginx services.
+- Standardized committed production network:
+  - `am_creator_network`
+- Standardized committed production service names:
+  - `app`
+  - `nginx`
+  - `postgres`
+  - `redis`
+  - `mongo`
+  - `opensign`
+  - `nango`
+- Standardized internal hostnames:
+  - app -> `postgres`
+  - app -> `redis`
+  - OpenSign -> `mongo`
+  - nginx -> `app:3000`
+  - Nango -> `postgres` and `redis`
+- Main application DB is now modeled separately from Nango DB in committed config:
+  - app DB: `am_creator_analytics`
+  - Nango DB: `nango`
+
+### Website Changes
+- Main landing page now positions AM as:
+  - India’s operating system for performance-led creator campaigns
+- New public pages:
+  - `/for-creators`
+  - `/for-d2c-brands`
+  - `/for-agencies`
+- Updated public pages:
+  - `/marketing`
+  - `/pricing`
+  - `/about`
+  - `/contact`
+- Shared public chrome now emphasizes:
+  - performance-led creator campaigns
+  - creator campaign operating system
+  - verified creator profiles
+  - campaign CRM
+  - contracts and usage rights
+  - attribution and ROI
+  - payout and compliance workspace
+  - founding creator network
+  - founding brand partners
+
+### Build Result
+- `npm run build` completed successfully.
+- Build still emits two known non-blocking warnings:
+  - Next.js workspace-root warning due to multiple lockfiles
+  - ESLint config warning:
+    - `Cannot find module ... eslint-config-next/core-web-vitals`
+
+### Verification / Limitations
+- Verified:
+  - `docker compose -f docker-compose.prod.yml config`
+  - `docker compose -f docker-compose.yml config`
+  - `npm run build`
+- Could **not** verify from this sandbox shell:
+  - `docker ps`
+  - `docker network ls`
+  - `docker compose -f docker-compose.prod.yml ps`
+  - `docker compose -f docker-compose.prod.yml build app`
+  - `docker compose -f docker-compose.prod.yml up -d`
+  - `curl http://localhost:3000/api/health`
+- Could **not** start a local preview server in this session because the sandbox blocked listening on a port:
+  - `listen EPERM: operation not permitted 127.0.0.1:3007`
+- Result: compile/build verification is complete, but this session did not deploy the new public pages live and did not browser-test a local preview.
+
+### Next Steps
+- [ ] Review the new public pages in a browser on a machine/session that can start a local or live preview server
+- [ ] Decide whether to deploy the new marketing/navigation/pricing pages to the Mac Mini live stack
+- [ ] Push the clean writable clone changes only after review and approval
+- [ ] Later cleanup: resolve the existing ESLint config warning and Next.js lockfile/workspace-root warning
+- [ ] If direct Docker runtime control is needed again, use a session/path that can access Docker Desktop or the Docker socket
+
 ## 2026-05-17 - Mac Mini Recovery, Git Sync, and `www` Routing Investigation
 
 ### Summary

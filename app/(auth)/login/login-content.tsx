@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Building2,
   CheckCircle,
+  Instagram,
   Mail,
   User,
 } from "lucide-react";
@@ -26,6 +27,7 @@ export default function LoginContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const callbackUrl = searchParams.get("callbackUrl");
 
   useEffect(() => {
     const roleParam = searchParams.get("role");
@@ -80,11 +82,25 @@ export default function LoginContent() {
       if (result?.error) {
         setError("Invalid credentials");
       } else {
-        router.push(role === "BRAND" ? "/brands" : "/creators");
+        router.push(callbackUrl || (role === "BRAND" ? "/brands" : "/creators"));
       }
     } catch {
       setError("An error occurred");
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInstagramSignIn = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      await signIn("instagram", {
+        callbackUrl: callbackUrl || "/creators",
+      });
+    } catch {
+      setError("Instagram sign-in could not be started.");
       setLoading(false);
     }
   };
@@ -190,6 +206,24 @@ export default function LoginContent() {
               <span className="block text-sm font-medium">Brand</span>
             </button>
           </div>
+
+          {role === "CREATOR" && (
+            <div className="mb-6 space-y-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 w-full rounded-xl border-border bg-background/80 text-sm font-semibold"
+                onClick={handleInstagramSignIn}
+                disabled={loading}
+              >
+                <Instagram className="mr-2 h-4 w-4" />
+                Continue with Instagram
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">
+                Use your Instagram Creator or Business account to create or access your creator workspace.
+              </p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

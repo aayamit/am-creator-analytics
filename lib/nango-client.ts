@@ -4,7 +4,10 @@
  * Self-hosted: https://docs.nango.dev/self-hosting
  */
 
-const NANGO_BASE_URL = process.env.NANGO_BASE_URL || "http://localhost:3003";
+const NANGO_BASE_URL =
+  process.env.NANGO_BASE_URL ||
+  process.env.NANGO_SERVER_URL ||
+  (process.env.NODE_ENV === "production" ? "http://nango:3000" : "http://localhost:3005");
 const NANGO_SECRET_KEY = process.env.NANGO_SECRET_KEY || "nango-secret-key"; // Set in .env
 
 if (!NANGO_SECRET_KEY || NANGO_SECRET_KEY === "nango-secret-key") {

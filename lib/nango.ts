@@ -4,7 +4,10 @@
  * Saves ₹40K-1.6L/month vs Merge.dev
  */
 
-const NANGO_SERVER_URL = process.env.NANGO_SERVER_URL || 'http://localhost:3003';
+const NANGO_SERVER_URL =
+  process.env.NANGO_SERVER_URL ||
+  process.env.NANGO_BASE_URL ||
+  (process.env.NODE_ENV === 'production' ? 'http://nango:3000' : 'http://localhost:3005');
 const NANGO_SECRET_KEY = process.env.NANGO_SECRET_KEY || 'nango-secret-key';
 
 export interface NangoSyncResult {

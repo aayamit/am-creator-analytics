@@ -4,51 +4,87 @@ import Link from 'next/link';
 import { LayoutDashboard, Users, BarChart3, FileText, Settings, LogOut, TrendingUp, Link2, Bell, Contact, Wallet, Shield, Send, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NotificationBell from '@/components/notifications/notification-bell';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 interface DashboardSidebarProps {
   role: "BRAND" | "CREATOR" | "AGENCY" | "ADMIN";
-  tenantId: string;
+  tenantId?: string;
   tenantName?: string;
   tenantType?: string;
 }
 
 export default function DashboardSidebar({ role, tenantId, tenantName, tenantType }: DashboardSidebarProps) {
   const { data: session } = useSession();
-  const basePath = `/${tenantId}`;
+  const hasTenantScope = Boolean(tenantId);
+  const tenantDashboardBase = tenantId ? `/${tenantId}/dashboard` : null;
 
-  const creatorNav = [
-    { href: `${basePath}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
-    { href: `${basePath}/dashboard/campaigns`, label: 'My Campaigns', icon: TrendingUp },
-    { href: `${basePath}/dashboard/analytics`, label: 'Analytics', icon: BarChart3 },
-    { href: `${basePath}/dashboard/media-kit`, label: 'Media Kit', icon: FileText },
-    { href: `${basePath}/dashboard/connections`, label: 'Connections', icon: Link2 },
-    { href: `${basePath}/dashboard/pitch`, label: 'Pitch to Brand', icon: Send },
-    { href: `${basePath}/dashboard/payouts`, label: 'Payouts', icon: Wallet },
-    { href: `${basePath}/dashboard/notifications`, label: 'Notifications', icon: Bell },
-  ];
+  const creatorNav = hasTenantScope
+    ? [
+        { href: `${tenantDashboardBase}`, label: 'Dashboard', icon: LayoutDashboard },
+        { href: `${tenantDashboardBase}/campaigns`, label: 'My Campaigns', icon: TrendingUp },
+        { href: `${tenantDashboardBase}/analytics`, label: 'Analytics', icon: BarChart3 },
+        { href: `${tenantDashboardBase}/media-kit`, label: 'Media Kit', icon: FileText },
+        { href: `${tenantDashboardBase}/connections`, label: 'Connections', icon: Link2 },
+        { href: `${tenantDashboardBase}/payouts`, label: 'Payouts', icon: Wallet },
+        { href: `${tenantDashboardBase}/notifications`, label: 'Notifications', icon: Bell },
+      ]
+    : [
+        { href: '/creators', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/creators/campaigns', label: 'My Campaigns', icon: TrendingUp },
+        { href: '/creators/analytics', label: 'Analytics', icon: BarChart3 },
+        { href: '/creators/media-kit', label: 'Media Kit', icon: FileText },
+        { href: '/creators/connections', label: 'Connections', icon: Link2 },
+        { href: '/creators/pitch', label: 'Pitch to Brand', icon: Send },
+        { href: '/creators/settings/payouts', label: 'Payouts', icon: Wallet },
+        { href: '/notifications', label: 'Notifications', icon: Bell },
+      ];
 
-  const brandNav = [
-    { href: `${basePath}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
-    { href: `${basePath}/dashboard/campaigns`, label: 'Campaigns', icon: TrendingUp },
-    { href: `${basePath}/dashboard/analytics`, label: 'Analytics', icon: BarChart3 },
-    { href: `${basePath}/dashboard/creators`, label: 'Discover', icon: Users },
-    { href: `${basePath}/dashboard/crm`, label: 'CRM', icon: Contact },
-    { href: `${basePath}/dashboard/pitches`, label: 'Pitch Inbox', icon: Inbox },
-    { href: `${basePath}/dashboard/funding`, label: 'Funding', icon: Wallet },
-    { href: `${basePath}/dashboard/notifications`, label: 'Notifications', icon: Bell },
-    { href: `${basePath}/dashboard/settings`, label: 'Settings', icon: Settings },
-  ];
+  const brandNav = hasTenantScope
+    ? [
+        { href: `${tenantDashboardBase}`, label: 'Dashboard', icon: LayoutDashboard },
+        { href: `${tenantDashboardBase}/campaigns`, label: 'Campaigns', icon: TrendingUp },
+        { href: `${tenantDashboardBase}/analytics`, label: 'Analytics', icon: BarChart3 },
+        { href: `${tenantDashboardBase}/creators`, label: 'Discover', icon: Users },
+        { href: `${tenantDashboardBase}/crm`, label: 'CRM', icon: Contact },
+        { href: `${tenantDashboardBase}/pitches`, label: 'Pitch Inbox', icon: Inbox },
+        { href: `${tenantDashboardBase}/funding`, label: 'Funding', icon: Wallet },
+        { href: `${tenantDashboardBase}/notifications`, label: 'Notifications', icon: Bell },
+      ]
+    : [
+        { href: '/brands', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/brands/campaigns/create', label: 'Campaigns', icon: TrendingUp },
+        { href: '/brands/analytics', label: 'Analytics', icon: BarChart3 },
+        { href: '/brands', label: 'Discover', icon: Users },
+        { href: '/brands/crm', label: 'CRM', icon: Contact },
+        { href: '/brands/pitches', label: 'Pitch Inbox', icon: Inbox },
+        { href: '/brands/funding', label: 'Funding', icon: Wallet },
+        { href: '/notifications', label: 'Notifications', icon: Bell },
+      ];
 
-  const adminNav = [
-    { href: `${basePath}/dashboard/admin`, label: 'Admin', icon: LayoutDashboard },
-    { href: `${basePath}/dashboard/admin/users`, label: 'Users', icon: Users },
-    { href: `${basePath}/dashboard/admin/audit-logs`, label: 'Audit Logs', icon: FileText },
-    { href: `${basePath}/dashboard/admin/gdpr`, label: 'GDPR', icon: Shield },
-    { href: `${basePath}/dashboard/notifications`, label: 'Notifications', icon: Bell },
-  ];
+  const adminNav = hasTenantScope
+    ? [
+        { href: `${tenantDashboardBase}/admin`, label: 'Admin', icon: LayoutDashboard },
+        { href: `${tenantDashboardBase}/admin/users`, label: 'Users', icon: Users },
+        { href: `${tenantDashboardBase}/admin/audit-logs`, label: 'Audit Logs', icon: FileText },
+        { href: `${tenantDashboardBase}/admin/gdpr`, label: 'GDPR', icon: Shield },
+        { href: `${tenantDashboardBase}/notifications`, label: 'Notifications', icon: Bell },
+      ]
+    : [
+        { href: '/admin', label: 'Admin', icon: LayoutDashboard },
+        { href: '/admin/users', label: 'Users', icon: Users },
+        { href: '/admin/audit-logs', label: 'Audit Logs', icon: FileText },
+        { href: '/admin/gdpr', label: 'GDPR', icon: Shield },
+        { href: '/notifications', label: 'Notifications', icon: Bell },
+      ];
 
   const navItems = role === "CREATOR" ? creatorNav : role === "BRAND" ? brandNav : adminNav;
+  const settingsHref = hasTenantScope
+    ? `${tenantDashboardBase}/settings`
+    : role === "CREATOR"
+      ? "/creators/settings/payouts"
+      : role === "BRAND"
+        ? "/brands"
+        : "/admin";
 
   return (
     <aside style={{
@@ -158,7 +194,7 @@ export default function DashboardSidebar({ role, tenantId, tenantName, tenantTyp
         )}
 
         <Link
-          href={`${basePath}/dashboard/settings`}
+          href={settingsHref}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -192,7 +228,7 @@ export default function DashboardSidebar({ role, tenantId, tenantName, tenantTyp
             width: '100%',
           }}
           onClick={() => {
-            // Sign out logic
+            void signOut({ callbackUrl: "/login" });
           }}
         >
           <LogOut size={20} />

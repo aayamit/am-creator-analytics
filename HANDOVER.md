@@ -1,6 +1,6 @@
 # AM Creator Analytics — Agent Handover Document
 
-**Version:** 1.3  
+**Version:** 1.4  
 **Date:** 2026-05-17  
 **Prepared by:** OWL (Hermes Agent) + Codex  
 **Project Owner:** Amit Kumar (amitkumaraman)
@@ -9,9 +9,9 @@
 
 ## 1. Project Overview
 
-AM Creator Analytics is a **B2B SaaS platform** for influencer marketing management. It connects brands with creators, manages campaigns, tracks ROI, handles contracts (via OpenSign), processes payouts (via Stripe), and integrates with social platforms (Instagram, YouTube, LinkedIn). It also includes CRM sync via Nango (Salesforce/HubSpot).
+AM Creator Analytics is a **B2B SaaS platform** for creator and influencer marketing management. It connects brands with creators, manages campaigns, tracks ROI, handles contracts through OpenSign, processes payouts, integrates social platforms, and includes CRM sync through Nango.
 
-**Tagline:** *"Stop measuring vanity metrics. Start tracking real B2B business outcomes."*
+**Positioning:** *"India's operating system for performance-led creator campaigns."*
 
 **Domain:** `amcreatoranalytics.com` (purchased via Squarespace/Google Workspace)  
 **Email:** `partnerships@amcreatoranalytics.com`
@@ -21,11 +21,33 @@ AM Creator Analytics is a **B2B SaaS platform** for influencer marketing managem
 ## Current Status
 
 - Public preview is intended to run directly from the Mac Mini through Docker + Cloudflare Tunnel.
-- The site returned Cloudflare `502` after the Mac restart because the local Docker stack was down even though the tunnel connector was still active.
-- Docker was brought back and the named Cloudflare tunnel connector was confirmed active again on 2026-05-16.
-- The production app image then failed a rebuild due to a JSX syntax error in `app/marketing/page.tsx`; that fix is now part of the clean sync path.
-- The app container is now healthy again on the Mac and both `http://127.0.0.1:3000` and `https://amcreatoranalytics.com` respond successfully.
-- Recovery used a local-only compose override to point the app at the correct app database and then ran `prisma db push` to create the missing tables. That override file should stay local and should not be committed.
+- The site returned Cloudflare `502` after the Mac restart because the local Docker stack was down even though the tunnel connector was still active. That recovery is complete and apex + `www` now resolve again through the live tunnel.
+- Docker production config has now been standardized in the clean writable repo so future deploys do not depend on mixed service names, split compose projects, or manual network reattachment.
+- The intended production stack is now defined under one compose project with stable service names:
+  - `app`
+  - `nginx`
+  - `postgres`
+  - `redis`
+  - `mongo`
+  - `opensign`
+  - `nango`
+- The intended production network is now one named shared network:
+  - `am_creator_network`
+- The app is now configured to use internal hostnames like `postgres`, `redis`, `mongo`, `opensign`, and `nango`, and nginx now proxies to `app:3000`.
+- The production compose file is now cloud-ready and portable:
+  - named volumes replace Mac-only `/Volumes/DA/...` bind-mount assumptions
+  - the committed production file remains clean
+  - local-only overrides should stay in `docker-compose.prod.local-env.yml` and stay uncommitted
+- Postgres initialization has been standardized so the main app DB and Nango DB are created separately on first boot:
+  - app DB: `am_creator_analytics`
+  - Nango DB: `nango`
+- Environment templates were updated:
+  - `.env.example`
+  - `.env.prod.example`
+  - `.env.prod.template` kept as compatibility reference
+- `docker compose -f docker-compose.prod.yml config` and `docker compose -f docker-compose.yml config` both succeeded from the clean writable repo.
+- Direct Docker runtime inspection from the sandbox shell is still blocked by Docker socket permissions, so this session could not directly run `docker ps`, `docker network ls`, or `docker compose ... ps` from the shell.
+- `npm run build` succeeds after the public website changes. There is still an existing non-blocking ESLint config warning during the build, and a separate Next.js warning about multiple lockfiles / inferred workspace root.
 - The local repository on `/Volumes/DA/am-creator-analytics` has a local-only commit (`1ade516`) that accidentally includes `volumes/` runtime data and `.env.backup`. Do **not** push that commit directly.
 - The correct GitHub repository is `https://github.com/aayamit/am-creator-analytics.git`. The stale `amitkumaraman/...` URL in the old handover notes is wrong.
 - A clean code-only sync was pushed from the writable clone with commit `99c11f5` (`feat: add phase 3 marketing and social auth flows`).
@@ -37,21 +59,46 @@ AM Creator Analytics is a **B2B SaaS platform** for influencer marketing managem
   - the shared footer now renders the AM mark image instead of the old text-only badge
   - `/login` and `/signup` were rebuilt to use theme-token styling and were verified in both light and dark mode
   - `/`, `/marketing`, `/features`, `/how-it-works`, `/pricing`, `/case-studies`, `/about`, `/login`, and `/signup` all currently show the `Login` link in the shared nav
+- Public website repositioning is implemented in the clean writable repo and ready for review:
+  - `/marketing` now presents AM as a performance-led creator campaign operating system
+  - new `/for-creators` page
+  - new `/for-d2c-brands` page
+  - new `/for-agencies` page
+  - updated nav, footer, pricing, about, and contact pages
+  - this rewrite is built and verified at compile level, but it has **not** been pushed or deployed live from this session
+- Instagram creator login is now wired to Instagram Business Login instead of the old Instagram Basic Display flow:
+  - live auth URL now uses `platform_app_id=26571906789138925`
+  - live redirect URI is `https://amcreatoranalytics.com/api/auth/callback/instagram`
+  - live scope is now trimmed to `instagram_business_basic` for creator onboarding
+- Browser testing confirms the integration path is now technically correct, but end-to-end account linking is still blocked by account-side access:
+  - Instagram recognizes account `amcreatoranalytics`
+  - the saved Instagram password currently being used in Chrome is invalid
+  - Instagram offered recovery via `partnerships@amcreatoranalytics.com` and `+91 79030 84346`
+  - the logged-in Facebook/Meta account is not linked to that Instagram account, so the Facebook shortcut does not complete auth
+- A separate creator dashboard bug was found during Instagram testing:
+  - non-tenant dashboard pages like `/creators/connections` were rendering sidebar links as `/undefined/dashboard/...`
+  - that cleanup is fixed in the clean writable repo, but it was **not** re-deployed live during this session
 
 ---
 
 ## 2. File Locations & Project Structure
 
-### Primary Project Directory
+### Primary Live Project Directory
 ```
 /Volumes/DA/am-creator-analytics/
+```
+
+### Current Writable Working Copy
+```
+/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/am-creator-analytics-clean
 ```
 
 ### Key Files & Directories
 
 | Path | Purpose |
 |------|---------|
-| `/Volumes/DA/am-creator-analytics/` | Project root |
+| `/Volumes/DA/am-creator-analytics/` | Live Mac Mini repo and persistent runtime data |
+| `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/am-creator-analytics-clean` | Writable clean clone currently used for code changes |
 | `app/` | Next.js App Router — all pages & API routes |
 | `app/api/` | 60+ API routes (see §8) |
 | `app/[tenantId]/dashboard/` | Tenant-scoped dashboard pages |
@@ -96,6 +143,7 @@ AM Creator Analytics is a **B2B SaaS platform** for influencer marketing managem
 - **Remote:** `origin`
 - **Current problem:** local repo `origin` may still point at the stale `amitkumaraman/am-creator-analytics` URL on disk; update it before pushing from the live repo
 - **Push warning:** do not push local commit `1ade516` directly because it contains `volumes/` database/runtime files and `.env.backup`
+- **Current session status:** deployment and website changes in the clean writable clone are not yet committed or pushed; review `git status` there first next session
 
 ### Recent Commits
 ```
@@ -158,62 +206,81 @@ git push origin master
 
 ### Production Stack (docker-compose.prod.yml)
 
-| Service | Container Name | Image | Host Port | Container Port |
-|---------|---------------|-------|-----------|----------------|
-| App (Next.js) | `am-creator-app` | Built from `Dockerfile.prod` | 3000 | 3000 |
-| Nginx | `am-creator-nginx` | `nginx:alpine` | 80, 443 | 80, 443 |
-| PostgreSQL | `am-creator-postgres` | `postgres:16-alpine` | 5432 | 5432 |
-| Redis | `am-creator-redis` | `redis:alpine` | 6379 | 6379 |
-| Nango | `am-creator-nango` | `nangohq/nango-server:hosted` | 3005, 3006 | 3000, 3006 |
-| OpenSign | `opensign-client` | `opensign/opensign:main` | 3001 | 3000 |
-| MongoDB | `opensign-mongo` | `mongo:latest` | 27017 | 27017 |
+| Service Name | Purpose | Host Port | Internal Hostname |
+|--------------|---------|-----------|-------------------|
+| `app` | Next.js application | `127.0.0.1:3000` | `app` |
+| `nginx` | Reverse proxy / public host routing | `80`, `443` | `nginx` |
+| `postgres` | Main relational database | `5432` | `postgres` |
+| `redis` | Cache / queue layer | `6379` | `redis` |
+| `mongo` | OpenSign MongoDB | `27017` | `mongo` |
+| `opensign` | OpenSign service | `127.0.0.1:3001` | `opensign` |
+| `nango` | Nango API and UI | `127.0.0.1:3005`, `127.0.0.1:3006` | `nango` |
 
-All services on Docker network: `app-network` (bridge)
+All intended production services now share one named network:
+
+```text
+am_creator_network
+```
+
+This is the key standardization that prevents the earlier split-network problem where the app container was running in one compose project/network while Postgres and nginx were running in another.
 
 ### Development Stack (docker-compose.yml)
-- PostgreSQL, Nango, MinIO, MeiliSearch, Redis
-- No app container — run `npm run dev` locally
+- Stable dev services: `postgres`, `redis`, `nango`, `minio`, `meilisearch`
+- Shared dev network: `am_creator_dev_network`
+- Dev Nango now points to internal service hostnames `postgres` and `redis`
 
 ### Production Build & Start
 ```bash
-cd /Volumes/DA/am-creator-analytics
+cd /path/to/am-creator-analytics
+
+# Validate compose
+docker compose -f docker-compose.prod.yml --env-file .env.prod config
 
 # Build app image
-docker compose -f docker-compose.prod.yml --env-file .env.prod build --no-cache app
+docker compose -f docker-compose.prod.yml --env-file .env.prod build app
 
 # Start all services
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
-# View logs
-docker compose -f docker-compose.prod.yml logs -f
+# Health check
+curl http://127.0.0.1:3000/api/health
+
+# View all logs
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs -f
+
+# App-only refresh when dependencies are already healthy
+docker compose -f docker-compose.prod.yml --env-file .env.prod build app
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps app
 
 # Stop all
-docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml --env-file .env.prod down
 ```
 
 ### Important Docker Notes
-- **Build requires:** `NEXT_LINT_DISABLED=true` (TypeScript errors are ignored in build)
-- **Build context should exclude:** `volumes/` so Docker does not send local database state into the image build context
-- **If homepage works but auth/database routes fail:** rebuild the `app` image and check `docker compose ... logs app` for Prisma/OpenSSL errors
-- **Current app DB fix:** recovery used a local-only compose override so the app talks to the dedicated `am_creator_analytics` database instead of the old shared/default target
-- **Most reliable live app-only deploy path on this Mac Mini:** run the build and `up -d --no-deps app` sequence from the clean clone inside Docker Desktop's embedded terminal, then replace only `am-creator-app`
-- **Nango DB setup:** Must create `nango` user/database in Postgres:
-  ```sql
-  CREATE USER nango WITH PASSWORD 'nango';
-  CREATE DATABASE nango OWNER nango;
-  GRANT ALL PRIVILEGES ON DATABASE nango TO nango;
-  ```
-- **Nginx** proxies to container name `am-creator-app:3000` (not localhost)
+- **Main issue that existed:** an app container from the clean clone was previously started on a different Docker network than the live Postgres and nginx services, which broke `/api/health` and made nginx/app hostnames inconsistent.
+- **Standardization now in place:** one prod compose project, one prod network, stable service names, stable internal hostnames, and separate DB bootstrap for the app and Nango.
+- **Main app DB:** `am_creator_analytics`
+- **Nango DB:** `nango`
+- **App internal dependencies:** use `postgres`, `redis`, `mongo`, `opensign`, and `nango` instead of `localhost`.
+- **Nginx internal upstream:** `app:3000`
+- **Persistent prod storage in committed compose:** named volumes
+  - `postgres_data`
+  - `redis_data`
+  - `mongo_data`
+  - `nginx_logs`
+- **Mac-specific overrides:** keep them in `docker-compose.prod.local-env.yml` only if absolutely needed, and keep that file uncommitted.
+- **Runtime verification limitation from this session:** direct shell access to Docker runtime commands is blocked by Docker socket permissions in the sandbox. `docker compose ... config` was verified successfully, but `docker ps`, `docker network ls`, `docker compose ... ps`, and `docker compose ... up -d` could not be executed from this shell.
 - **SSL certs** are self-signed at `nginx/ssl/cert.pem` and `nginx/ssl/key.pem`
-- **Persistent data** in `/Volumes/DA/am-creator-analytics/volumes/`
 
 ### Nginx Virtual Hosts
 | Domain | Proxies To |
 |--------|-----------|
-| `amcreatoranalytics.com` | `am-creator-app:3000` (landing + app) |
-| `www.amcreatoranalytics.com` | `am-creator-app:3000` (same app) |
-| `app.amcreatoranalytics.com` | `am-creator-app:3000` (dashboard) |
-| `opensign.amcreatoranalytics.com` | `opensign-client:3000` |
+| `amcreatoranalytics.com` | `app:3000` |
+| `www.amcreatoranalytics.com` | `app:3000` |
+| `app.amcreatoranalytics.com` | `app:3000` |
+| `opensign.amcreatoranalytics.com` | `opensign:3000` |
+| `nango.amcreatoranalytics.com` | `nango:3000` |
+| `nango-ui.amcreatoranalytics.com` | `nango:3006` |
 
 ---
 
@@ -240,6 +307,12 @@ docker compose -f docker-compose.prod.yml down
 
 All values below should stay sanitized in documentation. Real secrets live only in local `.env` and `.env.prod`.
 
+Tracked placeholder files now maintained in the repo:
+
+- `.env.example`
+- `.env.prod.example`
+- `.env.prod.template` (compatibility reference)
+
 ### Production (.env.prod)
 ```env
 # App Core
@@ -247,8 +320,22 @@ NEXTAUTH_SECRET=your_nextauth_secret_here
 NEXTAUTH_URL=https://amcreatoranalytics.com
 NEXT_PUBLIC_APP_URL=https://amcreatoranalytics.com
 
-# Database
-DATABASE_URL="postgresql://postgres:postgres@postgres:5432/nango?schema=public"
+# Postgres bootstrap
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_postgres_password_here
+POSTGRES_DB=postgres
+APP_DB_NAME=am_creator_analytics
+APP_DB_USER=am_creator_app
+APP_DB_PASSWORD=your_app_db_password_here
+NANGO_DB_NAME=nango
+NANGO_DB_USER=nango
+NANGO_DB_PASSWORD=your_nango_db_password_here
+
+# Main app database
+DATABASE_URL="postgresql://am_creator_app:your_app_db_password_here@postgres:5432/am_creator_analytics?schema=public"
+
+# Redis
+REDIS_URL=redis://redis:6379
 
 # Instagram (Meta App)
 INSTAGRAM_CLIENT_ID=<configured locally>
@@ -270,15 +357,8 @@ STRIPE_SECRET_KEY=sk_test_placeholder_key_for_build
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder_key_for_build
 STRIPE_WEBHOOK_SECRET=whsec_placeholder_for_build
 
-# App
-PORT=3000
-CLOUDFLARE_TUNNEL_ID=6aaf5b9c-77de-4be9-83f0-60964b3a564c
-POSTGRES_PASSWORD=postgres
-
-# Nango
-NANGO_SECRET_KEY=<configured locally>
-NANGO_ENCRYPTION_KEY=<configured locally>
-NANGO_ADMIN_KEY=<configured locally>
+# OpenSign / Mongo / Nango / WhatsApp / Payments / Email
+# See `.env.prod.example` for the full sanitized placeholder set.
 ```
 
 ### Local Development (.env)

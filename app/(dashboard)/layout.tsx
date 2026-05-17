@@ -21,7 +21,11 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-background">
-      <DashboardSidebar role={session.user.role as "BRAND" | "CREATOR"} />
+      <DashboardSidebar
+        role={
+          session.user.role as "BRAND" | "CREATOR" | "AGENCY" | "ADMIN"
+        }
+      />
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-auto">
           <div className="p-8">{children}</div>

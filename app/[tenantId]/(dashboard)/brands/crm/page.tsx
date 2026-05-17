@@ -42,7 +42,7 @@ export default function BrandCrmPage() {
   useEffect(() => {
     // Initialize Nango frontend SDK
     const nangoInstance = new Nango({
-      host: process.env.NEXT_PUBLIC_NANGO_BASE_URL || "http://localhost:3003",
+      host: process.env.NEXT_PUBLIC_NANGO_BASE_URL || "http://localhost:3005",
     });
     setNango(nangoInstance);
     

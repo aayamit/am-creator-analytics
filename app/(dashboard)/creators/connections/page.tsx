@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn, signOut, getSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,19 +42,19 @@ export default function ConnectionsPage() {
 
   useEffect(() => {
     async function fetchAccounts() {
-      const session = await getSession();
-      if (!session?.user?.id) return;
-
-      // In real implementation, fetch from /api/creators/[id] to get social accounts
-      // For now, check if Account table has entries for this user
-      // We'll do a simple check via API
       try {
-        const res = await fetch(`/api/creators/${(session.user as any).id}`);
+        const res = await fetch("/api/me");
+        if (!res.ok) {
+          return;
+        }
+
         const data = await res.json();
-        if (data.socialAccounts) {
+        const socialAccounts = data.profile?.socialAccounts;
+
+        if (Array.isArray(socialAccounts)) {
           setAccounts((prev) =>
             prev.map((acc) => {
-              const found = data.socialAccounts.find(
+              const found = socialAccounts.find(
                 (sa: any) => sa.platform === acc.platform
               );
               if (found) {
