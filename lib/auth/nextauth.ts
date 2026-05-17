@@ -69,7 +69,44 @@ function InstagramBusinessProvider(options: {
         scope: INSTAGRAM_BUSINESS_SCOPE,
       },
     },
-    token: "https://api.instagram.com/oauth/access_token",
+    token: {
+      url: "https://api.instagram.com/oauth/access_token",
+      async request(context) {
+        const { provider, params: { code }, client } = context;
+        
+        console.log("=== INSTAGRAM TOKEN EXCHANGE START ===");
+        console.log("1. provider.callbackUrl (NextAuth default):", provider.callbackUrl);
+        
+        const body = new URLSearchParams({
+          client_id: provider.clientId as string,
+          client_secret: provider.clientSecret as string,
+          grant_type: "authorization_code",
+          redirect_uri: provider.callbackUrl,
+          code: code as string,
+        });
+
+        console.log("4. Body being sent:", body.toString());
+
+        const response = await fetch("https://api.instagram.com/oauth/access_token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: body.toString(),
+        });
+
+        const tokens = await response.json();
+
+        if (!response.ok) {
+          console.error("=== INSTAGRAM TOKEN EXCHANGE FAILED ===");
+          console.error("Response:", tokens);
+          throw new Error(`Instagram token exchange failed: ${JSON.stringify(tokens)}`);
+        }
+
+        console.log("=== INSTAGRAM TOKEN EXCHANGE SUCCESS ===");
+        return { tokens };
+      }
+    },
     userinfo: {
       async request({ tokens }) {
         const url = new URL("https://graph.instagram.com/me");
