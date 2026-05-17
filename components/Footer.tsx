@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import BrandMark from '@/components/BrandMark';
 
 export default function Footer() {
   return (
@@ -17,26 +18,21 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand Column */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div 
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  backgroundColor: '#92400e',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#F8F7F4',
-                  fontWeight: 800,
-                  fontSize: '14px'
-                }}
-              >
-                AM
+            <div className="flex items-center gap-3 mb-4">
+              <BrandMark
+                alt="AM Creator Analytics mark"
+                className="h-10 w-10"
+                priority
+                variant="light"
+              />
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '18px', color: '#F8F7F4', margin: 0 }}>
+                  AM Creator Analytics
+                </p>
+                <p style={{ fontSize: '11px', color: 'rgba(248,247,244,0.6)', margin: '4px 0 0' }}>
+                  Full-funnel creator attribution
+                </p>
               </div>
-              <span style={{ fontWeight: 700, fontSize: '18px', letterSpacing: '-0.02em' }}>
-                AM Creator Analytics
-              </span>
             </div>
             <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#9ca3af', margin: 0 }}>
               India's first full-funnel B2B influencer attribution platform. Stop measuring vanity metrics.
@@ -147,7 +143,7 @@ export default function Footer() {
           }}
         >
           <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>
-            © 2024 AM Creator Analytics. All rights reserved.
+            © {new Date().getFullYear()} AM Creator Analytics. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: '24px' }}>
             {['Twitter', 'LinkedIn', 'Instagram'].map((social) => (

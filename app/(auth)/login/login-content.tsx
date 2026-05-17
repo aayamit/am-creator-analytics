@@ -1,14 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import {
+  AlertCircle,
+  Building2,
+  CheckCircle,
+  Mail,
+  User,
+} from "lucide-react";
+
+import BrandMark from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { BarChart3, Building2, User, CheckCircle, Mail, AlertCircle } from "lucide-react";
 
 export default function LoginContent() {
   const router = useRouter();
@@ -29,25 +36,31 @@ export default function LoginContent() {
     if (searchParams.get("verified") === "true") {
       setSuccessMessage("Email verified successfully! You can now sign in.");
     }
+
     if (searchParams.get("verification") === "sent") {
-      setSuccessMessage("Account created! Please check your email to verify your account.");
+      setSuccessMessage(
+        "Account created! Please check your email to verify your account.",
+      );
     }
 
     const errorParam = searchParams.get("error");
-    if (errorParam) {
-      switch (errorParam) {
-        case "invalid_verification_link":
-          setError("Invalid verification link. Please request a new one.");
-          break;
-        case "invalid_or_expired_token":
-          setError("This verification link has expired. Please request a new one.");
-          break;
-        case "verification_failed":
-          setError("Email verification failed. Please try again.");
-          break;
-        default:
-          setError("An error occurred. Please try again.");
-      }
+    if (!errorParam) {
+      return;
+    }
+
+    switch (errorParam) {
+      case "invalid_verification_link":
+        setError("Invalid verification link. Please request a new one.");
+        break;
+      case "invalid_or_expired_token":
+        setError("This verification link has expired. Please request a new one.");
+        break;
+      case "verification_failed":
+        setError("Email verification failed. Please try again.");
+        break;
+      default:
+        setError("An error occurred. Please try again.");
+        break;
     }
   }, [searchParams]);
 
@@ -100,117 +113,87 @@ export default function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#F8F7F4', color: '#1a1a2e' }}>
-      {/* Bloomberg-style grid background */}
-      <div 
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `
-            linear-gradient(rgba(26,26,46,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(26,26,46,0.03) 1px, transparent 1px)
-          `,
-          backgroundSize: '40px 40px',
-          pointerEvents: 'none'
-        }}
-      />
+    <section className="relative overflow-hidden bg-background text-foreground">
+      <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(26,26,46,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(26,26,46,0.08)_1px,transparent_1px)] [background-size:40px_40px] dark:opacity-40 dark:[background-image:linear-gradient(rgba(248,250,252,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(248,250,252,0.08)_1px,transparent_1px)]" />
 
-      {/* Subtle gradient orb - Instagram-inspired */}
-      <div 
-        style={{
-          position: 'absolute',
-          top: '10%',
-          right: '5%',
-          width: '400px',
-          height: '400px',
-          background: 'radial-gradient(circle, rgba(146,64,14,0.08) 0%, rgba(26,26,46,0.03) 50%, transparent 70%)',
-          pointerEvents: 'none',
-          filter: 'blur(60px)'
-        }}
-      />
-
-      {/* Main Container */}
-      <div className="relative z-10 flex flex-col justify-center items-center min-h-screen px-6">
-        {/* Logo - Facebook/Instagram inspired clean layout */}
-        <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center space-x-3">
-            <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(146,64,14,0.1)' }}>
-              <BarChart3 className="h-8 w-8 text-accent" />
-            </div>
-            <div>
-              <span className="text-2xl font-bold text-foreground block" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                AM Creator
-              </span>
-              <span className="text-sm text-muted-foreground">Analytics</span>
-            </div>
-          </Link>
-          <p className="text-muted-foreground mt-3" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-            Sign in to your {role === "BRAND" ? "Brand" : "Creator"} account
-          </p>
-        </div>
-
-        {/* Success Message */}
-        {successMessage && (
-          <div className="w-full max-w-sm mb-6 p-4 border border-green-200 bg-green-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <p className="text-sm text-green-800">{successMessage}</p>
-            </div>
+      <div className="relative mx-auto flex min-h-[calc(100vh-10rem)] max-w-5xl items-center justify-center px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <div className="w-full max-w-md rounded-2xl border border-border/80 bg-background/90 p-6 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] backdrop-blur-sm sm:p-8 dark:bg-card/90 dark:shadow-[0_24px_80px_-40px_rgba(0,0,0,0.75)]">
+          <div className="mb-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-3 no-underline hover:no-underline"
+            >
+              <BrandMark className="h-11 w-11 sm:h-12 sm:w-12" priority />
+              <div>
+                <span className="block text-lg font-semibold text-foreground sm:text-xl">
+                  AM Creator Analytics
+                </span>
+                <span className="block text-sm text-muted-foreground">
+                  Sign in to your {role === "BRAND" ? "brand" : "creator"} account
+                </span>
+              </div>
+            </Link>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Track real campaign outcomes, not vanity metrics.
+            </p>
           </div>
-        )}
 
-        {/* Error Message */}
-        {error && (
-          <div className="w-full max-w-sm mb-6 p-4 border border-red-200 bg-red-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <p className="text-sm text-red-600">{error}</p>
+          {successMessage && (
+            <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <p>{successMessage}</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Role Selector - NO HOVER EFFECTS */}
-        <div className="w-full max-w-sm mb-6">
-          <div className="grid grid-cols-2 gap-3">
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-200">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <p>{error}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="mb-6 grid grid-cols-2 gap-3 rounded-xl border border-border/70 bg-muted/40 p-2">
             <button
               type="button"
               onClick={() => setRole("CREATOR")}
-              className={`p-4 rounded-lg border-2 transition-none
-                ${role === "CREATOR" 
-                  ? "border-accent bg-accent/5" 
-                  : "border-border bg-white"
-                }`}
+              className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                role === "CREATOR"
+                  ? "border-accent bg-background text-foreground shadow-sm"
+                  : "border-transparent bg-transparent text-muted-foreground hover:text-foreground"
+              }`}
             >
-              <User className={`h-6 w-6 mx-auto mb-2 ${role === "CREATOR" ? "text-accent" : "text-muted-foreground"}`} />
-              <span className={`text-sm font-medium ${role === "CREATOR" ? "text-foreground" : "text-muted-foreground"}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                Creator
-              </span>
+              <User
+                className={`mb-2 h-5 w-5 ${
+                  role === "CREATOR" ? "text-accent" : "text-muted-foreground"
+                }`}
+              />
+              <span className="block text-sm font-medium">Creator</span>
             </button>
             <button
               type="button"
               onClick={() => setRole("BRAND")}
-              className={`p-4 rounded-lg border-2 transition-none
-                ${role === "BRAND" 
-                  ? "border-primary bg-primary/5" 
-                  : "border-border bg-white"
-                }`}
+              className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                role === "BRAND"
+                  ? "border-primary bg-background text-foreground shadow-sm"
+                  : "border-transparent bg-transparent text-muted-foreground hover:text-foreground"
+              }`}
             >
-              <Building2 className={`h-6 w-6 mx-auto mb-2 ${role === "BRAND" ? "text-primary" : "text-muted-foreground"}`} />
-              <span className={`text-sm font-medium ${role === "BRAND" ? "text-foreground" : "text-muted-foreground"}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                Brand
-              </span>
+              <Building2
+                className={`mb-2 h-5 w-5 ${
+                  role === "BRAND" ? "text-primary" : "text-muted-foreground"
+                }`}
+              />
+              <span className="block text-sm font-medium">Brand</span>
             </button>
           </div>
-        </div>
 
-        {/* Login Form - Facebook-inspired clean design */}
-        <div className="w-full max-w-sm">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="email" className="text-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Email</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -218,12 +201,11 @@ export default function LoginContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 border-2 focus:border-accent"
-                style={{ fontFamily: 'JetBrains Mono, monospace' }}
+                className="h-12 rounded-xl border-border bg-background/80 px-4 shadow-none focus-visible:ring-ring/30"
               />
             </div>
-            <div>
-              <Label htmlFor="password" className="text-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -231,42 +213,41 @@ export default function LoginContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="h-12 border-2 focus:border-accent"
-                style={{ fontFamily: 'JetBrains Mono, monospace' }}
+                className="h-12 rounded-xl border-border bg-background/80 px-4 shadow-none focus-visible:ring-ring/30"
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-accent text-accent-foreground font-semibold rounded-lg"
-              style={{ fontFamily: 'JetBrains Mono, monospace' }}
+              className="h-12 w-full rounded-xl text-sm font-semibold"
               disabled={loading}
             >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
-          {/* Resend Verification - NO HOVER */}
           <div className="mt-4 text-center">
             <button
               type="button"
               onClick={handleResendVerification}
-              className="text-sm text-muted-foreground"
-              style={{ fontFamily: 'JetBrains Mono, monospace' }}
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              <Mail className="h-4 w-4 inline mr-1" />
+              <Mail className="h-4 w-4" />
               Resend verification email
             </button>
           </div>
 
-          <p className="text-center text-sm text-muted-foreground mt-6" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-accent font-medium">
+            <Link
+              href="/signup"
+              className="font-medium text-accent no-underline hover:text-accent/80"
+            >
               Sign up
             </Link>
           </p>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

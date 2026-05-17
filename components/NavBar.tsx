@@ -8,8 +8,8 @@ import { useTheme } from 'next-themes';
 
 export default function NavBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const logoSrc = theme === 'dark' ? '/assets/white_logo.png' : '/assets/black_logo.png';
+  const { resolvedTheme, setTheme } = useTheme();
+  const logoSrc = resolvedTheme === 'dark' ? '/assets/white_logo.png' : '/assets/black_logo.png';
 
   const navLinks = [
     { label: 'Features', href: '/features' },
@@ -31,13 +31,24 @@ export default function NavBar() {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: 160, height: 40, position: 'relative' }}>
+        <Link
+          href="/"
+          aria-label="AM Creator Analytics home"
+          style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+        >
+          <div
+            className="relative h-9 w-[148px] overflow-hidden sm:h-10 sm:w-[178px] lg:h-11 lg:w-[208px]"
+          >
             <Image
               src={logoSrc}
               alt="AM Creator Analytics Logo"
               fill
-              style={{ objectFit: 'contain' }}
+              priority
+              sizes="(max-width: 640px) 148px, (max-width: 1024px) 178px, 208px"
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center',
+              }}
             />
           </div>
         </Link>
@@ -51,7 +62,7 @@ export default function NavBar() {
               className="nav-link"
               style={{
                 textDecoration: 'none',
-                color: '#4b5563',
+                color: 'var(--muted-foreground)',
                 fontSize: '14px',
                 fontWeight: 500,
                 transition: 'color 0.2s',
@@ -101,7 +112,7 @@ export default function NavBar() {
             </button>
           </Link>
           <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
             style={{
               backgroundColor: 'transparent',
               border: '1px solid var(--border)',
@@ -114,7 +125,7 @@ export default function NavBar() {
               justifyContent: 'center'
             }}
           >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
         </div>
 

@@ -9,10 +9,15 @@ import { ThemeProvider } from 'next-themes';
 export const metadata: Metadata = {
   title: 'AM Creator Analytics',
   description: 'Stop measuring vanity metrics. Start tracking real B2B business outcomes with India\'s first full-funnel influencer attribution platform.',
-  icons: [
-    { url: '/assets/black_AM_fav.png', media: '(prefers-color-scheme: light)' },
-    { url: '/assets/white_AM_fav.png', media: '(prefers-color-scheme: dark)' },
-  ],
+  manifest: '/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/assets/black_AM_mark.png', media: '(prefers-color-scheme: light)', type: 'image/png' },
+      { url: '/assets/white_AM_mark.png', media: '(prefers-color-scheme: dark)', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-icon.png',
+  },
 };
 
 export default function RootLayout({

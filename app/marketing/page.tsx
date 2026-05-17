@@ -361,49 +361,6 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-900 text-slate-400">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <h4 className="text-white font-semibold mb-4">Product</h4>
-            <ul className="space-y-2">
-              {['Features', 'Case Studies', 'For Creators', 'Pricing'].map((link) => (
-                <li key={link}>
-                  <Link href="#" className="hover:text-white transition-colors">{link}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-semibold mb-4">Company</h4>
-            <ul className="space-y-2">
-              {['About Us', 'Contact', 'Careers'].map((link) => (
-                <li key={link}>
-                  <Link href="#" className="hover:text-white transition-colors">{link}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2">
-              {['Privacy Policy', 'Terms of Service', 'DPDP Act & GDPR Compliant'].map((link) => (
-                <li key={link}>
-                  <Link href="#" className="hover:text-white transition-colors">{link}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-semibold mb-4">Security</h4>
-            <div className="text-sm">Enterprise-Grade Security</div>
-            <div className="text-xs mt-2 opacity-70">GDPR & DPDP Act Compliant</div>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-800 text-center text-sm">
-          © {new Date().getFullYear()} AM Creator Analytics. All rights reserved.
-        </div>
-      </footer>
     </div>
   );
 }

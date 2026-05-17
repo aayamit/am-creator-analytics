@@ -1,7 +1,7 @@
 # AM Creator Analytics — Agent Handover Document
 
-**Version:** 1.1  
-**Date:** 2026-05-16  
+**Version:** 1.3  
+**Date:** 2026-05-17  
 **Prepared by:** OWL (Hermes Agent) + Codex  
 **Project Owner:** Amit Kumar (amitkumaraman)
 
@@ -28,6 +28,15 @@ AM Creator Analytics is a **B2B SaaS platform** for influencer marketing managem
 - Recovery used a local-only compose override to point the app at the correct app database and then ran `prisma db push` to create the missing tables. That override file should stay local and should not be committed.
 - The local repository on `/Volumes/DA/am-creator-analytics` has a local-only commit (`1ade516`) that accidentally includes `volumes/` runtime data and `.env.backup`. Do **not** push that commit directly.
 - The correct GitHub repository is `https://github.com/aayamit/am-creator-analytics.git`. The stale `amitkumaraman/...` URL in the old handover notes is wrong.
+- A clean code-only sync was pushed from the writable clone with commit `99c11f5` (`feat: add phase 3 marketing and social auth flows`).
+- `https://www.amcreatoranalytics.com` was fixed on 2026-05-17 by adding the missing published application route in the Cloudflare dashboard for tunnel `amcamacmini`.
+- Both the apex domain and `www` now route to the same local app service on `http://localhost:3000`.
+- The public marketing shell was cleaned on 2026-05-17 so `/marketing` now renders a single shared header and footer.
+- Branding and auth polish was deployed on 2026-05-17:
+  - favicon/app icons now use the compact AM mark assets provided for the brand
+  - the shared footer now renders the AM mark image instead of the old text-only badge
+  - `/login` and `/signup` were rebuilt to use theme-token styling and were verified in both light and dark mode
+  - `/`, `/marketing`, `/features`, `/how-it-works`, `/pricing`, `/case-studies`, `/about`, `/login`, and `/signup` all currently show the `Login` link in the shared nav
 
 ---
 
@@ -50,6 +59,7 @@ AM Creator Analytics is a **B2B SaaS platform** for influencer marketing managem
 | `app/(auth)/` | Login/signup pages |
 | `app/layout.tsx` | Root layout (ThemeProvider + AuthProviders) |
 | `components/` | Shared React components (NavBar, Footer, providers) |
+| `components/BrandMark.tsx` | Compact AM mark component used by footer/auth surfaces |
 | `lib/` | Service clients & utilities (Prisma, Redis, MinIO, Nango, OpenSign, Stripe) |
 | `prisma/schema.prisma` | Database schema (PostgreSQL) |
 | `prisma/seed.js` | Database seed script |
@@ -61,6 +71,9 @@ AM Creator Analytics is a **B2B SaaS platform** for influencer marketing managem
 | `nginx/ssl/` | Self-signed SSL certificates |
 | `.env.prod` | Production environment variables |
 | `.env` | Local environment variables |
+| `public/assets/black_AM_mark.png` | Light-theme compact AM brand mark |
+| `public/assets/white_AM_mark.png` | Dark-theme compact AM brand mark |
+| `public/icons/` | PWA icon outputs derived from the AM mark |
 | `volumes/postgres/` | PostgreSQL data (persistent) |
 | `volumes/mongo/` | MongoDB data (for OpenSign) |
 | `volumes/redis/` | Redis data (persistent) |
@@ -136,7 +149,7 @@ git push origin master
 | **Testing** | Jest 30, Testing Library |
 | **Linting** | ESLint 9 |
 | **Reverse Proxy** | Nginx (alpine) |
-| **Tunnel** | Cloudflare Quick Tunnel |
+| **Tunnel** | Cloudflare Named Tunnel |
 | **Containerization** | Docker Compose 3.8 |
 
 ---
@@ -182,6 +195,8 @@ docker compose -f docker-compose.prod.yml down
 - **Build requires:** `NEXT_LINT_DISABLED=true` (TypeScript errors are ignored in build)
 - **Build context should exclude:** `volumes/` so Docker does not send local database state into the image build context
 - **If homepage works but auth/database routes fail:** rebuild the `app` image and check `docker compose ... logs app` for Prisma/OpenSSL errors
+- **Current app DB fix:** recovery used a local-only compose override so the app talks to the dedicated `am_creator_analytics` database instead of the old shared/default target
+- **Most reliable live app-only deploy path on this Mac Mini:** run the build and `up -d --no-deps app` sequence from the clean clone inside Docker Desktop's embedded terminal, then replace only `am-creator-app`
 - **Nango DB setup:** Must create `nango` user/database in Postgres:
   ```sql
   CREATE USER nango WITH PASSWORD 'nango';
@@ -196,6 +211,7 @@ docker compose -f docker-compose.prod.yml down
 | Domain | Proxies To |
 |--------|-----------|
 | `amcreatoranalytics.com` | `am-creator-app:3000` (landing + app) |
+| `www.amcreatoranalytics.com` | `am-creator-app:3000` (same app) |
 | `app.amcreatoranalytics.com` | `am-creator-app:3000` (dashboard) |
 | `opensign.amcreatoranalytics.com` | `opensign-client:3000` |
 
@@ -206,7 +222,16 @@ docker compose -f docker-compose.prod.yml down
 - **Active named tunnel on 2026-05-16:** `amcamacmini`
 - **Active tunnel ID on 2026-05-16:** `d0736635-75f1-482c-a672-b31451c86ff6`
 - **Origin target:** `http://127.0.0.1:3000`
-- **Public domain:** `amcreatoranalytics.com`
+- **Public domains intended:** `amcreatoranalytics.com` and `www.amcreatoranalytics.com`
+- **Observed current state on 2026-05-17 after fix:** apex domain works and `www` works
+- **Cloudflare dashboard fix applied on 2026-05-17:** added published application route
+  - hostname: `www.amcreatoranalytics.com`
+  - service: `http://localhost:3000`
+- **Published application routes after fix:** `amcreatoranalytics.com` and `www.amcreatoranalytics.com`
+- **Local config files that already include both hostnames:**
+  - `/Users/amit/.cloudflared/config.yml`
+  - `/Users/amit/.cloudflared/tunnels/d0736635-75f1-482c-a672-b31451c86ff6.yml`
+- **Important deployment nuance:** a system daemon exists at `/Library/LaunchDaemons/com.cloudflare.cloudflared.plist` and appears to run the tunnel using a token-based command. That explains why editing the local ingress files alone did not immediately fix the public `www` route; the effective fix had to be applied in the dashboard route list.
 - **Note:** the older `6aaf5b9c-77de-4be9-83f0-60964b3a564c` value still appears in local env/docs, but the active connector observed during recovery was the `amcamacmini` named tunnel above
 
 ---
@@ -618,6 +643,92 @@ docker compose -f docker-compose.prod.yml logs -f app
 | Search | MeiliSearch | Algolia | ₹15K |
 | Cache | Redis (self-hosted) | Redis Cloud | ₹10K |
 | E-Signatures | OpenSign (self-hosted) | DocuSign | ₹20K |
+
+---
+
+## 20. 2026-05-17 Marketing Fix Deployment Note
+
+- The live `/marketing` route was rendering duplicate chrome because:
+  - `app/layout.tsx` already rendered the shared `NavBar` and `Footer`
+  - `app/marketing/layout.tsx` rendered another `NavBar` and `Footer`
+  - `app/marketing/page.tsx` also rendered its own footer block
+- The live fix changed:
+  - `app/marketing/layout.tsx` to return `children` only
+  - `app/marketing/page.tsx` to remove the extra page-level footer
+  - `components/NavBar.tsx` to enlarge the logo frame and use responsive cropped sizing
+- Verified public result after deploy:
+  - `https://www.amcreatoranalytics.com/marketing`
+  - DOM check returned `1` nav and `1` footer
+
+### Important Deployment Detail
+
+- Direct Docker socket access from the sandboxed shell remained blocked even after permission requests.
+- The successful path was Docker Desktop's embedded terminal.
+- The first rebuild attempt failed because `docker compose up -d --build app` tried to recreate shared services and hit existing container-name conflicts.
+- The successful sequence was:
+
+```bash
+cd /Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/am-creator-analytics-clean
+docker compose -f docker-compose.prod.yml -f docker-compose.prod.local-env.yml --env-file /Volumes/DA/am-creator-analytics/.env.prod build app
+docker rm -f am-creator-app
+docker compose -f docker-compose.prod.yml -f docker-compose.prod.local-env.yml --env-file /Volumes/DA/am-creator-analytics/.env.prod up -d --no-deps app
+```
+
+- This replaced only the application container and left Postgres, Redis, Mongo, Nango, OpenSign, and nginx in place.
+
+### Browser Artifact
+
+- Desktop snapshot captured after the fix:
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/marketing-desktop-fixed.png`
+
+---
+
+## 21. 2026-05-17 Branding Assets, Footer Mark, and Auth Theme Fix
+
+- Brand assets were normalized around the compact AM mark supplied by the project owner.
+- New generated assets added in the clean clone:
+  - `public/assets/black_AM_mark.png`
+  - `public/assets/white_AM_mark.png`
+  - `app/icon.png`
+  - `app/apple-icon.png`
+  - `app/favicon.ico`
+  - `public/icons/icon-192x192.png`
+  - `public/icons/icon-512x512.png`
+- Shared UI updates:
+  - `components/BrandMark.tsx` added as a reusable AM mark component
+  - `components/Footer.tsx` switched from the old text badge to the image-based AM mark
+  - `app/layout.tsx` and `public/site.webmanifest` updated so favicon, Apple icon, and manifest point to the new mark assets
+  - `components/NavBar.tsx` switched to `resolvedTheme` and keeps the shared public `Login` link visible across the public pages
+- Auth updates:
+  - `app/(auth)/login/login-content.tsx` rebuilt with theme-token colors and dark-mode-safe surfaces
+  - `app/(auth)/signup/page.tsx` rebuilt with matching theme-token styling and dark-mode-safe surfaces
+- Live deployment used the same Docker Desktop embedded-terminal flow as the marketing-shell fix:
+
+```bash
+cd /Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/am-creator-analytics-clean
+docker compose -f docker-compose.prod.yml -f docker-compose.prod.local-env.yml --env-file /Volumes/DA/am-creator-analytics/.env.prod build app
+docker rm -f am-creator-app
+docker compose -f docker-compose.prod.yml -f docker-compose.prod.local-env.yml --env-file /Volumes/DA/am-creator-analytics/.env.prod up -d --no-deps app
+```
+
+- Live verification after deploy:
+  - `https://www.amcreatoranalytics.com/marketing`
+    - `1` nav
+    - `1` footer
+    - footer image alt `AM Creator Analytics mark`
+    - favicon links include `/favicon.ico`, `/assets/black_AM_mark.png`, `/assets/white_AM_mark.png`, and `/apple-icon.png`
+  - `https://www.amcreatoranalytics.com/login`
+    - verified in light mode and dark mode
+  - `https://www.amcreatoranalytics.com/signup`
+    - verified in light mode and dark mode
+  - `https://www.amcreatoranalytics.com/`, `/marketing`, `/features`, `/how-it-works`, `/pricing`, `/case-studies`, `/about`, `/login`, `/signup`
+    - all show the `Login` link in the shared nav
+- Browser artifacts saved in the session workspace:
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/marketing-live-after-branding.png`
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/login-light-fixed.png`
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/login-dark-fixed.png`
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/signup-light-fixed.png`
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/signup-dark-fixed.png`
 
 ---
 
