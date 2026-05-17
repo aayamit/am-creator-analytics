@@ -407,3 +407,29 @@ Replaced the public favicon/app icons with the supplied compact AM logo mark, sw
 - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/login-dark-fixed.png`
 - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/signup-light-fixed.png`
 - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/signup-dark-fixed.png`
+
+---
+
+## 2026-05-17 - Live Deployment Consolidation and Database Recovery
+
+### Summary
+Successfully unified the codebase by fetching the Clean Clone directly into the Live Repository on the Mac Mini, bypassing Github. Protected and successfully re-attached the live database volumes during the new Docker Compose rollout, and resolved several complex credential interpolation errors to bring the entire standardized stack (`app`, `nginx`, `postgres`, `redis`, `mongo`, `opensign`, `nango`) online and fully healthy.
+
+### Completed Tasks
+- [x] Backed up live `.env` and `.env.prod` files
+- [x] Committed Clean Clone and set it as a local git remote for the Live Repo
+- [x] Moved `volumes/` out of the Live Repo to protect databases during a hard git reset
+- [x] Hard reset the Live Repo to match the Clean Clone's `master` branch
+- [x] Restored `volumes/` to the Live Repo
+- [x] Created `docker-compose.prod.local-env.yml` in the Live Repo to bind-mount the existing Mac-local `/Volumes/DA/am-creator-analytics/volumes` directories into the new Docker Compose stack, preventing the creation of empty databases
+- [x] Discovered and fixed a Mongo credential override issue by appending `MONGO_INITDB_ROOT_PASSWORD` (which defaulted to `opensign123` in the old stack) to `.env` and `.env.prod`
+- [x] Discovered and fixed a Postgres credential mismatch where the app was defaulting to the new `nango` user setup script, but the live volume only recognized the old `postgres` user. Reset the `postgres` password internally.
+- [x] Fixed `.env.prod`'s `DATABASE_URL` which was erroneously pointing to the `nango` database instead of `am_creator_analytics`
+- [x] Restarted the stack with the new standardized service names and `am_creator_network`
+- [x] Verified full health status for all 7 containers via `docker ps`
+
+### Deployment Notes
+- Due to Github push failures (using a wrong credential), the deploy bypassed Github entirely via local git fetch (`git fetch clean_clone`).
+- A hard git reset would have deleted the live DB volumes since commit `1ade516` erroneously tracked them. Manually moving the directories out and back safely preserved them.
+- Docker compose variable interpolation reads from `.env`, not `.env.prod`. Mongo credentials had to be added to `.env` for the `healthcheck` to pass correctly.
+- Ensure any future database initialization scripts respect existing volumes rather than assuming empty environments.

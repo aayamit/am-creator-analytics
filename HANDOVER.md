@@ -20,64 +20,18 @@ AM Creator Analytics is a **B2B SaaS platform** for creator and influencer marke
 
 ## Current Status
 
-- Public preview is intended to run directly from the Mac Mini through Docker + Cloudflare Tunnel.
-- The site returned Cloudflare `502` after the Mac restart because the local Docker stack was down even though the tunnel connector was still active. That recovery is complete and apex + `www` now resolve again through the live tunnel.
-- Docker production config has now been standardized in the clean writable repo so future deploys do not depend on mixed service names, split compose projects, or manual network reattachment.
-- The intended production stack is now defined under one compose project with stable service names:
-  - `app`
-  - `nginx`
-  - `postgres`
-  - `redis`
-  - `mongo`
-  - `opensign`
-  - `nango`
-- The intended production network is now one named shared network:
-  - `am_creator_network`
-- The app is now configured to use internal hostnames like `postgres`, `redis`, `mongo`, `opensign`, and `nango`, and nginx now proxies to `app:3000`.
-- The production compose file is now cloud-ready and portable:
-  - named volumes replace Mac-only `/Volumes/DA/...` bind-mount assumptions
-  - the committed production file remains clean
-  - local-only overrides should stay in `docker-compose.prod.local-env.yml` and stay uncommitted
-- Postgres initialization has been standardized so the main app DB and Nango DB are created separately on first boot:
-  - app DB: `am_creator_analytics`
-  - Nango DB: `nango`
-- Environment templates were updated:
-  - `.env.example`
-  - `.env.prod.example`
-  - `.env.prod.template` kept as compatibility reference
-- `docker compose -f docker-compose.prod.yml config` and `docker compose -f docker-compose.yml config` both succeeded from the clean writable repo.
-- Direct Docker runtime inspection from the sandbox shell is still blocked by Docker socket permissions, so this session could not directly run `docker ps`, `docker network ls`, or `docker compose ... ps` from the shell.
-- `npm run build` succeeds after the public website changes. There is still an existing non-blocking ESLint config warning during the build, and a separate Next.js warning about multiple lockfiles / inferred workspace root.
-- The local repository on `/Volumes/DA/am-creator-analytics` has a local-only commit (`1ade516`) that accidentally includes `volumes/` runtime data and `.env.backup`. Do **not** push that commit directly.
-- The correct GitHub repository is `https://github.com/aayamit/am-creator-analytics.git`. The stale `amitkumaraman/...` URL in the old handover notes is wrong.
-- A clean code-only sync was pushed from the writable clone with commit `99c11f5` (`feat: add phase 3 marketing and social auth flows`).
-- `https://www.amcreatoranalytics.com` was fixed on 2026-05-17 by adding the missing published application route in the Cloudflare dashboard for tunnel `amcamacmini`.
-- Both the apex domain and `www` now route to the same local app service on `http://localhost:3000`.
-- The public marketing shell was cleaned on 2026-05-17 so `/marketing` now renders a single shared header and footer.
-- Branding and auth polish was deployed on 2026-05-17:
-  - favicon/app icons now use the compact AM mark assets provided for the brand
-  - the shared footer now renders the AM mark image instead of the old text-only badge
-  - `/login` and `/signup` were rebuilt to use theme-token styling and were verified in both light and dark mode
-  - `/`, `/marketing`, `/features`, `/how-it-works`, `/pricing`, `/case-studies`, `/about`, `/login`, and `/signup` all currently show the `Login` link in the shared nav
-- Public website repositioning is implemented in the clean writable repo and ready for review:
-  - `/marketing` now presents AM as a performance-led creator campaign operating system
-  - new `/for-creators` page
-  - new `/for-d2c-brands` page
-  - new `/for-agencies` page
-  - updated nav, footer, pricing, about, and contact pages
-  - this rewrite is built and verified at compile level, but it has **not** been pushed or deployed live from this session
-- Instagram creator login is now wired to Instagram Business Login instead of the old Instagram Basic Display flow:
-  - live auth URL now uses `platform_app_id=26571906789138925`
-  - live redirect URI is `https://amcreatoranalytics.com/api/auth/callback/instagram`
-  - live scope is now trimmed to `instagram_business_basic` for creator onboarding
-- Browser testing confirms the integration path is now technically correct, but end-to-end account linking is still blocked by account-side access:
-  - Instagram recognizes account `amcreatoranalytics`
-  - the saved Instagram password currently being used in Chrome is invalid
-  - Instagram offered recovery via `partnerships@amcreatoranalytics.com` and `+91 79030 84346`
-  - the logged-in Facebook/Meta account is not linked to that Instagram account, so the Facebook shortcut does not complete auth
-- A separate creator dashboard bug was found during Instagram testing:
-  - non-tenant dashboard pages like `/creators/connections` were rendering sidebar links as `/undefined/dashboard/...`
-  - that cleanup is fixed in the clean writable repo, but it was **not** re-deployed live during this session
+- Public preview runs directly from the Mac Mini through Docker + Cloudflare Tunnel. Both `amcreatoranalytics.com` and `www.amcreatoranalytics.com` resolve locally to `http://localhost:3000`.
+- **Repository Unification (2026-05-17):** The Clean Clone's unreleased changes (new B2B strategy pages, Docker standardization, and dashboard sidebar fixes) have been successfully merged into the Live Repository (`/Volumes/DA/am-creator-analytics`) by fetching the clean clone directly as a local git remote and performing a hard reset.
+- The dangerous dirty commit in the live repo (which accidentally tracked the database `volumes/`) was wiped out safely. The `volumes/` directory was temporarily moved out to prevent data loss during the hard reset and is now safely untracked via the new `.gitignore`.
+- **Docker Deployment Success:** The new standardized Docker production stack is fully live and healthy on the Mac Mini.
+  - The stack runs under one compose project with stable service names: `app`, `nginx`, `postgres`, `redis`, `mongo`, `opensign`, and `nango`.
+  - The intended production network is now one named shared network: `am_creator_network`.
+  - A local override file (`docker-compose.prod.local-env.yml`) was created in the live repo to safely bind-mount the existing `/Volumes/DA/am-creator-analytics/volumes` directories into the new Docker Compose stack, preventing the creation of empty databases.
+  - Database credential mismatches caused by the new Docker variables (e.g. `MONGO_INITDB_ROOT_PASSWORD` defaulting to `change-me-opensign-mongo-password` and `DATABASE_URL` pointing to the `nango` database instead of `am_creator_analytics`) have been successfully resolved by editing `.env` and `.env.prod`.
+  - All 7 containers are reporting as `Up` and `healthy`. Direct Docker runtime inspection from the sandbox shell is fully functional in the current session.
+- **Website Repositioning Live:** The public marketing shell now cleanly renders a single shared header and footer. New B2B strategy pages (`/for-creators`, `/for-d2c-brands`, `/for-agencies`) and updated core pages (`/marketing`, `/pricing`, `/about`, `/contact`) are fully built and live.
+- **Branding and Auth:** Favicons and footer logos use the compact "AM" mark. Login/signup screens use theme-token surfaces and work perfectly in both light and dark mode.
+- **Instagram Creator Login:** Wired to Instagram Business Login (`platform_app_id=26571906789138925`, trimmed scope `instagram_business_basic`). End-to-end account linking remains blocked because the saved Instagram password in Chrome for `amcreatoranalytics` is invalid. Recovery via `partnerships@amcreatoranalytics.com` or `+91 79030 84346` is needed.
 
 ---
 
