@@ -55,6 +55,9 @@ Resumed Instagram creator auth debugging from the Mac Mini deployment. Confirmed
   - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/deploy_live_instagram_connection_fix.log`
 - Successful deploy status:
   - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/deploy_live_instagram_connection_fix.status`
+- GitHub sync:
+  - committed as `79e356d` — `fix(auth): repair creator social account sync and profile reads`
+  - pushed successfully to `origin/master`
 
 ### Follow-Up Needed
 - [ ] Re-run the live deploy one more time so the `force_reauth` removal is definitely live
