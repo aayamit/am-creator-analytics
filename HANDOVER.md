@@ -1,7 +1,7 @@
 # AM Creator Analytics — Agent Handover Document
 
-**Version:** 1.4  
-**Date:** 2026-05-17  
+**Version:** 1.5  
+**Date:** 2026-05-19  
 **Prepared by:** OWL (Hermes Agent) + Codex  
 **Project Owner:** Amit Kumar (amitkumaraman)
 
@@ -31,7 +31,7 @@ AM Creator Analytics is a **B2B SaaS platform** for creator and influencer marke
   - All 7 containers are reporting as `Up` and `healthy`. Direct Docker runtime inspection from the sandbox shell is fully functional in the current session.
 - **Website Repositioning Live:** The public marketing shell now cleanly renders a single shared header and footer. New B2B strategy pages (`/for-creators`, `/for-d2c-brands`, `/for-agencies`) and updated core pages (`/marketing`, `/pricing`, `/about`, `/contact`) are fully built and live.
 - **Branding and Auth:** Favicons and footer logos use the compact "AM" mark. Login/signup screens use theme-token surfaces and work perfectly in both light and dark mode.
-- **Instagram Creator Login:** Wired to Instagram Business Login (`platform_app_id=26571906789138925`, trimmed scope `instagram_business_basic`). End-to-end account linking remains blocked because the saved Instagram password in Chrome for `amcreatoranalytics` is invalid. Recovery via `partnerships@amcreatoranalytics.com` or `+91 79030 84346` is needed.
+- **Instagram Creator Login:** Wired to Instagram Business Login (`platform_app_id=26571906789138925`, scope `instagram_business_basic`) and no longer blocked by the old token-exchange or NextAuth Prisma-adapter failure. The live app now includes the custom schema-compatible NextAuth adapter and the repaired `/api/me` route. Browser verification shows the flow reaches Instagram login and recaptcha correctly, and the `amcreatoranalytics` Instagram credentials do work. Remaining gap: final "Instagram connected" confirmation on `/creators/connections` still needs one clean end-to-end authorization pass after the forced re-auth loop removal is published and re-tested.
 
 ---
 
@@ -112,6 +112,16 @@ dee2ea0  chore: Remove backup files, test dirs, chrome-extension
 48e0cbd  chore: Clean up - move plan docs to docs/plans/
 5930ef5  feat: Add Docker production deployment files
 ```
+
+### Current Uncommitted Focus (2026-05-19)
+- `lib/auth/nextauth.ts`
+  - custom NextAuth adapter for the current Prisma schema
+  - creator social sync in `callbacks.signIn`
+  - local-only pending cleanup: removed `force_reauth` so Instagram can reuse an existing login session
+- `app/api/me/route.ts`
+  - repaired Prisma relation names so creator social accounts can actually be read back from the current schema
+- Host deploy helper added:
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/deploy_live_instagram_connection_fix.command`
 
 ### Git Commands
 ```bash
@@ -763,6 +773,11 @@ docker compose -f docker-compose.prod.yml -f docker-compose.prod.local-env.yml -
   - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/login-dark-fixed.png`
   - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/signup-light-fixed.png`
   - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/signup-dark-fixed.png`
+
+---
+
+## Current Blockers
+- **Instagram / Meta API Setup:** The Valid OAuth Redirect URI cannot be saved in the Meta Developer Dashboard due to a known dashboard bug. The dashboard refuses to save the required "User Data Deletion" URL (`https://amcreatoranalytics.com/data-deletion`), throwing a `name_placeholder should represent a valid URL` error. This is actively blocking the Instagram Business login setup.
 
 ---
 

@@ -1,5 +1,68 @@
 # AM Creator Analytics - Work Log
 
+## 2026-05-19 - Instagram Creator Auth Persistence Fix and Live API Read Repair
+
+### Summary
+Resumed Instagram creator auth debugging from the Mac Mini deployment. Confirmed the earlier token-exchange failure is gone, shipped the custom NextAuth adapter plus `/api/me` repair live, and verified public app health after the app-only rebuild. The remaining Instagram friction is now at the browser/auth-experience layer: Instagram reaches login and recaptcha correctly, but the end-to-end "connected" state still needs one clean successful authorization pass after removing the forced re-auth loop.
+
+### Completed Tasks
+- [x] Re-read `HANDOVER.md`, `WORK_LOG.md`, and `IMPORTANT_NEXT_SESSION_CONTEXT_AM_CREATOR_ANALYTICS.md` before resuming
+- [x] Reconfirm that the live app is using the custom NextAuth adapter path in `lib/auth/nextauth.ts`
+- [x] Identify that `/api/me` was still using invalid Prisma relation names (`brandProfile`, `creatorProfile`, `socialAccounts`) for the current schema
+- [x] Fix `app/api/me/route.ts` to use the actual generated Prisma relation names:
+  - `BrandProfile`
+  - `CreatorProfile`
+  - `SocialAccount`
+- [x] Replace per-request `new PrismaClient()` usage in `/api/me` with the shared `@/lib/prisma` client
+- [x] Rebuild the clean repo successfully with the `/api/me` repair in place
+- [x] Deploy the live app again from the Mac Mini host path using:
+  - `deploy_live_instagram_connection_fix.command`
+- [x] Verify live local health after deploy:
+  - `http://127.0.0.1:3000/api/health`
+- [x] Verify public health after deploy:
+  - `https://www.amcreatoranalytics.com/api/health`
+- [x] Re-test the Instagram creator login flow in Chrome and confirm the app now reliably reaches Instagram auth instead of failing back in the app
+- [x] Identify one remaining UX/flow issue in the auth URL generation:
+  - `force_reauth: "true"` was forcing repeated Instagram re-login/recaptcha
+- [x] Remove `force_reauth` locally from `InstagramBusinessProvider` so future auth attempts can reuse an existing Instagram session instead of forcing a fresh login every time
+- [x] Rebuild the clean repo successfully after removing `force_reauth`
+
+### Live State After This Session
+- Live app includes:
+  - custom NextAuth adapter compatible with the current Prisma schema
+  - creator social-account sync in `callbacks.signIn`
+  - repaired `/api/me` route using the correct Prisma relation names
+- Verified live health:
+  - local health returned healthy JSON after rebuild
+  - public health returned healthy JSON after rebuild
+- Instagram login in browser now reaches:
+  - Instagram login
+  - recaptcha challenge
+  - successful Instagram account login for `amcreatoranalytics`
+
+### Remaining Instagram Blocker
+- The final "connected" verification is **not yet confirmed** in this session.
+- Current likely remaining issue:
+  - the local clean repo has the `force_reauth` removal, but this last parameter cleanup was not conclusively re-published from the sandbox after the second build because host-side relaunch control remained flaky from here.
+- Practical effect:
+  - the live flow is much closer and no longer failing at token exchange or `/api/me`
+  - but browser-side end-to-end confirmation still needs one clean run where Instagram can reuse the active session and proceed straight through consent/callback
+
+### Deployment Notes
+- Successful live deploy artifact used this session:
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/deploy_live_instagram_connection_fix.command`
+- Successful deploy log:
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/deploy_live_instagram_connection_fix.log`
+- Successful deploy status:
+  - `/Users/amit/Documents/Codex/2026-05-16/important-when-working-on-this-project/deploy_live_instagram_connection_fix.status`
+
+### Follow-Up Needed
+- [ ] Re-run the live deploy one more time so the `force_reauth` removal is definitely live
+- [ ] Re-test Instagram creator login in the Chrome profile that already has the cleanest Meta/Instagram session
+- [ ] Confirm the final callback lands with `/creators/connections` showing Instagram as connected
+- [ ] If Instagram still resists after that clean pass, move immediately to YouTube auth using the `Patna Daily / dailypatna@gmail.com` Chrome profile as requested
+- [ ] After auth is stable, begin the next architecture pass for creator analytics ingestion, pooled creator data storage, categorization, fit analysis, and brand-facing insight layers
+
 ## 2026-05-17 - Instagram Creator Login Integration and Dashboard Cleanup
 
 ### Summary
@@ -433,3 +496,6 @@ Successfully unified the codebase by fetching the Clean Clone directly into the 
 - A hard git reset would have deleted the live DB volumes since commit `1ade516` erroneously tracked them. Manually moving the directories out and back safely preserved them.
 - Docker compose variable interpolation reads from `.env`, not `.env.prod`. Mongo credentials had to be added to `.env` for the `healthcheck` to pass correctly.
 - Ensure any future database initialization scripts respect existing volumes rather than assuming empty environments.
+
+### Current Blockers (Instagram Auth)
+- Blocked on Meta Developer Dashboard. Unable to save the User Data Deletion URL due to the `name_placeholder should represent a valid URL` bug, which in turn prevents saving the OAuth callback URL for Instagram Business login.

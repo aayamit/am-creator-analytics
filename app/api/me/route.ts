@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 function buildProfileUrl(
   platform: string,
@@ -44,10 +42,10 @@ export async function GET(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        brandProfile: true,
-        creatorProfile: {
+        BrandProfile: true,
+        CreatorProfile: {
           include: {
-            socialAccounts: true,
+            SocialAccount: true,
           },
         },
       },
@@ -63,28 +61,28 @@ export async function GET(request: NextRequest) {
       email: user.email,
       name: user.name,
       role: user.role,
-      image: user.image,
+      image: null,
     };
 
-    if (role === "CREATOR" && user.creatorProfile) {
+    if (role === "CREATOR" && user.CreatorProfile) {
       response.profile = {
-        id: user.creatorProfile.id,
-        displayName: user.creatorProfile.displayName,
-        niche: user.creatorProfile.niche,
-        bio: user.creatorProfile.bio,
-        website: user.creatorProfile.website,
-        socialAccounts: user.creatorProfile.socialAccounts.map((sa) => ({
+        id: user.CreatorProfile.id,
+        displayName: user.CreatorProfile.displayName,
+        niche: user.CreatorProfile.niche,
+        bio: user.CreatorProfile.bio,
+        website: user.CreatorProfile.website,
+        socialAccounts: user.CreatorProfile.SocialAccount.map((sa) => ({
           platform: sa.platform,
           username: sa.username,
           profileUrl: buildProfileUrl(sa.platform, sa.username, sa.accountId),
         })),
       };
-    } else if (role === "BRAND" && user.brandProfile) {
+    } else if (role === "BRAND" && user.BrandProfile) {
       response.profile = {
-        id: user.brandProfile.id,
-        companyName: user.brandProfile.companyName,
-        industry: user.brandProfile.industry,
-        website: user.brandProfile.website,
+        id: user.BrandProfile.id,
+        companyName: user.BrandProfile.companyName,
+        industry: user.BrandProfile.industry,
+        website: user.BrandProfile.website,
       };
     }
 
@@ -95,7 +93,5 @@ export async function GET(request: NextRequest) {
       { error: "Internal server error" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

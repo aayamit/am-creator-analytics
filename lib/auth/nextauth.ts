@@ -1,9 +1,9 @@
 import type { NextAuthOptions } from "next-auth";
+import type { Adapter } from "next-auth/adapters";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
 import type { OAuthConfig } from "next-auth/providers/oauth";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { SocialPlatform, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -35,6 +35,155 @@ interface InstagramBusinessProfile extends Record<string, unknown> {
   media_count?: number;
 }
 
+type AuthDbUser = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  emailVerified: Date | null;
+  role: UserRole;
+};
+
+function toAdapterUser(user: AuthDbUser) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email ?? "",
+    emailVerified: user.emailVerified,
+    image: null,
+    role: user.role,
+  };
+}
+
+const authAdapter: Adapter = {
+  async createUser(data) {
+    const user = await prisma.user.create({
+      data: {
+        id: data.id ?? crypto.randomUUID(),
+        name: data.name ?? null,
+        email: data.email ?? null,
+        emailVerified: data.emailVerified ?? null,
+        role:
+          "role" in data && data.role === UserRole.BRAND
+            ? UserRole.BRAND
+            : "role" in data && data.role === UserRole.ADMIN
+              ? UserRole.ADMIN
+              : UserRole.CREATOR,
+        updatedAt: new Date(),
+      },
+    });
+
+    return toAdapterUser(user);
+  },
+  async getUser(id) {
+    const user = await prisma.user.findUnique({ where: { id } });
+    return user ? toAdapterUser(user) : null;
+  },
+  async getUserByEmail(email) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    return user ? toAdapterUser(user) : null;
+  },
+  async getUserByAccount(provider_providerAccountId) {
+    const account = await prisma.account.findUnique({
+      where: { provider_providerAccountId },
+      include: { User: true },
+    });
+
+    return account?.User ? toAdapterUser(account.User) : null;
+  },
+  async updateUser(data) {
+    const user = await prisma.user.update({
+      where: { id: data.id },
+      data: {
+        name: data.name === undefined ? undefined : data.name,
+        email: data.email === undefined ? undefined : data.email,
+        emailVerified:
+          data.emailVerified === undefined ? undefined : data.emailVerified,
+        updatedAt: new Date(),
+      },
+    });
+
+    return toAdapterUser(user);
+  },
+  async deleteUser(id) {
+    const user = await prisma.user.delete({ where: { id } });
+    return toAdapterUser(user);
+  },
+  async linkAccount(data) {
+    await prisma.account.upsert({
+      where: {
+        provider_providerAccountId: {
+          provider: data.provider,
+          providerAccountId: data.providerAccountId,
+        },
+      },
+      update: {
+        userId: data.userId,
+        type: data.type,
+      },
+      create: {
+        id: crypto.randomUUID(),
+        userId: data.userId,
+        type: data.type,
+        provider: data.provider,
+        providerAccountId: data.providerAccountId,
+      },
+    });
+  },
+  async unlinkAccount(provider_providerAccountId) {
+    await prisma.account.delete({ where: { provider_providerAccountId } });
+  },
+  async getSessionAndUser(sessionToken) {
+    const session = await prisma.session.findUnique({
+      where: { sessionToken },
+      include: { User: true },
+    });
+
+    if (!session) {
+      return null;
+    }
+
+    const { User, ...sessionData } = session;
+    return {
+      session: sessionData,
+      user: toAdapterUser(User),
+    };
+  },
+  async createSession(data) {
+    return prisma.session.create({
+      data: {
+        id: data.id ?? crypto.randomUUID(),
+        sessionToken: data.sessionToken,
+        userId: data.userId,
+        expires: data.expires,
+      },
+    });
+  },
+  async updateSession(data) {
+    return prisma.session.update({
+      where: { sessionToken: data.sessionToken },
+      data: {
+        expires: data.expires,
+        userId: data.userId === undefined ? undefined : data.userId,
+      },
+    });
+  },
+  async deleteSession(sessionToken) {
+    await prisma.session.delete({ where: { sessionToken } });
+  },
+  async createVerificationToken(data) {
+    return prisma.verificationToken.create({ data });
+  },
+  async useVerificationToken(identifier_token) {
+    try {
+      return await prisma.verificationToken.delete({
+        where: { identifier_token },
+      });
+    } catch {
+      return null;
+    }
+  },
+};
+
 // Creator login/linking only needs profile-level access. Keep the auth scope
 // minimal so the onboarding flow is not blocked on later-stage permissions.
 const INSTAGRAM_BUSINESS_SCOPE = "instagram_business_basic";
@@ -64,7 +213,6 @@ function InstagramBusinessProvider(options: {
     authorization: {
       url: "https://www.instagram.com/oauth/authorize",
       params: {
-        force_reauth: "true",
         response_type: "code",
         scope: INSTAGRAM_BUSINESS_SCOPE,
       },
@@ -405,7 +553,7 @@ async function syncCreatorOauthAccount({
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: authAdapter,
   session: {
     strategy: "jwt",
   },
@@ -492,7 +640,19 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn() {
+    async signIn({ user, account, profile }) {
+      if (
+        account?.provider === "google" ||
+        account?.provider === "linkedin" ||
+        account?.provider === "instagram"
+      ) {
+        await syncCreatorOauthAccount({
+          user,
+          account,
+          profile,
+        });
+      }
+
       return true;
     },
     async jwt({ token, user, account }) {
